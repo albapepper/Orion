@@ -1,0 +1,60 @@
+pub mod ai;
+pub mod audit;
+pub mod commands;
+pub mod config;
+pub mod db;
+pub mod loans;
+pub mod locks;
+pub mod tasks;
+
+use commands::AppState;
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    let config = config::Config::load();
+    let state = AppState::new(config.clone());
+
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .manage(state)
+        .setup(move |app| {
+            // Connect to the buyer's database in the background if configured.
+            // If unreachable (or first run), the app still opens — the frontend
+            // falls back to demo data and the setup wizard.
+            if !config.database.url.is_empty() {
+                let handle = app.handle().clone();
+                let url = config.database.url.clone();
+                tauri::async_runtime::spawn(async move {
+                    use tauri::Manager;
+                    match db::connect(&url).await {
+                        Ok(pool) => {
+                            let state = handle.state::<AppState>();
+                            *state.db.write().await = Some(pool);
+                        }
+                        Err(e) => eprintln!("[orion] database connection failed: {e}"),
+                    }
+                });
+            }
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            commands::config_commands::get_status,
+            commands::config_commands::get_config,
+            commands::config_commands::save_config,
+            commands::config_commands::test_db_connection,
+            commands::config_commands::deploy_schema,
+            commands::config_commands::test_ai_connection,
+            commands::loan_commands::list_loans,
+            commands::loan_commands::get_loan_detail,
+            commands::loan_commands::save_income,
+            commands::loan_commands::acquire_loan_lock,
+            commands::loan_commands::release_loan_lock,
+            commands::loan_commands::get_loan_lock,
+            commands::ai_commands::ai_chat,
+            commands::task_commands::list_tasks,
+            commands::task_commands::create_task,
+            commands::task_commands::set_task_status,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
