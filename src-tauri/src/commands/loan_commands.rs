@@ -34,6 +34,7 @@ pub struct LoanDetail {
     pub assets: Vec<crate::loans::Asset>,
     pub liabilities: Vec<crate::loans::Liability>,
     pub property: Option<crate::loans::SubjectProperty>,
+    pub reo: Vec<crate::loans::ReoProperty>,
     pub terms: Option<LoanTerms>,
     pub lock: Option<LockInfo>,
 }
@@ -90,6 +91,9 @@ pub async fn get_loan_detail(
             let property = crate::db::queries::get_subject_property(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let reo = crate::db::queries::get_reo(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let income = crate::db::queries::get_income(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -108,6 +112,7 @@ pub async fn get_loan_detail(
                 assets,
                 liabilities,
                 property,
+                reo,
                 terms,
                 lock,
             })
@@ -126,6 +131,7 @@ pub async fn get_loan_detail(
                 assets: demo::assets(loan_id),
                 liabilities: demo::liabilities(loan_id),
                 property: Some(demo::subject_property(loan_id)),
+                reo: demo::reo(loan_id),
                 terms: Some(demo::loan_terms(loan_id)),
                 lock: None,
             })
@@ -814,4 +820,113 @@ pub async fn save_subject_property(
     .map_err(|e| e.to_string())?;
 
     Ok(saved)
+}
+
+#[derive(Deserialize)]
+pub struct ReoInput {
+    pub id: Option<String>,
+    pub borrower_id: String,
+    pub address_line: Option<String>,
+    pub city: Option<String>,
+    pub state: Option<String>,
+    pub postal_code: Option<String>,
+    pub property_type: String,
+    pub market_value: Option<f64>,
+    pub mortgage_payment: Option<f64>,
+    pub rental_income: Option<f64>,
+    pub disposition: String,
+    pub notes: Option<String>,
+}
+
+#[tauri::command]
+pub async fn save_reo(
+    state: State<'_, AppState>,
+    loan_id: String,
+    record: ReoInput,
+) -> Result<crate::loans::ReoProperty, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let borrower_id = parse_uuid(&record.borrower_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    let record_id = record.id.as_deref().map(parse_uuid).transpose()?;
+
+    let saved = crate::db::queries::upsert_reo(
+        &pool,
+        record_id,
+        borrower_id,
+        loan_id,
+        company_id,
+        record.address_line.as_deref(),
+        record.city.as_deref(),
+        record.state.as_deref(),
+        record.postal_code.as_deref(),
+        &record.property_type,
+        record.market_value,
+        record.mortgage_payment,
+        record.rental_income,
+        &record.disposition,
+        record.notes.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        if record_id.is_some() { "reo.update" } else { "reo.create" },
+        "loan_properties_reo",
+        saved.id,
+        None,
+        Some(serde_json::to_value(&saved).map_err(|e| e.to_string())?),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
+#[tauri::command]
+pub async fn delete_reo(
+    state: State<'_, AppState>,
+    reo_id: String,
+) -> Result<(), String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let reo_id = parse_uuid(&reo_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let before = crate::db::queries::get_reo_by_id(&pool, reo_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::db::queries::delete_reo(&pool, reo_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if let Some(removed) = before {
+        crate::audit::write(
+            &pool,
+            company_id,
+            Some(removed.loan_id),
+            user_id,
+            "reo.delete",
+            "loan_properties_reo",
+            removed.id,
+            Some(serde_json::to_value(&removed).map_err(|e| e.to_string())?),
+            None,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }

@@ -2,7 +2,7 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Asset, Borrower, BorrowerDependent, Employment, Liability, LoanIncome, LoanSummary, LoanTerms, SubjectProperty};
+use super::{Asset, Borrower, BorrowerDependent, Employment, Liability, LoanIncome, LoanSummary, LoanTerms, ReoProperty, SubjectProperty};
 use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
@@ -242,4 +242,23 @@ pub fn subject_property(loan_id: Uuid) -> SubjectProperty {
         estimated_value: Some(700_000.0),
         notes: None,
     }
+}
+
+pub fn reo(loan_id: Uuid) -> Vec<ReoProperty> {
+    vec![ReoProperty {
+        id: id("00000000-0000-0000-0000-000000000901"),
+        borrower_id: id(DEMO_BORROWER_ID),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        address_line: Some("88 Harbor View Ln, Apt 4".into()),
+        city: Some("Bellingham".into()),
+        state: Some("WA".into()),
+        postal_code: Some("98225".into()),
+        property_type: "condo".into(),
+        market_value: Some(415_000.0),
+        mortgage_payment: Some(1_480.0),
+        rental_income: Some(1_950.0),
+        disposition: "pending_sale".into(),
+        notes: Some("Closing mid-October".into()),
+    }]
 }

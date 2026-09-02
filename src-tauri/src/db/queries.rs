@@ -3,7 +3,7 @@
 
 use crate::loans::{
     Asset, Borrower, BorrowerDependent, Employment, Liability, Loan, LoanIncome, LoanSummary,
-    LoanTerms,
+    LoanTerms, ReoProperty,
 };
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -615,4 +615,98 @@ pub async fn upsert_subject_property(
     .fetch_one(pool)
     .await?;
     Ok(row)
+}
+
+const REO_COLUMNS: &str = "id, borrower_id, loan_id, company_id, address_line, city, state,
+    postal_code, property_type, market_value::FLOAT8 AS market_value,
+    mortgage_payment::FLOAT8 AS mortgage_payment, rental_income::FLOAT8 AS rental_income,
+    disposition, notes";
+
+pub async fn get_reo(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Vec<ReoProperty>> {
+    let rows = sqlx::query_as::<_, ReoProperty>(&format!(
+        "SELECT {REO_COLUMNS} FROM loan_properties_reo WHERE loan_id = $1
+         ORDER BY market_value DESC"
+    ))
+    .bind(loan_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+pub async fn get_reo_by_id(pool: &PgPool, id: Uuid) -> anyhow::Result<Option<ReoProperty>> {
+    let row = sqlx::query_as::<_, ReoProperty>(&format!(
+        "SELECT {REO_COLUMNS} FROM loan_properties_reo WHERE id = $1"
+    ))
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn upsert_reo(
+    pool: &PgPool,
+    id: Option<Uuid>,
+    borrower_id: Uuid,
+    loan_id: Uuid,
+    company_id: Uuid,
+    address_line: Option<&str>,
+    city: Option<&str>,
+    state: Option<&str>,
+    postal_code: Option<&str>,
+    property_type: &str,
+    market_value: Option<f64>,
+    mortgage_payment: Option<f64>,
+    rental_income: Option<f64>,
+    disposition: &str,
+    notes: Option<&str>,
+) -> anyhow::Result<ReoProperty> {
+    let row = sqlx::query_as::<_, ReoProperty>(&format!(
+        r#"
+        INSERT INTO loan_properties_reo
+            (id, borrower_id, loan_id, company_id, address_line, city, state, postal_code,
+             property_type, market_value, mortgage_payment, rental_income, disposition,
+             notes, updated_at)
+        VALUES (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+                $12, $13, $14, now())
+        ON CONFLICT (id) DO UPDATE SET
+            address_line = EXCLUDED.address_line,
+            city = EXCLUDED.city,
+            state = EXCLUDED.state,
+            postal_code = EXCLUDED.postal_code,
+            property_type = EXCLUDED.property_type,
+            market_value = EXCLUDED.market_value,
+            mortgage_payment = EXCLUDED.mortgage_payment,
+            rental_income = EXCLUDED.rental_income,
+            disposition = EXCLUDED.disposition,
+            notes = EXCLUDED.notes,
+            updated_at = now()
+        RETURNING {REO_COLUMNS}
+        "#
+    ))
+    .bind(id)
+    .bind(borrower_id)
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(address_line)
+    .bind(city)
+    .bind(state)
+    .bind(postal_code)
+    .bind(property_type)
+    .bind(market_value)
+    .bind(mortgage_payment)
+    .bind(rental_income)
+    .bind(disposition)
+    .bind(notes)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn delete_reo(pool: &PgPool, id: Uuid) -> anyhow::Result<()> {
+    sqlx::query("DELETE FROM loan_properties_reo WHERE id = $1")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(())
 }
