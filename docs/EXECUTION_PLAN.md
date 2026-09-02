@@ -85,7 +85,7 @@ consumes later.
       fields; extend existing table, MISMO-complete)
 - [x] **P2-15** Income backend expansion (queries, audit, commands)
 - [x] **P2-16** Income AI context expansion (usable income calc)
-- [ ] **P2-17** Income screen expansion + replace `IncomeScreen` placeholder
+- [x] **P2-17** Income screen expansion + replace `IncomeScreen` placeholder
       patterns with shared screen scaffolding
 
 ### Week 3 — Assets + Liabilities

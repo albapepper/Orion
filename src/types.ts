@@ -39,6 +39,8 @@ export interface LoanIncome {
   borrower_id: string;
   income_type: string;
   monthly_amount: number;
+  prior_year_monthly: number | null;
+  verified: boolean;
   employer_name: string | null;
   years_on_job: number | null;
   notes: string | null;
@@ -129,5 +131,9 @@ export const INCOME_TYPES = [
   'bonus',
   'commission',
   'self_employed',
+  'retirement',
+  'social_security',
+  'rental',
+  'military_benefits',
   'other',
 ] as const;

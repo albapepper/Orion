@@ -14,6 +14,11 @@ interface Props {
 
 type RowStatus = 'saving' | 'saved' | 'error';
 
+const twoYearAvg = (row: LoanIncome) =>
+  row.prior_year_monthly !== null
+    ? (Number(row.prior_year_monthly) + Number(row.monthly_amount)) / 2
+    : null;
+
 export function IncomeScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
@@ -35,6 +40,12 @@ export function IncomeScreen(props: Props) {
   const totalMonthly = () =>
     (detail()?.income ?? []).reduce(
       (sum, row) => sum + Number(rowValue(row, 'monthly_amount') ?? 0),
+      0,
+    );
+
+  const totalTwoYear = () =>
+    (detail()?.income ?? []).reduce(
+      (sum, row) => sum + (twoYearAvg(row) ?? Number(rowValue(row, 'monthly_amount') ?? 0)),
       0,
     );
 
@@ -60,6 +71,8 @@ export function IncomeScreen(props: Props) {
           borrower_id: row.borrower_id,
           income_type: rowValue(row, 'income_type'),
           monthly_amount: Number(rowValue(row, 'monthly_amount')) || 0,
+          prior_year_monthly: rowValue(row, 'prior_year_monthly'),
+          verified: rowValue(row, 'verified'),
           employer_name: rowValue(row, 'employer_name'),
           years_on_job: rowValue(row, 'years_on_job'),
           notes: rowValue(row, 'notes'),
@@ -85,6 +98,32 @@ export function IncomeScreen(props: Props) {
     return null;
   };
 
+  const numInput = (
+    row: LoanIncome,
+    f: 'monthly_amount' | 'prior_year_monthly' | 'years_on_job',
+    step?: string,
+  ) => (
+    <input
+      type="number"
+      min="0"
+      step={step}
+      value={rowValue(row, f) ?? ''}
+      onInput={(e) =>
+        setField(
+          row.id,
+          f,
+          Number.isNaN(e.currentTarget.valueAsNumber)
+            ? f === 'monthly_amount'
+              ? 0
+              : null
+            : e.currentTarget.valueAsNumber,
+        )
+      }
+      onBlur={() => commitRow(row)}
+      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+    />
+  );
+
   return (
     <div class="screen">
       <LoanHeader detail={detail()} />
@@ -99,9 +138,11 @@ export function IncomeScreen(props: Props) {
             <tr>
               <th>Type</th>
               <th>Monthly amount</th>
+              <th>Prior year (mo)</th>
               <th>Employer</th>
               <th>Years on job</th>
               <th>Notes</th>
+              <th title="Verified">✓</th>
               <th />
             </tr>
           </thead>
@@ -119,27 +160,12 @@ export function IncomeScreen(props: Props) {
                       onBlur={() => commitRow(row)}
                     >
                       <For each={[...INCOME_TYPES]}>
-                        {(t) => <option value={t}>{t}</option>}
+                        {(t) => <option value={t}>{t.replace(/_/g, ' ')}</option>}
                       </For>
                     </select>
                   </td>
-                  <td>
-                    <input
-                      type="number"
-                      value={rowValue(row, 'monthly_amount')}
-                      onInput={(e) =>
-                        setField(
-                          row.id,
-                          'monthly_amount',
-                          Number.isNaN(e.currentTarget.valueAsNumber)
-                            ? 0
-                            : e.currentTarget.valueAsNumber,
-                        )
-                      }
-                      onBlur={() => commitRow(row)}
-                      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                    />
-                  </td>
+                  <td>{numInput(row, 'monthly_amount')}</td>
+                  <td>{numInput(row, 'prior_year_monthly')}</td>
                   <td>
                     <input
                       type="text"
@@ -149,24 +175,7 @@ export function IncomeScreen(props: Props) {
                       onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                     />
                   </td>
-                  <td>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={rowValue(row, 'years_on_job') ?? ''}
-                      onInput={(e) =>
-                        setField(
-                          row.id,
-                          'years_on_job',
-                          Number.isNaN(e.currentTarget.valueAsNumber)
-                            ? null
-                            : e.currentTarget.valueAsNumber,
-                        )
-                      }
-                      onBlur={() => commitRow(row)}
-                      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                    />
-                  </td>
+                  <td>{numInput(row, 'years_on_job', '0.1')}</td>
                   <td>
                     <input
                       type="text"
@@ -174,6 +183,17 @@ export function IncomeScreen(props: Props) {
                       onInput={(e) => setField(row.id, 'notes', e.currentTarget.value)}
                       onBlur={() => commitRow(row)}
                       onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                    />
+                  </td>
+                  <td class="check-cell">
+                    <input
+                      type="checkbox"
+                      checked={rowValue(row, 'verified')}
+                      title="Verified"
+                      onChange={(e) => {
+                        setField(row.id, 'verified', e.currentTarget.checked);
+                        commitRow(row);
+                      }}
                     />
                   </td>
                   <td class="row-status-cell">
@@ -194,7 +214,14 @@ export function IncomeScreen(props: Props) {
               <td class="mono">
                 ${totalMonthly().toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo
               </td>
-              <td colspan="4" />
+              <td />
+              <td colspan="3">
+                2-yr avg (prior-year rows):{' '}
+                <span class="mono">
+                  ${totalTwoYear().toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo
+                </span>
+              </td>
+              <td colspan="2" />
             </tr>
           </tfoot>
         </table>
