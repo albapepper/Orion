@@ -7,6 +7,7 @@ interface Props {
 
 const BINDINGS: Array<[string, string]> = [
   ['⌃d', 'Dashboard'],
+  ['⌃o', 'Loan overview'],
   ['⌃b', 'Borrower Info screen'],
   ['⌃e', 'Employment screen'],
   ['⌃p', 'Property screen'],

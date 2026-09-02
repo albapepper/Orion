@@ -131,8 +131,9 @@ consumes later.
 
 ### Week 6 — Loan Overview + consistency review
 
-- [ ] **P2-42** Loan Overview screen (summary card: key numbers, status,
-      who's on it) + nav integration
+- [x] **P2-42** Loan Overview screen (summary card: key numbers, status,
+      who's on it) + nav integration (⌃o; ⌃] walks from overview into the
+      cascade at borrower)
 - [ ] **P2-43** Cross-screen consistency review: all 10 screens against the
       pattern checklist (audit on every save, context on every screen,
       lock check on entry, keybinding, stepper wired)

@@ -11,6 +11,7 @@ export interface NavItem {
 // borrower → employment → property → terms → credit → income → assets → liabilities → REO → declarations → demographic
 export const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', key: 'd' },
+  { id: 'overview', label: 'Overview', key: 'o' },
   { id: 'borrower', label: 'Borrower', key: 'b' },
   { id: 'employment', label: 'Employment', key: 'e' },
   { id: 'property', label: 'Property', key: 'p' },

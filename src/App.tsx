@@ -4,6 +4,7 @@ import type { AppStatus, LoanSummary } from './types';
 import { NavTray } from './components/NavTray';
 import { ChatBox } from './components/ChatBox';
 import { KeyLegend } from './components/KeyLegend';
+import { OverviewScreen } from './screens/OverviewScreen';
 import { Dashboard } from './screens/Dashboard';
 import { IncomeScreen } from './screens/loan/IncomeScreen';
 import { TermsScreen } from './screens/loan/TermsScreen';
@@ -19,7 +20,10 @@ import { StubScreen } from './screens/loan/StubScreen';
 import { LOAN_SCREENS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import './App.css';
 
-type Route = { name: 'dashboard' } | { name: LoanScreen; loanId: string };
+type Route =
+  | { name: 'dashboard' }
+  | { name: 'overview'; loanId: string }
+  | { name: LoanScreen; loanId: string };
 
 function App() {
   const [route, setRoute] = createSignal<Route>({ name: 'dashboard' });
@@ -52,16 +56,26 @@ function App() {
       return;
     }
     const loanId = activeLoanId() ?? loans()?.[0]?.id;
-    if (loanId) navigate({ name: id as LoanScreen, loanId });
+    if (!loanId) return;
+    if (id === 'overview') {
+      navigate({ name: 'overview', loanId });
+      return;
+    }
+    navigate({ name: id as LoanScreen, loanId });
   };
 
   // Entering a loan starts at the top of the cascade: the borrower
   const openLoan = (loan: LoanSummary) => navigate({ name: 'borrower', loanId: loan.id });
 
-  // Walk the cascade without leaving the loan
+  // Walk the cascade without leaving the loan; overview acts as the
+  // head of the cascade (⌃] enters it at the borrower).
   const shiftStage = (dir: 1 | -1) => {
     const r = route();
     if (r.name === 'dashboard') return;
+    if (r.name === 'overview') {
+      if (dir === 1) navigate({ name: 'borrower', loanId: r.loanId });
+      return;
+    }
     const target = dir === 1 ? nextStage(r.name) : prevStage(r.name);
     if (target) navigate({ name: target, loanId: 'loanId' in r ? r.loanId : activeLoanId()! });
   };
@@ -151,6 +165,12 @@ function App() {
         <Switch>
           <Match when={route().name === 'dashboard'}>
             <Dashboard loans={loans() ?? []} onOpenLoan={openLoan} />
+          </Match>
+          <Match when={route().name === 'overview'}>
+            <OverviewScreen
+              loanId={(route() as { loanId: string }).loanId}
+              onNavigate={openScreen}
+            />
           </Match>
           <Match when={route().name === 'income'}>
             <IncomeScreen
