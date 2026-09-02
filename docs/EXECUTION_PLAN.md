@@ -116,7 +116,7 @@ consumes later.
 
 ### Week 5 — Declarations + Demographic
 
-- [ ] **P2-34** Declarations migration (the 13 URLA yes/no questions + text)
+- [x] **P2-34** Declarations migration (the 13 URLA yes/no questions + text)
 - [ ] **P2-35** Declarations backend: queries + audit hook + IPC commands
 - [ ] **P2-36** Declarations AI context builder (flags + explanations)
 - [ ] **P2-37** Declarations screen UI + sidebar wire + lock check
