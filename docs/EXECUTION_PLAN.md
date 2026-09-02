@@ -90,7 +90,7 @@ consumes later.
 
 ### Week 3 — Assets + Liabilities
 
-- [ ] **P2-18** Assets migration (checking, savings, retirement, gifts,
+- [x] **P2-18** Assets migration (checking, savings, retirement, gifts,
       verification fields)
 - [ ] **P2-19** Assets backend: queries + audit hook + IPC commands
 - [ ] **P2-20** Assets AI context builder (reserves, sourcing, seasoning)
