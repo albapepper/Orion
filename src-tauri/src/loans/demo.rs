@@ -2,7 +2,7 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Asset, Borrower, BorrowerDependent, Declaration, Employment, Liability, LoanIncome, LoanSummary, LoanTerms, ReoProperty, SubjectProperty};
+use super::{Asset, Borrower, BorrowerDependent, Declaration, Demographics, Employment, Liability, LoanIncome, LoanSummary, LoanTerms, ReoProperty, SubjectProperty};
 use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
@@ -280,4 +280,16 @@ pub fn declarations(loan_id: Uuid) -> Vec<Declaration> {
         decl("alimony_child_support", "00000000-0000-0000-0000-000000000a04", Some(true), Some("$450/month until 2031, per divorce decree")),
 
     ]
+}
+pub fn demographics(loan_id: Uuid) -> Vec<Demographics> {
+    vec![Demographics {
+        id: id("00000000-0000-0000-0000-000000000b01"),
+        borrower_id: id(DEMO_BORROWER_ID),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        ethnicity: None,
+        race: None,
+        sex: None,
+        collection_basis: Some("not_face_to_face".into()),
+    }]
 }

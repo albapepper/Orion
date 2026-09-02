@@ -36,6 +36,7 @@ pub struct LoanDetail {
     pub property: Option<crate::loans::SubjectProperty>,
     pub reo: Vec<crate::loans::ReoProperty>,
     pub declarations: Vec<crate::loans::Declaration>,
+    pub demographics: Vec<crate::loans::Demographics>,
     pub terms: Option<LoanTerms>,
     pub lock: Option<LockInfo>,
 }
@@ -98,6 +99,9 @@ pub async fn get_loan_detail(
             let declarations = crate::db::queries::get_declarations(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let demographics = crate::db::queries::get_demographics(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let income = crate::db::queries::get_income(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -118,6 +122,7 @@ pub async fn get_loan_detail(
                 property,
                 reo,
                 declarations,
+                demographics,
                 terms,
                 lock,
             })
@@ -138,6 +143,7 @@ pub async fn get_loan_detail(
                 property: Some(demo::subject_property(loan_id)),
                 reo: demo::reo(loan_id),
                 declarations: demo::declarations(loan_id),
+                demographics: demo::demographics(loan_id),
                 terms: Some(demo::loan_terms(loan_id)),
                 lock: None,
             })
@@ -983,6 +989,63 @@ pub async fn save_declaration(
         saved.id,
         None,
         Some(serde_json::to_value(&saved).map_err(|e| e.to_string())?),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
+#[derive(Deserialize)]
+pub struct DemographicsInput {
+    pub borrower_id: String,
+    pub ethnicity: Option<String>,
+    pub race: Option<String>,
+    pub sex: Option<String>,
+    pub collection_basis: Option<String>,
+}
+
+#[tauri::command]
+pub async fn save_demographics(
+    state: State<'_, AppState>,
+    loan_id: String,
+    input: DemographicsInput,
+) -> Result<crate::loans::Demographics, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let borrower_id = parse_uuid(&input.borrower_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let saved = crate::db::queries::upsert_demographics(
+        &pool,
+        borrower_id,
+        loan_id,
+        company_id,
+        input.ethnicity.as_deref(),
+        input.race.as_deref(),
+        input.sex.as_deref(),
+        input.collection_basis.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    // HMDA data is sensitive: the audit entry records THAT a change
+    // happened, never the values (cross-cutting rule 4).
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "demographics.update",
+        "borrower_demographics",
+        saved.id,
+        None,
+        Some(serde_json::json!({ "record": "updated", "fields": null })),
     )
     .await
     .map_err(|e| e.to_string())?;

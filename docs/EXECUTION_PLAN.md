@@ -122,7 +122,7 @@ consumes later.
 - [x] **P2-37** Declarations screen UI + sidebar wire + lock check (own
       stage, ⌃q; Yes/No toggles + explanations)
 - [x] **P2-38** Demographic migration (HMDA monitoring info)
-- [ ] **P2-39** Demographic backend: queries + audit hook + IPC commands
+- [x] **P2-39** Demographic backend: queries + audit hook + IPC commands
 - [ ] **P2-40** Demographic screen UI + sidebar wire (no AI context —
       compliance capture only)
 - [ ] **P2-41** Demographic AI context builder (minimal, per spec)
