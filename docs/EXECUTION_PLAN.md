@@ -61,7 +61,7 @@ consumes later.
 
 ### Week 1 — Borrower Info + Loan Terms
 
-- [ ] **P2-02** Loan Terms migration (purpose, type, amount, rate, term,
+- [x] **P2-02** Loan Terms migration (purpose, type, amount, rate, term,
       LTV/CLTV — MISMO-complete)
 - [ ] **P2-03** Loan Terms backend: queries + audit hook + IPC commands
 - [ ] **P2-04** Loan Terms AI context builder (`build_context`)
