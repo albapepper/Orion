@@ -76,7 +76,7 @@ consumes later.
 
 ### Week 2 — Employment + Income expansion
 
-- [ ] **P2-10** Employment migration (2-year history, employer, position,
+- [x] **P2-10** Employment migration (2-year history, employer, position,
       dates, self-employed flags)
 - [ ] **P2-11** Employment backend: queries + audit hook + IPC commands
 - [ ] **P2-12** Employment AI context builder (gaps, stability)
