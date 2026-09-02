@@ -107,7 +107,7 @@ consumes later.
 - [x] **P2-26** Property migration (subject address, type, occupancy,
       appraised value) — replaces demo property stub
 - [x] **P2-27** Property backend: queries + audit hook + IPC commands
-- [ ] **P2-28** Property AI context builder (eligibility, occupancy)
+- [x] **P2-28** Property AI context builder (eligibility, occupancy)
 - [ ] **P2-29** Property screen UI + sidebar wire + lock check (replaces stub)
 - [ ] **P2-30** REO migration (other properties, value, payment, rental income)
 - [ ] **P2-31** REO backend: queries + audit hook + IPC commands
