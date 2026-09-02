@@ -1,0 +1,172 @@
+# Orion — Execution Plan
+
+**Rolling plan for docs/orion_roadmap.md. One stage active at a time.**
+
+## The Convention
+
+1. **Pick the top unchecked item** in the active stage below.
+2. **Build it.** Scope is whatever the item says — no further.
+3. **Check the box and commit in the same commit.** The plan file travels
+   with the code, so history reads as a changelog.
+4. **Commit message:** `<ITEM-ID>: <what landed>` — e.g.
+   `P2-03: borrower info queries, audit hook, IPC commands`
+5. **If work surfaces a new task,** add it to the stage with the next ID
+   before moving on. Plan drifts forward, never silently.
+6. **When the last box in a stage checks,** expand the next stage's
+   outline into IDs, then start it. That's the "rolling" part.
+
+Rules of engagement:
+
+- An item is **done when it's committed**, not when it compiles.
+- A half-finished item stays unchecked — park it with a note in the
+  item text if you stop mid-way.
+- Phase gates (definition of done) get reviewed before rolling to the
+  next phase.
+
+---
+
+## Status
+
+| Phase                        | State                                    |
+| ---------------------------- | ---------------------------------------- |
+| 1 — Foundation               | ✅ done (pre-plan)                       |
+| UX comfort pass              | ✅ built, **uncommitted** — commit first |
+| **2 — The 1003 Screens**     | 🔄 **ACTIVE**                            |
+| 3 — Pipeline & Workflow      | ⏸ outline only                          |
+| 4 — Pricing & AUS            | ⏸ outline only                          |
+| 5 — Team, Admin & Polish     | ⏸ outline only                          |
+| 6 — Certification & Pilot    | ⏸ outline only                          |
+
+**Definition of done for this stage** (from roadmap): a loan officer can
+enter a complete 1003, every field saves to Postgres with an audit
+entry, and the AI sidebar answers screen-specific questions accurately
+on all 10 screens.
+
+---
+
+## Stage: Phase 2 — The 1003 Screens (ACTIVE)
+
+Every screen lands as four commits, following the eight-step pattern
+(migration / backend / context / UI). MISMO 3.4 completeness is a
+property of every migration from the first one — this is what DU/LPA
+consumes later.
+
+### Week 0 — Staging
+
+- [ ] **P2-00** Commit the UX comfort pass (stage stepper, autosave, focus
+      visibility, legend/README) as its own commit before new work starts.
+- [ ] **P2-01** MISMO 3.4 field reference: write `docs/1003-fields.md`
+      mapping each of the 10 screens to its MISMO 3.4 fields/containers,
+      before any migration is written. First migration copies from this.
+
+### Week 1 — Borrower Info + Loan Terms
+
+- [ ] **P2-02** Loan Terms migration (purpose, type, amount, rate, term,
+      LTV/CLTV — MISMO-complete)
+- [ ] **P2-03** Loan Terms backend: queries + audit hook + IPC commands
+- [ ] **P2-04** Loan Terms AI context builder (`build_context`)
+- [ ] **P2-05** Loan Terms screen UI + sidebar wire + lock check
+- [ ] **P2-06** Borrower Info migration (name, SSN, DOB, contact, marital,
+      dependents, citizenship — MISMO-complete)
+- [ ] **P2-07** Borrower Info backend: queries + audit hook + IPC commands
+- [ ] **P2-08** Borrower Info AI context builder
+- [ ] **P2-09** Borrower Info screen UI + sidebar wire + lock check
+
+### Week 2 — Employment + Income expansion
+
+- [ ] **P2-10** Employment migration (2-year history, employer, position,
+      dates, self-employed flags)
+- [ ] **P2-11** Employment backend: queries + audit hook + IPC commands
+- [ ] **P2-12** Employment AI context builder (gaps, stability)
+- [ ] **P2-13** Employment screen UI + sidebar wire + lock check
+- [ ] **P2-14** Income migration expansion (2-yr averages, DTI-relevant
+      fields; extend existing table, MISMO-complete)
+- [ ] **P2-15** Income backend expansion (queries, audit, commands)
+- [ ] **P2-16** Income AI context expansion (usable income calc)
+- [ ] **P2-17** Income screen expansion + replace `IncomeScreen` placeholder
+      patterns with shared screen scaffolding
+
+### Week 3 — Assets + Liabilities
+
+- [ ] **P2-18** Assets migration (checking, savings, retirement, gifts,
+      verification fields)
+- [ ] **P2-19** Assets backend: queries + audit hook + IPC commands
+- [ ] **P2-20** Assets AI context builder (reserves, sourcing, seasoning)
+- [ ] **P2-21** Assets screen UI + sidebar wire + lock check (replaces stub)
+- [ ] **P2-22** Liabilities migration (debt, payments, balances, payoff)
+- [ ] **P2-23** Liabilities backend: queries + audit hook + IPC commands
+- [ ] **P2-24** Liabilities AI context builder (DTI impact)
+- [ ] **P2-25** Liabilities screen UI + sidebar wire + lock check
+
+### Week 4 — Property + REO
+
+- [ ] **P2-26** Property migration (subject address, type, occupancy,
+      appraised value) — replaces demo property stub
+- [ ] **P2-27** Property backend: queries + audit hook + IPC commands
+- [ ] **P2-28** Property AI context builder (eligibility, occupancy)
+- [ ] **P2-29** Property screen UI + sidebar wire + lock check (replaces stub)
+- [ ] **P2-30** REO migration (other properties, value, payment, rental income)
+- [ ] **P2-31** REO backend: queries + audit hook + IPC commands
+- [ ] **P2-32** REO AI context builder (rental income, disposition)
+- [ ] **P2-33** REO screen UI + sidebar wire + lock check
+
+### Week 5 — Declarations + Demographic
+
+- [ ] **P2-34** Declarations migration (the 13 URLA yes/no questions + text)
+- [ ] **P2-35** Declarations backend: queries + audit hook + IPC commands
+- [ ] **P2-36** Declarations AI context builder (flags + explanations)
+- [ ] **P2-37** Declarations screen UI + sidebar wire + lock check
+- [ ] **P2-38** Demographic migration (HMDA monitoring info)
+- [ ] **P2-39** Demographic backend: queries + audit hook + IPC commands
+- [ ] **P2-40** Demographic screen UI + sidebar wire (no AI context —
+      compliance capture only)
+- [ ] **P2-41** Demographic AI context builder (minimal, per spec)
+
+### Week 6 — Loan Overview + consistency review
+
+- [ ] **P2-42** Loan Overview screen (summary card: key numbers, status,
+      who's on it) + nav integration
+- [ ] **P2-43** Cross-screen consistency review: all 10 screens against the
+      pattern checklist (audit on every save, context on every screen,
+      lock check on entry, keybinding, stepper wired)
+- [ ] **P2-44** Week-6 definition-of-done walkthrough: enter a full 1003 in
+      demo + real mode; fix what's broken or confusing; record gaps as
+      Phase 3 items
+
+---
+
+## Queue: Future Stages (outlines — expanded on arrival)
+
+### Phase 3 — Pipeline & Workflow (Oct 15 → Nov 11)
+
+Dashboard AI summary · Loan List filters · Loan Overview · Tasks 2.0 ·
+Documents · Conditions · lock system on every screen + presence.
+**Gate: DEMO-READY.**
+
+### Phase 4 — Pricing & AUS (Nov 12 → Dec 16)
+
+Rate sheets admin · Pricing screen · Pricing AI options · MISMO 3.4
+serializer · DU sandbox · LPA sandbox. **Gate: pilot-credible.**
+⚠ GSE sandbox access must be in hand by week 14.
+
+### Phase 5 — Team, Admin & Polish (Dec 17 → Jan 27)
+
+Setup wizard · Users · Company settings · Closing · Funding · Contacts
+panel · new-user walkthrough. **Gate: PILOT-READY.**
+
+### Phase 6 — Certification & Pilot (Jan 28 → Mar 31)
+
+GSE certification (DU + LPA parallel) · first pilot shop. **Gate: LAUNCH.**
+
+---
+
+## Parallel Track (non-code, checked here so it isn't forgotten)
+
+- [ ] **PT-01** Read Rocket employment agreement (IP / non-compete / non-solicit)
+- [ ] **PT-02** Apply: Fannie Mae Technology Partner program
+- [ ] **PT-03** Apply: Freddie Mac Technology Partner program
+- [ ] **PT-04** Join MISMO (member tier, full 3.4 spec)
+- [ ] **PT-05** Software/IP attorney engaged
+- [ ] **PT-06** EULA / Enterprise License Agreement drafted
+- [ ] **PT-07** IP assignment → Scoracle LLC
+- [ ] **PT-08** Trademark filing, Class 42
