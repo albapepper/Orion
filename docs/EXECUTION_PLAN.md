@@ -104,7 +104,7 @@ consumes later.
 
 ### Week 4 — Property + REO
 
-- [ ] **P2-26** Property migration (subject address, type, occupancy,
+- [x] **P2-26** Property migration (subject address, type, occupancy,
       appraised value) — replaces demo property stub
 - [ ] **P2-27** Property backend: queries + audit hook + IPC commands
 - [ ] **P2-28** Property AI context builder (eligibility, occupancy)
