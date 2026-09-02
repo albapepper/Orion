@@ -68,7 +68,7 @@ consumes later.
 - [x] **P2-05** Loan Terms screen UI + sidebar wire + lock check (lock
       badge shown via header; acquisition deferred to Phase 3, consistent
       with all screens)
-- [ ] **P2-06** Borrower Info migration (name, SSN, DOB, contact, marital,
+- [x] **P2-06** Borrower Info migration (name, SSN, DOB, contact, marital,
       dependents, citizenship — MISMO-complete)
 - [ ] **P2-07** Borrower Info backend: queries + audit hook + IPC commands
 - [ ] **P2-08** Borrower Info AI context builder
