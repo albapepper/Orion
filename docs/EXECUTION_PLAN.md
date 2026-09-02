@@ -93,7 +93,7 @@ consumes later.
 - [x] **P2-18** Assets migration (checking, savings, retirement, gifts,
       verification fields)
 - [x] **P2-19** Assets backend: queries + audit hook + IPC commands
-- [ ] **P2-20** Assets AI context builder (reserves, sourcing, seasoning)
+- [x] **P2-20** Assets AI context builder (reserves, sourcing, seasoning)
 - [ ] **P2-21** Assets screen UI + sidebar wire + lock check (replaces stub)
 - [ ] **P2-22** Liabilities migration (debt, payments, balances, payoff)
 - [ ] **P2-23** Liabilities backend: queries + audit hook + IPC commands
