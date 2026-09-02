@@ -94,6 +94,29 @@ async fn build_context_for_screen(
             };
             Ok(crate::loans::screens::terms::build_context(&name, &terms))
         }
+        "borrower" => {
+            let borrower = match &db {
+                Some(pool) => {
+                    let mut borrowers = crate::db::queries::get_borrowers(pool, loan_id).await?;
+                    if borrowers.is_empty() {
+                        borrowers = demo::borrowers(loan_id);
+                    }
+                    borrowers
+                        .into_iter()
+                        .find(|b| b.is_primary)
+                        .unwrap_or_else(|| demo::borrowers(loan_id)[0].clone())
+                }
+                None => demo::borrowers(loan_id)[0].clone(),
+            };
+            let dependents = match &db {
+                Some(pool) => crate::db::queries::get_dependents(pool, loan_id).await?,
+                None => demo::dependents(loan_id),
+            };
+            Ok(crate::loans::screens::borrower::build_context(
+                &borrower,
+                &dependents,
+            ))
+        }
         _ => Ok(format!(
             "You are a concise, expert mortgage assistant inside the Orion \
              loan origination platform. Current screen: {screen}. Answer \

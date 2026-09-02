@@ -71,7 +71,7 @@ consumes later.
 - [x] **P2-06** Borrower Info migration (name, SSN, DOB, contact, marital,
       dependents, citizenship — MISMO-complete)
 - [x] **P2-07** Borrower Info backend: queries + audit hook + IPC commands
-- [ ] **P2-08** Borrower Info AI context builder
+- [x] **P2-08** Borrower Info AI context builder
 - [ ] **P2-09** Borrower Info screen UI + sidebar wire + lock check
 
 ### Week 2 — Employment + Income expansion
