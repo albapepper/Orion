@@ -167,6 +167,25 @@ async fn build_context_for_screen(
             };
             Ok(crate::loans::screens::property::build_context(&name, &property))
         }
+        "declarations" => {
+            let (name, declarations) = match &db {
+                Some(pool) => {
+                    let borrowers = crate::db::queries::get_borrowers(pool, loan_id).await?;
+                    let name = borrower_name(&borrowers);
+                    let declarations =
+                        crate::db::queries::get_declarations(pool, loan_id).await?;
+                    (name, declarations)
+                }
+                None => (
+                    borrower_name(&demo::borrowers(loan_id)),
+                    demo::declarations(loan_id),
+                ),
+            };
+            Ok(crate::loans::screens::declarations::build_context(
+                &name,
+                &declarations,
+            ))
+        }
         "reo" => {
             let (name, reo) = match &db {
                 Some(pool) => {

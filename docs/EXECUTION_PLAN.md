@@ -118,7 +118,7 @@ consumes later.
 
 - [x] **P2-34** Declarations migration (the 13 URLA yes/no questions + text)
 - [x] **P2-35** Declarations backend: queries + audit hook + IPC commands
-- [ ] **P2-36** Declarations AI context builder (flags + explanations)
+- [x] **P2-36** Declarations AI context builder (flags + explanations)
 - [ ] **P2-37** Declarations screen UI + sidebar wire + lock check
 - [ ] **P2-38** Demographic migration (HMDA monitoring info)
 - [ ] **P2-39** Demographic backend: queries + audit hook + IPC commands
