@@ -81,7 +81,7 @@ consumes later.
 - [x] **P2-11** Employment backend: queries + audit hook + IPC commands
 - [x] **P2-12** Employment AI context builder (gaps, stability)
 - [x] **P2-13** Employment screen UI + sidebar wire + lock check
-- [ ] **P2-14** Income migration expansion (2-yr averages, DTI-relevant
+- [x] **P2-14** Income migration expansion (2-yr averages, DTI-relevant
       fields; extend existing table, MISMO-complete)
 - [ ] **P2-15** Income backend expansion (queries, audit, commands)
 - [ ] **P2-16** Income AI context expansion (usable income calc)
