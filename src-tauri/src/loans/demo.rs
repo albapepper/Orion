@@ -2,8 +2,8 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Borrower, LoanIncome, LoanSummary};
-use chrono::Utc;
+use super::{Borrower, LoanIncome, LoanSummary, LoanTerms};
+use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
 pub const DEMO_LOAN_ID: &str = "00000000-0000-0000-0000-000000000001";
@@ -73,4 +73,21 @@ pub fn income(loan_id: Uuid) -> Vec<LoanIncome> {
             notes: Some("Annual bonus averaged over 12 months".into()),
         },
     ]
+}
+
+pub fn loan_terms(loan_id: Uuid) -> LoanTerms {
+    LoanTerms {
+        id: id("00000000-0000-0000-0000-000000000301"),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        loan_purpose: "purchase".into(),
+        mortgage_type: "conventional".into(),
+        amortization_type: "fixed".into(),
+        loan_amount: Some(560_000.0),
+        interest_rate: Some(6.375),
+        term_months: Some(360),
+        lien_priority: "first".into(),
+        property_value: Some(700_000.0),
+        application_date: NaiveDate::from_ymd_opt(2026, 9, 1),
+    }
 }

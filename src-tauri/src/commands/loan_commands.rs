@@ -1,6 +1,7 @@
 use super::AppState;
-use crate::loans::{demo, Borrower, LoanIncome, LoanSummary};
+use crate::loans::{demo, Borrower, LoanIncome, LoanSummary, LoanTerms};
 use crate::locks::LockInfo;
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 use uuid::Uuid;
@@ -28,6 +29,7 @@ pub struct LoanDetail {
     pub summary: LoanSummary,
     pub borrowers: Vec<Borrower>,
     pub income: Vec<LoanIncome>,
+    pub terms: Option<LoanTerms>,
     pub lock: Option<LockInfo>,
 }
 
@@ -55,6 +57,9 @@ pub async fn get_loan_detail(
             let income = crate::db::queries::get_income(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let terms = crate::db::queries::get_loan_terms(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let lock = crate::locks::get_lock(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -62,6 +67,7 @@ pub async fn get_loan_detail(
                 summary,
                 borrowers,
                 income,
+                terms,
                 lock,
             })
         }
@@ -74,6 +80,7 @@ pub async fn get_loan_detail(
                 summary,
                 borrowers: demo::borrowers(loan_id),
                 income: demo::income(loan_id),
+                terms: Some(demo::loan_terms(loan_id)),
                 lock: None,
             })
         }
@@ -183,4 +190,81 @@ pub async fn get_loan_lock(
     crate::locks::get_lock(&pool, loan_id)
         .await
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_loan_terms(
+    state: State<'_, AppState>,
+    loan_id: String,
+) -> Result<Option<LoanTerms>, String> {
+    let loan_id = parse_uuid(&loan_id)?;
+    let db = state.db.read().await.clone();
+    match db {
+        Some(pool) => crate::db::queries::get_loan_terms(&pool, loan_id)
+            .await
+            .map_err(|e| e.to_string()),
+        None => Ok(Some(demo::loan_terms(loan_id))),
+    }
+}
+
+#[derive(Deserialize)]
+pub struct TermsInput {
+    pub loan_purpose: String,
+    pub mortgage_type: String,
+    pub amortization_type: String,
+    pub loan_amount: Option<f64>,
+    pub interest_rate: Option<f64>,
+    pub term_months: Option<i32>,
+    pub lien_priority: String,
+    pub property_value: Option<f64>,
+    pub application_date: Option<NaiveDate>,
+}
+
+#[tauri::command]
+pub async fn save_loan_terms(
+    state: State<'_, AppState>,
+    loan_id: String,
+    terms: TermsInput,
+) -> Result<LoanTerms, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let saved = crate::db::queries::upsert_loan_terms(
+        &pool,
+        loan_id,
+        company_id,
+        &terms.loan_purpose,
+        &terms.mortgage_type,
+        &terms.amortization_type,
+        terms.loan_amount,
+        terms.interest_rate,
+        terms.term_months,
+        &terms.lien_priority,
+        terms.property_value,
+        terms.application_date,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "terms.update",
+        "loan_terms",
+        saved.id,
+        None,
+        Some(serde_json::to_value(&saved).map_err(|e| e.to_string())?),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
 }

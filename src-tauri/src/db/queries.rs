@@ -1,7 +1,7 @@
 // Runtime-checked sqlx queries. These can be migrated to the compile-time
 // `query!` macros once a dev database + `sqlx prepare` workflow is in place.
 
-use crate::loans::{Borrower, Loan, LoanIncome, LoanSummary};
+use crate::loans::{Borrower, Loan, LoanIncome, LoanSummary, LoanTerms};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -58,6 +58,78 @@ pub async fn get_income(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Vec<Loan
     .fetch_all(pool)
     .await?;
     Ok(rows)
+}
+
+const TERMS_COLUMNS: &str = "id, loan_id, company_id, loan_purpose, mortgage_type,
+    amortization_type, loan_amount::FLOAT8 AS loan_amount, interest_rate::FLOAT8 AS interest_rate,
+    term_months, lien_priority, property_value::FLOAT8 AS property_value, application_date";
+
+pub async fn get_loan_terms(
+    pool: &PgPool,
+    loan_id: Uuid,
+) -> anyhow::Result<Option<LoanTerms>> {
+    let row = sqlx::query_as::<_, LoanTerms>(
+        &format!("SELECT {TERMS_COLUMNS} FROM loan_terms WHERE loan_id = $1"),
+    )
+    .bind(loan_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn upsert_loan_terms(
+    pool: &PgPool,
+    loan_id: Uuid,
+    company_id: Uuid,
+    loan_purpose: &str,
+    mortgage_type: &str,
+    amortization_type: &str,
+    loan_amount: Option<f64>,
+    interest_rate: Option<f64>,
+    term_months: Option<i32>,
+    lien_priority: &str,
+    property_value: Option<f64>,
+    application_date: Option<chrono::NaiveDate>,
+) -> anyhow::Result<LoanTerms> {
+    let row = sqlx::query_as::<_, LoanTerms>(
+        &format!(
+            r#"
+        INSERT INTO loan_terms
+            (id, loan_id, company_id, loan_purpose, mortgage_type, amortization_type,
+             loan_amount, interest_rate, term_months, lien_priority, property_value,
+             application_date, updated_at)
+        VALUES
+            (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())
+        ON CONFLICT (loan_id) DO UPDATE SET
+            loan_purpose = EXCLUDED.loan_purpose,
+            mortgage_type = EXCLUDED.mortgage_type,
+            amortization_type = EXCLUDED.amortization_type,
+            loan_amount = EXCLUDED.loan_amount,
+            interest_rate = EXCLUDED.interest_rate,
+            term_months = EXCLUDED.term_months,
+            lien_priority = EXCLUDED.lien_priority,
+            property_value = EXCLUDED.property_value,
+            application_date = EXCLUDED.application_date,
+            updated_at = now()
+        RETURNING {TERMS_COLUMNS}
+        "#
+        ),
+    )
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(loan_purpose)
+    .bind(mortgage_type)
+    .bind(amortization_type)
+    .bind(loan_amount)
+    .bind(interest_rate)
+    .bind(term_months)
+    .bind(lien_priority)
+    .bind(property_value)
+    .bind(application_date)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
 }
 
 #[allow(clippy::too_many_arguments)]

@@ -63,7 +63,7 @@ consumes later.
 
 - [x] **P2-02** Loan Terms migration (purpose, type, amount, rate, term,
       LTV/CLTV — MISMO-complete)
-- [ ] **P2-03** Loan Terms backend: queries + audit hook + IPC commands
+- [x] **P2-03** Loan Terms backend: queries + audit hook + IPC commands
 - [ ] **P2-04** Loan Terms AI context builder (`build_context`)
 - [ ] **P2-05** Loan Terms screen UI + sidebar wire + lock check
 - [ ] **P2-06** Borrower Info migration (name, SSN, DOB, contact, marital,

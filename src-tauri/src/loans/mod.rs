@@ -1,7 +1,7 @@
 pub mod demo;
 pub mod screens;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -39,6 +39,22 @@ pub struct LoanIncome {
     pub employer_name: Option<String>,
     pub years_on_job: Option<f64>,
     pub notes: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct LoanTerms {
+    pub id: Uuid,
+    pub loan_id: Uuid,
+    pub company_id: Uuid,
+    pub loan_purpose: String,
+    pub mortgage_type: String,
+    pub amortization_type: String,
+    pub loan_amount: Option<f64>,
+    pub interest_rate: Option<f64>,
+    pub term_months: Option<i32>,
+    pub lien_priority: String,
+    pub property_value: Option<f64>,
+    pub application_date: Option<NaiveDate>,
 }
 
 /// A loan row enriched with the primary borrower's name for list views.
