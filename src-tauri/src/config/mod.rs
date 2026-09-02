@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Config {
     #[serde(default)]
     pub database: DatabaseConfig,
@@ -42,16 +42,6 @@ impl Default for AiConfig {
 pub struct AppConfig {
     #[serde(default)]
     pub company_id: String,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            database: DatabaseConfig::default(),
-            ai: AiConfig::default(),
-            app: AppConfig::default(),
-        }
-    }
 }
 
 impl Config {
