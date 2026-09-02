@@ -97,6 +97,19 @@ export interface Asset {
   notes: string | null;
 }
 
+export interface Liability {
+  id: string;
+  borrower_id: string;
+  loan_id: string;
+  company_id: string;
+  liability_type: string;
+  creditor_name: string | null;
+  monthly_payment: number | null;
+  unpaid_balance: number | null;
+  payoff_at_close: boolean;
+  notes: string | null;
+}
+
 export interface LoanDetail {
   summary: LoanSummary;
   borrowers: Borrower[];
@@ -104,6 +117,7 @@ export interface LoanDetail {
   employments: Employment[];
   income: LoanIncome[];
   assets: Asset[];
+  liabilities: Liability[];
   terms: LoanTerms | null;
   lock: LockInfo | null;
 }

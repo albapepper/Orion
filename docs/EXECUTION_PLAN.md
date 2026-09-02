@@ -99,7 +99,8 @@ consumes later.
 - [x] **P2-22** Liabilities migration (debt, payments, balances, payoff)
 - [x] **P2-23** Liabilities backend: queries + audit hook + IPC commands
 - [x] **P2-24** Liabilities AI context builder (DTI impact)
-- [ ] **P2-25** Liabilities screen UI + sidebar wire + lock check
+- [x] **P2-25** Liabilities screen UI + sidebar wire + lock check (new
+      cascade stage after assets, ⌃l)
 
 ### Week 4 — Property + REO
 
