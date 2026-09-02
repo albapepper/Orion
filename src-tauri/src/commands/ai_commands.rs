@@ -117,6 +117,24 @@ async fn build_context_for_screen(
                 &dependents,
             ))
         }
+        "employment" => {
+            let (name, employments) = match &db {
+                Some(pool) => {
+                    let borrowers = crate::db::queries::get_borrowers(pool, loan_id).await?;
+                    let name = borrower_name(&borrowers);
+                    let employments = crate::db::queries::get_employments(pool, loan_id).await?;
+                    (name, employments)
+                }
+                None => (
+                    borrower_name(&demo::borrowers(loan_id)),
+                    demo::employments(loan_id),
+                ),
+            };
+            Ok(crate::loans::screens::employment::build_context(
+                &name,
+                &employments,
+            ))
+        }
         _ => Ok(format!(
             "You are a concise, expert mortgage assistant inside the Orion \
              loan origination platform. Current screen: {screen}. Answer \
