@@ -16,6 +16,20 @@ export interface Borrower {
   email: string | null;
   phone: string | null;
   is_primary: boolean;
+  middle_name: string | null;
+  suffix_name: string | null;
+  ssn: string | null;
+  birth_date: string | null; // ISO date
+  marital_status: string | null;
+  citizenship_status: string | null;
+}
+
+export interface BorrowerDependent {
+  id: string;
+  borrower_id: string;
+  loan_id: string;
+  company_id: string;
+  age: number | null;
 }
 
 export interface LoanIncome {
@@ -55,6 +69,7 @@ export interface LoanTerms {
 export interface LoanDetail {
   summary: LoanSummary;
   borrowers: Borrower[];
+  dependents: BorrowerDependent[];
   income: LoanIncome[];
   terms: LoanTerms | null;
   lock: LockInfo | null;

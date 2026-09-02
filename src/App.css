@@ -542,6 +542,23 @@ button.primary.small {
   font-size: 13px;
 }
 
+button.ghost {
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  padding: 8px 14px;
+  font-weight: 600;
+}
+
+button.ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button.ghost.small {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
 .form-error {
   margin-top: 10px;
   color: var(--red);
@@ -698,6 +715,65 @@ button.primary.small {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-dim);
+}
+
+/* ── Borrower screen: co-borrower tabs + dependents ──── */
+
+.borrower-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.borrower-tab {
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.borrower-tab:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.borrower-tab.active {
+  color: var(--text);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.dependents-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.dep-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dep-row:last-child {
+  border-bottom: none;
+}
+
+.dep-index {
+  color: var(--text-dim);
+  width: 18px;
+}
+
+.dep-row input {
+  width: 90px;
+  padding: 7px 10px;
+}
+
+.dep-remove {
+  margin-left: auto;
 }
 
 /* ── Inline save feedback ────────────────────────────── */

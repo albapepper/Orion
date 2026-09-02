@@ -7,6 +7,7 @@ import { KeyLegend } from './components/KeyLegend';
 import { Dashboard } from './screens/Dashboard';
 import { IncomeScreen } from './screens/loan/IncomeScreen';
 import { TermsScreen } from './screens/loan/TermsScreen';
+import { BorrowerScreen } from './screens/loan/BorrowerScreen';
 import { StubScreen } from './screens/loan/StubScreen';
 import { LOAN_SCREENS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import './App.css';
@@ -47,8 +48,8 @@ function App() {
     if (loanId) navigate({ name: id as LoanScreen, loanId });
   };
 
-  // Entering a loan starts at the top of the cascade
-  const openLoan = (loan: LoanSummary) => navigate({ name: 'property', loanId: loan.id });
+  // Entering a loan starts at the top of the cascade: the borrower
+  const openLoan = (loan: LoanSummary) => navigate({ name: 'borrower', loanId: loan.id });
 
   // Walk the cascade without leaving the loan
   const shiftStage = (dir: 1 | -1) => {
@@ -146,6 +147,13 @@ function App() {
           </Match>
           <Match when={route().name === 'income'}>
             <IncomeScreen
+              loanId={(route() as { loanId: string }).loanId}
+              demo={status() ? !status()!.db_connected : false}
+              onNavigate={openScreen}
+            />
+          </Match>
+          <Match when={route().name === 'borrower'}>
+            <BorrowerScreen
               loanId={(route() as { loanId: string }).loanId}
               demo={status() ? !status()!.db_connected : false}
               onNavigate={openScreen}

@@ -72,7 +72,7 @@ consumes later.
       dependents, citizenship — MISMO-complete)
 - [x] **P2-07** Borrower Info backend: queries + audit hook + IPC commands
 - [x] **P2-08** Borrower Info AI context builder
-- [ ] **P2-09** Borrower Info screen UI + sidebar wire + lock check
+- [x] **P2-09** Borrower Info screen UI + sidebar wire + lock check
 
 ### Week 2 — Employment + Income expansion
 
