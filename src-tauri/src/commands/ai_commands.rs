@@ -52,34 +52,47 @@ async fn build_context_for_screen(
 ) -> anyhow::Result<String> {
     let db = state.db.read().await.clone();
 
+    let borrower_name = |borrowers: &[crate::loans::Borrower]| {
+        borrowers
+            .iter()
+            .find(|b| b.is_primary)
+            .or(borrowers.first())
+            .map(|b| format!("{} {}", b.first_name, b.last_name))
+            .unwrap_or_else(|| "Unknown borrower".to_string())
+    };
+
     match screen {
         "income" => {
-            let (income, borrower_name) = match db {
+            let (income, name) = match &db {
                 Some(pool) => {
-                    let income = crate::db::queries::get_income(&pool, loan_id).await?;
-                    let borrowers = crate::db::queries::get_borrowers(&pool, loan_id).await?;
-                    let name = borrowers
-                        .iter()
-                        .find(|b| b.is_primary)
-                        .or(borrowers.first())
-                        .map(|b| format!("{} {}", b.first_name, b.last_name))
-                        .unwrap_or_else(|| "Unknown borrower".to_string());
+                    let income = crate::db::queries::get_income(pool, loan_id).await?;
+                    let name = borrower_name(&crate::db::queries::get_borrowers(pool, loan_id).await?);
                     (income, name)
                 }
-                None => {
-                    let borrowers = demo::borrowers(loan_id);
-                    let name = borrowers
-                        .first()
-                        .map(|b| format!("{} {}", b.first_name, b.last_name))
-                        .unwrap_or_default();
-                    (demo::income(loan_id), name)
-                }
+                None => (demo::income(loan_id), borrower_name(&demo::borrowers(loan_id))),
             };
             Ok(crate::loans::screens::income::build_context(
-                &borrower_name,
+                &name,
                 &income,
                 "conventional",
             ))
+        }
+        "terms" => {
+            let terms = match &db {
+                Some(pool) => {
+                    crate::db::queries::get_loan_terms(pool, loan_id)
+                        .await?
+                        .unwrap_or_else(|| demo::loan_terms(loan_id))
+                }
+                None => demo::loan_terms(loan_id),
+            };
+            let name = match &db {
+                Some(pool) => {
+                    borrower_name(&crate::db::queries::get_borrowers(pool, loan_id).await?)
+                }
+                None => borrower_name(&demo::borrowers(loan_id)),
+            };
+            Ok(crate::loans::screens::terms::build_context(&name, &terms))
         }
         _ => Ok(format!(
             "You are a concise, expert mortgage assistant inside the Orion \
