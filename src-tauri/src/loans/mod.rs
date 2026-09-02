@@ -26,6 +26,22 @@ pub struct Borrower {
     pub email: Option<String>,
     pub phone: Option<String>,
     pub is_primary: bool,
+    pub middle_name: Option<String>,
+    pub suffix_name: Option<String>,
+    /// Never logged to audit or sent to AI verbatim — masked last-4 only.
+    pub ssn: Option<String>,
+    pub birth_date: Option<NaiveDate>,
+    pub marital_status: Option<String>,
+    pub citizenship_status: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct BorrowerDependent {
+    pub id: Uuid,
+    pub borrower_id: Uuid,
+    pub loan_id: Uuid,
+    pub company_id: Uuid,
+    pub age: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]

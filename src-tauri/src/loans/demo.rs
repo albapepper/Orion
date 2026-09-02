@@ -2,7 +2,7 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Borrower, LoanIncome, LoanSummary, LoanTerms};
+use super::{Borrower, BorrowerDependent, LoanIncome, LoanSummary, LoanTerms};
 use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
@@ -45,7 +45,32 @@ pub fn borrowers(loan_id: Uuid) -> Vec<Borrower> {
         email: Some("jordan.ellis@example.com".into()),
         phone: Some("555-0142".into()),
         is_primary: true,
+        middle_name: Some("Alex".into()),
+        suffix_name: None,
+        ssn: Some("123-45-6789".into()),
+        birth_date: NaiveDate::from_ymd_opt(1985, 3, 14),
+        marital_status: Some("married".into()),
+        citizenship_status: Some("us_citizen".into()),
     }]
+}
+
+pub fn dependents(loan_id: Uuid) -> Vec<BorrowerDependent> {
+    vec![
+        BorrowerDependent {
+            id: id("00000000-0000-0000-0000-000000000401"),
+            borrower_id: id(DEMO_BORROWER_ID),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            age: Some(12),
+        },
+        BorrowerDependent {
+            id: id("00000000-0000-0000-0000-000000000402"),
+            borrower_id: id(DEMO_BORROWER_ID),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            age: Some(7),
+        },
+    ]
 }
 
 pub fn income(loan_id: Uuid) -> Vec<LoanIncome> {

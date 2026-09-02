@@ -1,5 +1,5 @@
 use super::AppState;
-use crate::loans::{demo, Borrower, LoanIncome, LoanSummary, LoanTerms};
+use crate::loans::{demo, Borrower, BorrowerDependent, LoanIncome, LoanSummary, LoanTerms};
 use crate::locks::LockInfo;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -28,9 +28,26 @@ pub async fn list_loans(state: State<'_, AppState>) -> Result<Vec<LoanSummary>, 
 pub struct LoanDetail {
     pub summary: LoanSummary,
     pub borrowers: Vec<Borrower>,
+    pub dependents: Vec<BorrowerDependent>,
     pub income: Vec<LoanIncome>,
     pub terms: Option<LoanTerms>,
     pub lock: Option<LockInfo>,
+}
+
+/// Audit payloads must never carry a full SSN — mask to last-4.
+fn mask_ssn_in(payload: &mut serde_json::Value) {
+    if let Some(obj) = payload.as_object_mut() {
+        let masked = obj
+            .get("ssn")
+            .and_then(|v| v.as_str())
+            .and_then(|s| s.get(s.len().saturating_sub(4)..))
+            .map(|last4| format!("***-**-{last4}"));
+        if let Some(m) = masked {
+            obj.insert("ssn".into(), serde_json::Value::String(m));
+        } else {
+            obj.insert("ssn".into(), serde_json::Value::Null);
+        }
+    }
 }
 
 #[tauri::command]
@@ -54,6 +71,9 @@ pub async fn get_loan_detail(
             let borrowers = crate::db::queries::get_borrowers(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let dependents = crate::db::queries::get_dependents(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let income = crate::db::queries::get_income(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -66,6 +86,7 @@ pub async fn get_loan_detail(
             Ok(LoanDetail {
                 summary,
                 borrowers,
+                dependents,
                 income,
                 terms,
                 lock,
@@ -79,6 +100,7 @@ pub async fn get_loan_detail(
             Ok(LoanDetail {
                 summary,
                 borrowers: demo::borrowers(loan_id),
+                dependents: demo::dependents(loan_id),
                 income: demo::income(loan_id),
                 terms: Some(demo::loan_terms(loan_id)),
                 lock: None,
@@ -262,6 +284,122 @@ pub async fn save_loan_terms(
         saved.id,
         None,
         Some(serde_json::to_value(&saved).map_err(|e| e.to_string())?),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
+#[derive(Deserialize)]
+pub struct BorrowerInput {
+    pub first_name: String,
+    pub last_name: String,
+    pub middle_name: Option<String>,
+    pub suffix_name: Option<String>,
+    pub ssn: Option<String>,
+    pub birth_date: Option<NaiveDate>,
+    pub marital_status: Option<String>,
+    pub citizenship_status: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+}
+
+#[tauri::command]
+pub async fn save_borrower(
+    state: State<'_, AppState>,
+    borrower_id: String,
+    borrower: BorrowerInput,
+) -> Result<Borrower, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let borrower_id = parse_uuid(&borrower_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let saved = crate::db::queries::save_borrower(
+        &pool,
+        borrower_id,
+        &borrower.first_name,
+        &borrower.last_name,
+        borrower.middle_name.as_deref(),
+        borrower.suffix_name.as_deref(),
+        borrower.ssn.as_deref(),
+        borrower.birth_date,
+        borrower.marital_status.as_deref(),
+        borrower.citizenship_status.as_deref(),
+        borrower.email.as_deref(),
+        borrower.phone.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let mut payload = serde_json::to_value(&saved).map_err(|e| e.to_string())?;
+    mask_ssn_in(&mut payload);
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(saved.loan_id),
+        user_id,
+        "borrower.update",
+        "borrowers",
+        saved.id,
+        None,
+        Some(payload),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
+#[derive(Deserialize)]
+pub struct DependentsInput {
+    pub borrower_id: String,
+    /// One entry per dependent; age optional (URLA allows "not yet born").
+    pub ages: Vec<Option<i32>>,
+}
+
+#[tauri::command]
+pub async fn save_dependents(
+    state: State<'_, AppState>,
+    loan_id: String,
+    input: DependentsInput,
+) -> Result<Vec<BorrowerDependent>, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let borrower_id = parse_uuid(&input.borrower_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let saved = crate::db::queries::replace_dependents(
+        &pool,
+        borrower_id,
+        loan_id,
+        company_id,
+        &input.ages,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "dependents.replace",
+        "borrower_dependents",
+        borrower_id,
+        None,
+        Some(serde_json::json!({ "dependent_count": saved.len() })),
     )
     .await
     .map_err(|e| e.to_string())?;

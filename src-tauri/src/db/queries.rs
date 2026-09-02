@@ -1,7 +1,7 @@
 // Runtime-checked sqlx queries. These can be migrated to the compile-time
 // `query!` macros once a dev database + `sqlx prepare` workflow is in place.
 
-use crate::loans::{Borrower, Loan, LoanIncome, LoanSummary, LoanTerms};
+use crate::loans::{Borrower, BorrowerDependent, Loan, LoanIncome, LoanSummary, LoanTerms};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -34,12 +34,108 @@ pub async fn get_loan(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Option<Loa
 
 pub async fn get_borrowers(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Vec<Borrower>> {
     let rows = sqlx::query_as::<_, Borrower>(
-        "SELECT id, loan_id, company_id, first_name, last_name, email, phone, is_primary
-         FROM borrowers WHERE loan_id = $1 ORDER BY is_primary DESC, last_name",
+        r#"
+        SELECT id, loan_id, company_id, first_name, last_name, email, phone, is_primary,
+               middle_name, suffix_name, ssn,
+               birth_date, marital_status, citizenship_status
+        FROM borrowers WHERE loan_id = $1 ORDER BY is_primary DESC, last_name
+        "#,
     )
     .bind(loan_id)
     .fetch_all(pool)
     .await?;
+    Ok(rows)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn save_borrower(
+    pool: &PgPool,
+    borrower_id: Uuid,
+    first_name: &str,
+    last_name: &str,
+    middle_name: Option<&str>,
+    suffix_name: Option<&str>,
+    ssn: Option<&str>,
+    birth_date: Option<chrono::NaiveDate>,
+    marital_status: Option<&str>,
+    citizenship_status: Option<&str>,
+    email: Option<&str>,
+    phone: Option<&str>,
+) -> anyhow::Result<Borrower> {
+    let row = sqlx::query_as::<_, Borrower>(
+        r#"
+        UPDATE borrowers SET
+            first_name = $2, last_name = $3, middle_name = $4, suffix_name = $5,
+            ssn = $6, birth_date = $7, marital_status = $8, citizenship_status = $9,
+            email = $10, phone = $11
+        WHERE id = $1
+        RETURNING id, loan_id, company_id, first_name, last_name, email, phone, is_primary,
+                  middle_name, suffix_name, ssn,
+                  birth_date, marital_status, citizenship_status
+        "#,
+    )
+    .bind(borrower_id)
+    .bind(first_name)
+    .bind(last_name)
+    .bind(middle_name)
+    .bind(suffix_name)
+    .bind(ssn)
+    .bind(birth_date)
+    .bind(marital_status)
+    .bind(citizenship_status)
+    .bind(email)
+    .bind(phone)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn get_dependents(
+    pool: &PgPool,
+    loan_id: Uuid,
+) -> anyhow::Result<Vec<BorrowerDependent>> {
+    let rows = sqlx::query_as::<_, BorrowerDependent>(
+        "SELECT id, borrower_id, loan_id, company_id, age
+         FROM borrower_dependents WHERE loan_id = $1 ORDER BY borrower_id, created_at",
+    )
+    .bind(loan_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+/// Dependents are edited as a list of ages: replace-all is the honest
+/// model (MISMO carries a count + age list, not identified individuals).
+pub async fn replace_dependents(
+    pool: &PgPool,
+    borrower_id: Uuid,
+    loan_id: Uuid,
+    company_id: Uuid,
+    ages: &[Option<i32>],
+) -> anyhow::Result<Vec<BorrowerDependent>> {
+    let mut tx = pool.begin().await?;
+    sqlx::query("DELETE FROM borrower_dependents WHERE borrower_id = $1")
+        .bind(borrower_id)
+        .execute(&mut *tx)
+        .await?;
+    let mut rows = Vec::with_capacity(ages.len());
+    for age in ages {
+        let row = sqlx::query_as::<_, BorrowerDependent>(
+            r#"
+            INSERT INTO borrower_dependents (borrower_id, loan_id, company_id, age)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, borrower_id, loan_id, company_id, age
+            "#,
+        )
+        .bind(borrower_id)
+        .bind(loan_id)
+        .bind(company_id)
+        .bind(age)
+        .fetch_one(&mut *tx)
+        .await?;
+        rows.push(row);
+    }
+    tx.commit().await?;
     Ok(rows)
 }
 
