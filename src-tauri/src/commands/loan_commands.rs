@@ -35,6 +35,7 @@ pub struct LoanDetail {
     pub liabilities: Vec<crate::loans::Liability>,
     pub property: Option<crate::loans::SubjectProperty>,
     pub reo: Vec<crate::loans::ReoProperty>,
+    pub declarations: Vec<crate::loans::Declaration>,
     pub terms: Option<LoanTerms>,
     pub lock: Option<LockInfo>,
 }
@@ -94,6 +95,9 @@ pub async fn get_loan_detail(
             let reo = crate::db::queries::get_reo(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let declarations = crate::db::queries::get_declarations(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let income = crate::db::queries::get_income(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -113,6 +117,7 @@ pub async fn get_loan_detail(
                 liabilities,
                 property,
                 reo,
+                declarations,
                 terms,
                 lock,
             })
@@ -132,6 +137,7 @@ pub async fn get_loan_detail(
                 liabilities: demo::liabilities(loan_id),
                 property: Some(demo::subject_property(loan_id)),
                 reo: demo::reo(loan_id),
+                declarations: demo::declarations(loan_id),
                 terms: Some(demo::loan_terms(loan_id)),
                 lock: None,
             })
@@ -929,4 +935,57 @@ pub async fn delete_reo(
         .map_err(|e| e.to_string())?;
     }
     Ok(())
+}
+
+#[derive(Deserialize)]
+pub struct DeclarationInput {
+    pub borrower_id: String,
+    pub question_key: String,
+    pub answer: Option<bool>,
+    pub explanation: Option<String>,
+}
+
+#[tauri::command]
+pub async fn save_declaration(
+    state: State<'_, AppState>,
+    loan_id: String,
+    declaration: DeclarationInput,
+) -> Result<crate::loans::Declaration, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let borrower_id = parse_uuid(&declaration.borrower_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let saved = crate::db::queries::upsert_declaration(
+        &pool,
+        borrower_id,
+        loan_id,
+        company_id,
+        &declaration.question_key,
+        declaration.answer,
+        declaration.explanation.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "declaration.update",
+        "loan_declarations",
+        saved.id,
+        None,
+        Some(serde_json::to_value(&saved).map_err(|e| e.to_string())?),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
 }

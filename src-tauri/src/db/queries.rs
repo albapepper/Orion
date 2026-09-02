@@ -710,3 +710,50 @@ pub async fn delete_reo(pool: &PgPool, id: Uuid) -> anyhow::Result<()> {
         .await?;
     Ok(())
 }
+
+pub async fn get_declarations(
+    pool: &PgPool,
+    loan_id: Uuid,
+) -> anyhow::Result<Vec<crate::loans::Declaration>> {
+    let rows = sqlx::query_as::<_, crate::loans::Declaration>(
+        "SELECT id, borrower_id, loan_id, company_id, question_key, answer, explanation
+         FROM loan_declarations WHERE loan_id = $1
+         ORDER BY borrower_id, question_key",
+    )
+    .bind(loan_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+pub async fn upsert_declaration(
+    pool: &PgPool,
+    borrower_id: Uuid,
+    loan_id: Uuid,
+    company_id: Uuid,
+    question_key: &str,
+    answer: Option<bool>,
+    explanation: Option<&str>,
+) -> anyhow::Result<crate::loans::Declaration> {
+    let row = sqlx::query_as::<_, crate::loans::Declaration>(
+        r#"
+        INSERT INTO loan_declarations
+            (borrower_id, loan_id, company_id, question_key, answer, explanation, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, now())
+        ON CONFLICT (borrower_id, question_key) DO UPDATE SET
+            answer = EXCLUDED.answer,
+            explanation = EXCLUDED.explanation,
+            updated_at = now()
+        RETURNING id, borrower_id, loan_id, company_id, question_key, answer, explanation
+        "#,
+    )
+    .bind(borrower_id)
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(question_key)
+    .bind(answer)
+    .bind(explanation)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}

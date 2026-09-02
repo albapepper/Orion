@@ -2,7 +2,7 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Asset, Borrower, BorrowerDependent, Employment, Liability, LoanIncome, LoanSummary, LoanTerms, ReoProperty, SubjectProperty};
+use super::{Asset, Borrower, BorrowerDependent, Declaration, Employment, Liability, LoanIncome, LoanSummary, LoanTerms, ReoProperty, SubjectProperty};
 use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
@@ -261,4 +261,23 @@ pub fn reo(loan_id: Uuid) -> Vec<ReoProperty> {
         disposition: "pending_sale".into(),
         notes: Some("Closing mid-October".into()),
     }]
+}
+
+pub fn declarations(loan_id: Uuid) -> Vec<Declaration> {
+    let decl = |key: &str, did: &str, answer: Option<bool>, explanation: Option<&str>| Declaration {
+        id: id(did),
+        borrower_id: id(DEMO_BORROWER_ID),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        question_key: key.into(),
+        answer,
+        explanation: explanation.map(|e| e.into()),
+    };
+    vec![
+        decl("primary_residence", "00000000-0000-0000-0000-000000000a01", Some(true), None),
+        decl("us_citizen", "00000000-0000-0000-0000-000000000a02", Some(true), None),
+        decl("bankruptcy_7yr", "00000000-0000-0000-0000-000000000a03", Some(false), None),
+        decl("alimony_child_support", "00000000-0000-0000-0000-000000000a04", Some(true), Some("$450/month until 2031, per divorce decree")),
+
+    ]
 }

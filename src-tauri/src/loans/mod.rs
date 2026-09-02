@@ -116,6 +116,17 @@ pub struct ReoProperty {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct Declaration {
+    pub id: Uuid,
+    pub borrower_id: Uuid,
+    pub loan_id: Uuid,
+    pub company_id: Uuid,
+    pub question_key: String,
+    pub answer: Option<bool>,
+    pub explanation: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct BorrowerDependent {
     pub id: Uuid,
     pub borrower_id: Uuid,

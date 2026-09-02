@@ -60,6 +60,7 @@ pub fn run() {
             commands::loan_commands::save_subject_property,
             commands::loan_commands::save_reo,
             commands::loan_commands::delete_reo,
+            commands::loan_commands::save_declaration,
             commands::loan_commands::acquire_loan_lock,
             commands::loan_commands::release_loan_lock,
             commands::loan_commands::get_loan_lock,
