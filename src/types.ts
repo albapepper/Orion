@@ -126,6 +126,23 @@ export interface SubjectProperty {
   notes: string | null;
 }
 
+export interface ReoProperty {
+  id: string;
+  borrower_id: string;
+  loan_id: string;
+  company_id: string;
+  address_line: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  property_type: string;
+  market_value: number | null;
+  mortgage_payment: number | null;
+  rental_income: number | null;
+  disposition: string;
+  notes: string | null;
+}
+
 export interface LoanDetail {
   summary: LoanSummary;
   borrowers: Borrower[];
@@ -135,6 +152,7 @@ export interface LoanDetail {
   assets: Asset[];
   liabilities: Liability[];
   property: SubjectProperty | null;
+  reo: ReoProperty[];
   terms: LoanTerms | null;
   lock: LockInfo | null;
 }

@@ -8,7 +8,7 @@ export interface NavItem {
 }
 
 // Loan screens follow the cascade:
-// borrower → employment → property → terms → credit → income → assets → liabilities
+// borrower → employment → property → terms → credit → income → assets → liabilities → REO
 export const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', key: 'd' },
   { id: 'borrower', label: 'Borrower', key: 'b' },
@@ -19,6 +19,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'income', label: 'Income', key: 'i' },
   { id: 'assets', label: 'Assets', key: 'a' },
   { id: 'liabilities', label: 'Liabilities', key: 'l' },
+  { id: 'reo', label: 'REO', key: 'r' },
 ];
 
 interface Props {
