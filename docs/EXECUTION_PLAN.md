@@ -111,7 +111,7 @@ consumes later.
 - [x] **P2-29** Property screen UI + sidebar wire + lock check (replaces stub)
 - [x] **P2-30** REO migration (other properties, value, payment, rental income)
 - [x] **P2-31** REO backend: queries + audit hook + IPC commands
-- [ ] **P2-32** REO AI context builder (rental income, disposition)
+- [x] **P2-32** REO AI context builder (rental income, disposition)
 - [ ] **P2-33** REO screen UI + sidebar wire + lock check
 
 ### Week 5 — Declarations + Demographic
