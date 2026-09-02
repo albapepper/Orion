@@ -17,6 +17,35 @@ SaaS, no vendor-hosted data.
 - **Local AI by default** — Ollama on-device, zero per-query cost, no data
   leaves the building; cloud AI is a config switch, not a rewrite
 
+## Design notes
+
+**Mouseless functionality is an architectural goal, not a feature.** The
+legacy Unix systems Orion replaces are fully keyboard-driven, and power users
+process loans faster that way. Every capability we ship must be reachable
+without a mouse; the mouse makes things *discoverable*, the keyboard makes
+them *fast*. Concretely:
+
+- Every screen and panel gets a keybinding the moment it exists — never
+  "keyboard support later"
+- `?` opens the keyboard legend from anywhere; keycaps are rendered inline in
+  the NavTray so bindings are learned passively
+- `Home` is the universal back button
+- `/` focuses the assistant from anywhere; `Esc` always dismisses / unfocuses
+- New commands should be wired for both the assistant and direct keys
+
+Current bindings: `d` dashboard · `i/a/c/p` income/assets/credit/property ·
+`1–9` nth recent loan · `/` assistant · `[` collapse NavTray · `Home` back ·
+`?` legend · `Esc` close.
+
+**Layout** is three fixed columns: **NavTray** (left — all navigation:
+screens, recent loans, collapse toggle, app name), **workspace** (center),
+**ChatBox** (right — all things AI, headed by the active model identifier so
+users always know what model they're talking to). No top header.
+
+**Visual language:** dark roast brown palette, copper accent, hard edges —
+zero border radius, 1px borders, monospace numerals. Modern-Linux feel
+(COSMIC / Omarchy), not 2025 SaaS.
+
 ## Stack
 
 Tauri v2 · SolidJS + TypeScript · Rust · sqlx (Postgres) · Tokio · Ollama

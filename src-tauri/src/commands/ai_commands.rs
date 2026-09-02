@@ -7,17 +7,30 @@ use uuid::Uuid;
 #[tauri::command]
 pub async fn ai_chat(
     state: State<'_, AppState>,
-    loan_id: String,
+    loan_id: Option<String>,
     screen: String,
     messages: Vec<Message>,
     thinking: Option<bool>,
 ) -> Result<AiResponse, String> {
-    let loan_id = Uuid::parse_str(&loan_id).map_err(|e| e.to_string())?;
+    let loan_id = loan_id
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .map(Uuid::parse_str)
+        .transpose()
+        .map_err(|e| e.to_string())?;
 
     // Build screen-appropriate context from current loan data
-    let system_context = build_context_for_screen(&state, loan_id, &screen)
-        .await
-        .map_err(|e| e.to_string())?;
+    let system_context = match loan_id {
+        Some(id) => build_context_for_screen(&state, id, &screen)
+            .await
+            .map_err(|e| e.to_string())?,
+        None => format!(
+            "You are a concise, expert mortgage assistant inside the Orion \
+             loan origination platform. No loan is currently open. Current \
+             screen: {screen}. Help the user navigate their pipeline and \
+             answer general origination questions briefly."
+        ),
+    };
 
     let thinking = match thinking {
         Some(t) => t,

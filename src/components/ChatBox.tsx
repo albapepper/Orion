@@ -1,6 +1,6 @@
-import { createSignal, For, Show } from 'solid-js';
+import { createSignal, For, onCleanup, onMount, Show } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
-import type { AiResponse } from '../types';
+import type { AiResponse, AppStatus } from '../types';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -8,22 +8,28 @@ interface Message {
 }
 
 interface Props {
-  loanId: string;
-  screen: string; // passed from whichever screen is active
+  loanId: string | null;
+  screen: string; // whichever screen is active
+  status?: AppStatus;
 }
 
-export function AiSidebar(props: Props) {
+export function ChatBox(props: Props) {
   const [messages, setMessages] = createSignal<Message[]>([]);
   const [input, setInput] = createSignal('');
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  let inputRef: HTMLInputElement | undefined;
+
+  // "/" anywhere in the app focuses the chat input
+  const focusHandler = () => inputRef?.focus();
+  onMount(() => window.addEventListener('orion:focus-chat', focusHandler));
+  onCleanup(() => window.removeEventListener('orion:focus-chat', focusHandler));
 
   const send = async () => {
     const text = input().trim();
     if (!text || loading()) return;
 
-    const userMsg: Message = { role: 'user', content: text };
-    setMessages((m) => [...m, userMsg]);
+    setMessages((m) => [...m, { role: 'user', content: text }]);
     setInput('');
     setLoading(true);
     setError(null);
@@ -43,17 +49,21 @@ export function AiSidebar(props: Props) {
   };
 
   return (
-    <aside class="ai-sidebar">
-      <div class="ai-header">
-        <span class="ai-title">AI Assistant</span>
+    <aside class="chat-box">
+      <div class="chat-header">
+        <div class="chat-model">
+          <span class="model-dot" />
+          <span class="model-name">{props.status?.ai_model ?? '…'}</span>
+          <span class="model-provider">{props.status?.ai_provider ?? ''}</span>
+        </div>
         <span class="screen-badge">{props.screen}</span>
       </div>
 
-      <div class="ai-messages">
+      <div class="chat-messages">
         <Show when={messages().length === 0 && !loading()}>
-          <div class="ai-empty">
-            Ask anything about this loan's {props.screen} data — answers use
-            what's on screen right now.
+          <div class="chat-empty">
+            Context-aware chat for the {props.screen} screen. Press{' '}
+            <kbd class="keycap inline">/</kbd> to type from anywhere.
           </div>
         </Show>
         <For each={messages()}>
@@ -65,12 +75,16 @@ export function AiSidebar(props: Props) {
         </Show>
       </div>
 
-      <div class="ai-input">
+      <div class="chat-input">
         <input
+          ref={inputRef}
           type="text"
           value={input()}
           onInput={(e) => setInput(e.currentTarget.value)}
-          onKeyDown={(e) => e.key === 'Enter' && send()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') send();
+            if (e.key === 'Escape') e.currentTarget.blur();
+          }}
           placeholder={`Ask about ${props.screen}…`}
           disabled={loading()}
         />

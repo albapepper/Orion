@@ -1,79 +1,156 @@
-import { createResource, createSignal, Match, Show, Switch } from 'solid-js';
+import { createResource, createSignal, Match, onCleanup, onMount, Switch } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
 import type { AppStatus, LoanSummary } from './types';
+import { NavTray } from './components/NavTray';
+import { ChatBox } from './components/ChatBox';
+import { KeyLegend } from './components/KeyLegend';
 import { Dashboard } from './screens/Dashboard';
-import { LoanList } from './screens/LoanList';
 import { IncomeScreen } from './screens/loan/IncomeScreen';
+import { StubScreen } from './screens/loan/StubScreen';
 import './App.css';
 
-type Route =
-  | { name: 'dashboard' }
-  | { name: 'loans' }
-  | { name: 'income'; loanId: string };
+type LoanScreen = 'income' | 'assets' | 'credit' | 'property';
+
+type Route = { name: 'dashboard' } | { name: LoanScreen; loanId: string };
+
+const LOAN_SCREENS: LoanScreen[] = ['income', 'assets', 'credit', 'property'];
+const SCREEN_LABELS: Record<LoanScreen, string> = {
+  income: 'Income Analysis',
+  assets: 'Assets',
+  credit: 'Credit',
+  property: 'Property',
+};
 
 function App() {
   const [route, setRoute] = createSignal<Route>({ name: 'dashboard' });
-  const [status] = createResource(() => invoke<AppStatus>('get_status'));
+  const [history, setHistory] = createSignal<Route[]>([]);
+  const [trayCollapsed, setTrayCollapsed] = createSignal(false);
+  const [legendOpen, setLegendOpen] = createSignal(false);
+  const [activeLoanId, setActiveLoanId] = createSignal<string | null>(null);
 
-  const openLoan = (loan: LoanSummary) =>
-    setRoute({ name: 'income', loanId: loan.id });
+  const [status] = createResource(() => invoke<AppStatus>('get_status'));
+  const [loans] = createResource(() => invoke<LoanSummary[]>('list_loans'));
+
+  const navigate = (next: Route) => {
+    setHistory((h) => [...h, route()]);
+    setRoute(next);
+    if ('loanId' in next) setActiveLoanId(next.loanId);
+  };
+
+  const goBack = () => {
+    const h = history();
+    if (h.length === 0) return;
+    setRoute(h[h.length - 1]);
+    setHistory(h.slice(0, -1));
+  };
+
+  // Navigating to a loan screen with no loan open falls back to the top
+  // recent loan, so keyboard-only flow never dead-ends.
+  const openScreen = (id: string) => {
+    if (id === 'dashboard') {
+      navigate({ name: 'dashboard' });
+      return;
+    }
+    const loanId = activeLoanId() ?? loans()?.[0]?.id;
+    if (loanId) navigate({ name: id as LoanScreen, loanId });
+  };
+
+  const openLoan = (loan: LoanSummary) => navigate({ name: 'income', loanId: loan.id });
+
+  const inEditor = (el: EventTarget | null) =>
+    el instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    if (e.key === 'Escape') {
+      if (legendOpen()) setLegendOpen(false);
+      else if (inEditor(e.target)) (e.target as HTMLElement).blur();
+      return;
+    }
+
+    if (inEditor(e.target)) return;
+
+    switch (e.key) {
+      case 'd':
+        openScreen('dashboard');
+        break;
+      case 'i':
+      case 'a':
+      case 'c':
+      case 'p':
+        openScreen(
+          LOAN_SCREENS.find((s) => s.startsWith(e.key))!,
+        );
+        break;
+      case '/':
+        e.preventDefault();
+        window.dispatchEvent(new Event('orion:focus-chat'));
+        break;
+      case '?':
+        setLegendOpen((v) => !v);
+        break;
+      case '[':
+        setTrayCollapsed((v) => !v);
+        break;
+      case 'Home':
+        e.preventDefault();
+        goBack();
+        break;
+      default: {
+        const n = parseInt(e.key, 10);
+        if (n >= 1 && n <= 9) {
+          const loan = loans()?.[n - 1];
+          if (loan) openLoan(loan);
+        }
+      }
+    }
+  };
+
+  onMount(() => window.addEventListener('keydown', onKeyDown));
+  onCleanup(() => window.removeEventListener('keydown', onKeyDown));
+
+  const currentLoanId = () => {
+    const r = route();
+    return 'loanId' in r ? r.loanId : activeLoanId();
+  };
 
   return (
     <div class="app">
-      <nav class="topbar">
-        <div class="brand">
-          <span class="brand-mark">◆</span> Orion
-        </div>
-        <div class="topbar-nav">
-          <button
-            classList={{ active: route().name === 'dashboard' }}
-            onClick={() => setRoute({ name: 'dashboard' })}
-          >
-            Dashboard
-          </button>
-          <button
-            classList={{ active: route().name !== 'dashboard' }}
-            onClick={() => setRoute({ name: 'loans' })}
-          >
-            Loans
-          </button>
-        </div>
-        <div class="topbar-status">
-          <Show when={status()}>
-            <span
-              class="env-badge"
-              classList={{ warn: !status()!.db_connected }}
-              title={
-                status()!.db_connected
-                  ? 'Connected to database'
-                  : 'No database — showing demo data'
-              }
-            >
-              {status()!.db_connected ? 'DB connected' : 'Demo mode'}
-            </span>
-            <span class="env-badge">
-              AI: {status()!.ai_provider} · {status()!.ai_model}
-            </span>
-          </Show>
-        </div>
-      </nav>
+      <NavTray
+        collapsed={trayCollapsed()}
+        onToggle={() => setTrayCollapsed((v) => !v)}
+        activeNav={route().name}
+        onNavigate={openScreen}
+        recentLoans={loans() ?? []}
+        activeLoanId={activeLoanId()}
+        onOpenLoan={openLoan}
+        onShowLegend={() => setLegendOpen(true)}
+        status={status()}
+      />
 
-      <main class="content">
+      <main class="workspace">
         <Switch>
           <Match when={route().name === 'dashboard'}>
-            <Dashboard onOpenLoans={() => setRoute({ name: 'loans' })} />
-          </Match>
-          <Match when={route().name === 'loans'}>
-            <LoanList onOpenLoan={openLoan} />
+            <Dashboard loans={loans() ?? []} onOpenLoan={openLoan} />
           </Match>
           <Match when={route().name === 'income'}>
-            <IncomeScreen
-              loanId={(route() as { name: 'income'; loanId: string }).loanId}
-              onBack={() => setRoute({ name: 'loans' })}
+            <IncomeScreen loanId={(route() as { loanId: string }).loanId} onBack={goBack} />
+          </Match>
+          <Match when={['assets', 'credit', 'property'].includes(route().name)}>
+            <StubScreen
+              loanId={(route() as { loanId: string }).loanId}
+              screen={route().name}
+              label={SCREEN_LABELS[route().name as LoanScreen]}
+              onBack={goBack}
             />
           </Match>
         </Switch>
       </main>
+
+      <ChatBox loanId={currentLoanId()} screen={route().name} status={status()} />
+
+      <KeyLegend open={legendOpen()} onClose={() => setLegendOpen(false)} />
     </div>
   );
 }

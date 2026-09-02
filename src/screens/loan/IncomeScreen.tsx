@@ -2,9 +2,8 @@ import { createResource, createSignal, For, Show } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
 import type { LoanDetail, LoanIncome } from '../../types';
 import { INCOME_TYPES } from '../../types';
-import { AiSidebar } from '../../components/AiSidebar';
 import { TaskPanel } from '../../components/TaskPanel';
-import { LockBadge } from '../../components/LockBadge';
+import { LoanHeader } from '../../components/LoanHeader';
 
 interface Props {
   loanId: string;
@@ -19,9 +18,6 @@ export function IncomeScreen(props: Props) {
   const [saving, setSaving] = createSignal(false);
   const [saveError, setSaveError] = createSignal<string | null>(null);
   const [edits, setEdits] = createSignal<Record<string, Partial<LoanIncome>>>({});
-
-  const primaryBorrower = () =>
-    detail()?.borrowers.find((b) => b.is_primary) ?? detail()?.borrowers[0];
 
   const rowValue = <K extends keyof LoanIncome>(row: LoanIncome, field: K): LoanIncome[K] => {
     const edit = edits()[row.id];
@@ -68,119 +64,97 @@ export function IncomeScreen(props: Props) {
   };
 
   return (
-    <div class="loan-screen-layout">
-      <div class="loan-main">
-        <header class="screen-header">
-          <div>
-            <button class="back-link" onClick={props.onBack}>
-              ← Loans
-            </button>
-            <h1>
-              {detail()?.summary.loan_number ?? '…'}
-              <span class="screen-label"> · Income Analysis</span>
-            </h1>
-            <div class="context-line">
-              Borrower:{' '}
-              {primaryBorrower()
-                ? `${primaryBorrower()!.first_name} ${primaryBorrower()!.last_name}`
-                : '—'}
-            </div>
-          </div>
-          <LockBadge lock={detail()?.lock ?? null} currentUserId={null} />
-        </header>
+    <div class="screen">
+      <LoanHeader detail={detail()} screenLabel="Income Analysis" onBack={props.onBack} />
 
-        <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
-          <table class="data-table editable">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Monthly amount</th>
-                <th>Employer</th>
-                <th>Years on job</th>
-                <th>Notes</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              <For each={detail()!.income}>
-                {(row) => (
-                  <tr>
-                    <td>
-                      <select
-                        value={rowValue(row, 'income_type')}
-                        onChange={(e) => setField(row.id, 'income_type', e.currentTarget.value)}
-                      >
-                        <For each={[...INCOME_TYPES]}>
-                          {(t) => <option value={t}>{t}</option>}
-                        </For>
-                      </select>
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        value={rowValue(row, 'monthly_amount')}
-                        onInput={(e) =>
-                          setField(row.id, 'monthly_amount', e.currentTarget.valueAsNumber)
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={rowValue(row, 'employer_name') ?? ''}
-                        onInput={(e) => setField(row.id, 'employer_name', e.currentTarget.value)}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={rowValue(row, 'years_on_job') ?? ''}
-                        onInput={(e) =>
-                          setField(row.id, 'years_on_job', e.currentTarget.valueAsNumber)
-                        }
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={rowValue(row, 'notes') ?? ''}
-                        onInput={(e) => setField(row.id, 'notes', e.currentTarget.value)}
-                      />
-                    </td>
-                    <td>
-                      <button
-                        class="primary small"
-                        disabled={saving() || !edits()[row.id]}
-                        onClick={() => saveRow(row)}
-                      >
-                        Save
-                      </button>
-                    </td>
-                  </tr>
-                )}
-              </For>
-            </tbody>
-            <tfoot>
-              <tr>
-                <td>Total qualifying</td>
-                <td class="mono">
-                  ${totalMonthly().toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  /mo
-                </td>
-                <td colspan="4" />
-              </tr>
-            </tfoot>
-          </table>
-          <Show when={saveError()}>
-            <div class="form-error">{saveError()}</div>
-          </Show>
+      <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
+        <table class="data-table editable">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Monthly amount</th>
+              <th>Employer</th>
+              <th>Years on job</th>
+              <th>Notes</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            <For each={detail()!.income}>
+              {(row) => (
+                <tr>
+                  <td>
+                    <select
+                      value={rowValue(row, 'income_type')}
+                      onChange={(e) => setField(row.id, 'income_type', e.currentTarget.value)}
+                    >
+                      <For each={[...INCOME_TYPES]}>
+                        {(t) => <option value={t}>{t}</option>}
+                      </For>
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={rowValue(row, 'monthly_amount')}
+                      onInput={(e) =>
+                        setField(row.id, 'monthly_amount', e.currentTarget.valueAsNumber)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={rowValue(row, 'employer_name') ?? ''}
+                      onInput={(e) => setField(row.id, 'employer_name', e.currentTarget.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={rowValue(row, 'years_on_job') ?? ''}
+                      onInput={(e) =>
+                        setField(row.id, 'years_on_job', e.currentTarget.valueAsNumber)
+                      }
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={rowValue(row, 'notes') ?? ''}
+                      onInput={(e) => setField(row.id, 'notes', e.currentTarget.value)}
+                    />
+                  </td>
+                  <td>
+                    <button
+                      class="primary small"
+                      disabled={saving() || !edits()[row.id]}
+                      onClick={() => saveRow(row)}
+                    >
+                      Save
+                    </button>
+                  </td>
+                </tr>
+              )}
+            </For>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total qualifying</td>
+              <td class="mono">
+                ${totalMonthly().toLocaleString(undefined, { maximumFractionDigits: 0 })}/mo
+              </td>
+              <td colspan="4" />
+            </tr>
+          </tfoot>
+        </table>
+        <Show when={saveError()}>
+          <div class="form-error">{saveError()}</div>
         </Show>
+      </Show>
 
-        <TaskPanel loanId={props.loanId} screen="income" />
-      </div>
-
-      <AiSidebar loanId={props.loanId} screen="income" />
+      <TaskPanel loanId={props.loanId} screen="income" />
     </div>
   );
 }
