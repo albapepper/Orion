@@ -66,10 +66,27 @@ export interface LoanTerms {
   application_date: string | null; // ISO date, YYYY-MM-DD
 }
 
+export interface Employment {
+  id: string;
+  borrower_id: string;
+  loan_id: string;
+  company_id: string;
+  employer_name: string | null;
+  position: string | null;
+  self_employed: boolean;
+  monthly_income: number | null;
+  start_date: string | null; // ISO date
+  end_date: string | null; // ISO date, null = present
+  is_current: boolean;
+  months_in_line_of_work: number | null;
+  business_phone: string | null;
+}
+
 export interface LoanDetail {
   summary: LoanSummary;
   borrowers: Borrower[];
   dependents: BorrowerDependent[];
+  employments: Employment[];
   income: LoanIncome[];
   terms: LoanTerms | null;
   lock: LockInfo | null;

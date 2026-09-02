@@ -8,6 +8,7 @@ import { Dashboard } from './screens/Dashboard';
 import { IncomeScreen } from './screens/loan/IncomeScreen';
 import { TermsScreen } from './screens/loan/TermsScreen';
 import { BorrowerScreen } from './screens/loan/BorrowerScreen';
+import { EmploymentScreen } from './screens/loan/EmploymentScreen';
 import { StubScreen } from './screens/loan/StubScreen';
 import { LOAN_SCREENS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import './App.css';
@@ -154,6 +155,13 @@ function App() {
           </Match>
           <Match when={route().name === 'borrower'}>
             <BorrowerScreen
+              loanId={(route() as { loanId: string }).loanId}
+              demo={status() ? !status()!.db_connected : false}
+              onNavigate={openScreen}
+            />
+          </Match>
+          <Match when={route().name === 'employment'}>
+            <EmploymentScreen
               loanId={(route() as { loanId: string }).loanId}
               demo={status() ? !status()!.db_connected : false}
               onNavigate={openScreen}

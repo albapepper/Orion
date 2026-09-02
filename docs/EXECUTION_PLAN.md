@@ -80,7 +80,7 @@ consumes later.
       dates, self-employed flags)
 - [x] **P2-11** Employment backend: queries + audit hook + IPC commands
 - [x] **P2-12** Employment AI context builder (gaps, stability)
-- [ ] **P2-13** Employment screen UI + sidebar wire + lock check
+- [x] **P2-13** Employment screen UI + sidebar wire + lock check
 - [ ] **P2-14** Income migration expansion (2-yr averages, DTI-relevant
       fields; extend existing table, MISMO-complete)
 - [ ] **P2-15** Income backend expansion (queries, audit, commands)
