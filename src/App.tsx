@@ -9,6 +9,7 @@ import { IncomeScreen } from './screens/loan/IncomeScreen';
 import { TermsScreen } from './screens/loan/TermsScreen';
 import { BorrowerScreen } from './screens/loan/BorrowerScreen';
 import { EmploymentScreen } from './screens/loan/EmploymentScreen';
+import { AssetsScreen } from './screens/loan/AssetsScreen';
 import { StubScreen } from './screens/loan/StubScreen';
 import { LOAN_SCREENS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import './App.css';
@@ -174,7 +175,14 @@ function App() {
               onNavigate={openScreen}
             />
           </Match>
-          <Match when={['property', 'credit', 'assets'].includes(route().name)}>
+          <Match when={route().name === 'assets'}>
+            <AssetsScreen
+              loanId={(route() as { loanId: string }).loanId}
+              demo={status() ? !status()!.db_connected : false}
+              onNavigate={openScreen}
+            />
+          </Match>
+          <Match when={['property', 'credit'].includes(route().name)}>
             <StubScreen
               loanId={(route() as { loanId: string }).loanId}
               screen={route().name as LoanScreen}

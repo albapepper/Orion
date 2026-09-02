@@ -84,12 +84,26 @@ export interface Employment {
   business_phone: string | null;
 }
 
+export interface Asset {
+  id: string;
+  borrower_id: string;
+  loan_id: string;
+  company_id: string;
+  account_type: string;
+  institution: string | null;
+  balance: number;
+  gift_donor: string | null;
+  gift_relationship: string | null;
+  notes: string | null;
+}
+
 export interface LoanDetail {
   summary: LoanSummary;
   borrowers: Borrower[];
   dependents: BorrowerDependent[];
   employments: Employment[];
   income: LoanIncome[];
+  assets: Asset[];
   terms: LoanTerms | null;
   lock: LockInfo | null;
 }
