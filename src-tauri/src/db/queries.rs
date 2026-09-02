@@ -244,6 +244,8 @@ pub async fn get_income(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Vec<Loan
         r#"
         SELECT id, loan_id, company_id, borrower_id, income_type,
                monthly_amount::FLOAT8 AS monthly_amount,
+               prior_year_monthly::FLOAT8 AS prior_year_monthly,
+               verified,
                employer_name,
                years_on_job::FLOAT8 AS years_on_job,
                notes
@@ -337,6 +339,8 @@ pub async fn upsert_income(
     borrower_id: Uuid,
     income_type: &str,
     monthly_amount: f64,
+    prior_year_monthly: Option<f64>,
+    verified: bool,
     employer_name: Option<&str>,
     years_on_job: Option<f64>,
     notes: Option<&str>,
@@ -345,18 +349,23 @@ pub async fn upsert_income(
         r#"
         INSERT INTO loan_income
             (id, loan_id, company_id, borrower_id, income_type,
-             monthly_amount, employer_name, years_on_job, notes, updated_at)
+             monthly_amount, prior_year_monthly, verified,
+             employer_name, years_on_job, notes, updated_at)
         VALUES
-            (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9, now())
+            (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())
         ON CONFLICT (id) DO UPDATE SET
             income_type = EXCLUDED.income_type,
             monthly_amount = EXCLUDED.monthly_amount,
+            prior_year_monthly = EXCLUDED.prior_year_monthly,
+            verified = EXCLUDED.verified,
             employer_name = EXCLUDED.employer_name,
             years_on_job = EXCLUDED.years_on_job,
             notes = EXCLUDED.notes,
             updated_at = now()
         RETURNING id, loan_id, company_id, borrower_id, income_type,
                   monthly_amount::FLOAT8 AS monthly_amount,
+                  prior_year_monthly::FLOAT8 AS prior_year_monthly,
+                  verified,
                   employer_name,
                   years_on_job::FLOAT8 AS years_on_job,
                   notes
@@ -368,6 +377,8 @@ pub async fn upsert_income(
     .bind(borrower_id)
     .bind(income_type)
     .bind(monthly_amount)
+    .bind(prior_year_monthly)
+    .bind(verified)
     .bind(employer_name)
     .bind(years_on_job)
     .bind(notes)

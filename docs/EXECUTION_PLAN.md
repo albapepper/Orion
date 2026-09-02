@@ -83,7 +83,7 @@ consumes later.
 - [x] **P2-13** Employment screen UI + sidebar wire + lock check
 - [x] **P2-14** Income migration expansion (2-yr averages, DTI-relevant
       fields; extend existing table, MISMO-complete)
-- [ ] **P2-15** Income backend expansion (queries, audit, commands)
+- [x] **P2-15** Income backend expansion (queries, audit, commands)
 - [ ] **P2-16** Income AI context expansion (usable income calc)
 - [ ] **P2-17** Income screen expansion + replace `IncomeScreen` placeholder
       patterns with shared screen scaffolding

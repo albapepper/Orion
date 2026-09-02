@@ -69,6 +69,8 @@ pub struct LoanIncome {
     pub borrower_id: Uuid,
     pub income_type: String,
     pub monthly_amount: f64,
+    pub prior_year_monthly: Option<f64>,
+    pub verified: bool,
     pub employer_name: Option<String>,
     pub years_on_job: Option<f64>,
     pub notes: Option<String>,
