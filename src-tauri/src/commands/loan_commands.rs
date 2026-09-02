@@ -31,6 +31,7 @@ pub struct LoanDetail {
     pub dependents: Vec<BorrowerDependent>,
     pub employments: Vec<crate::loans::Employment>,
     pub income: Vec<LoanIncome>,
+    pub assets: Vec<crate::loans::Asset>,
     pub terms: Option<LoanTerms>,
     pub lock: Option<LockInfo>,
 }
@@ -78,6 +79,9 @@ pub async fn get_loan_detail(
             let employments = crate::db::queries::get_employments(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let assets = crate::db::queries::get_assets(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let income = crate::db::queries::get_income(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -93,6 +97,7 @@ pub async fn get_loan_detail(
                 dependents,
                 employments,
                 income,
+                assets,
                 terms,
                 lock,
             })
@@ -108,6 +113,7 @@ pub async fn get_loan_detail(
                 dependents: demo::dependents(loan_id),
                 employments: demo::employments(loan_id),
                 income: demo::income(loan_id),
+                assets: demo::assets(loan_id),
                 terms: Some(demo::loan_terms(loan_id)),
                 lock: None,
             })
@@ -528,5 +534,107 @@ pub async fn delete_employment(
         .map_err(|e| e.to_string())?;
     }
 
+    Ok(())
+}
+
+#[derive(Deserialize)]
+pub struct AssetInput {
+    pub id: Option<String>,
+    pub borrower_id: String,
+    pub account_type: String,
+    pub institution: Option<String>,
+    pub balance: f64,
+    pub gift_donor: Option<String>,
+    pub gift_relationship: Option<String>,
+    pub notes: Option<String>,
+}
+
+#[tauri::command]
+pub async fn save_asset(
+    state: State<'_, AppState>,
+    loan_id: String,
+    asset: AssetInput,
+) -> Result<crate::loans::Asset, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let borrower_id = parse_uuid(&asset.borrower_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    let record_id = asset.id.as_deref().map(parse_uuid).transpose()?;
+
+    let saved = crate::db::queries::upsert_asset(
+        &pool,
+        record_id,
+        borrower_id,
+        loan_id,
+        company_id,
+        &asset.account_type,
+        asset.institution.as_deref(),
+        asset.balance,
+        asset.gift_donor.as_deref(),
+        asset.gift_relationship.as_deref(),
+        asset.notes.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        if record_id.is_some() { "asset.update" } else { "asset.create" },
+        "loan_assets",
+        saved.id,
+        None,
+        Some(serde_json::to_value(&saved).map_err(|e| e.to_string())?),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
+#[tauri::command]
+pub async fn delete_asset(
+    state: State<'_, AppState>,
+    asset_id: String,
+) -> Result<(), String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let asset_id = parse_uuid(&asset_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let before = crate::db::queries::get_asset(&pool, asset_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    crate::db::queries::delete_asset(&pool, asset_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if let Some(removed) = before {
+        crate::audit::write(
+            &pool,
+            company_id,
+            Some(removed.loan_id),
+            user_id,
+            "asset.delete",
+            "loan_assets",
+            removed.id,
+            Some(serde_json::to_value(&removed).map_err(|e| e.to_string())?),
+            None,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    }
     Ok(())
 }

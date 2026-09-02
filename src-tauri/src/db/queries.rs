@@ -1,7 +1,9 @@
 // Runtime-checked sqlx queries. These can be migrated to the compile-time
 // `query!` macros once a dev database + `sqlx prepare` workflow is in place.
 
-use crate::loans::{Borrower, BorrowerDependent, Employment, Loan, LoanIncome, LoanSummary, LoanTerms};
+use crate::loans::{
+    Asset, Borrower, BorrowerDependent, Employment, Loan, LoanIncome, LoanSummary, LoanTerms,
+};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -383,6 +385,84 @@ pub async fn upsert_income(
     .bind(years_on_job)
     .bind(notes)
     .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+const ASSET_COLUMNS: &str = "id, borrower_id, loan_id, company_id, account_type, institution,
+    balance::FLOAT8 AS balance, gift_donor, gift_relationship, notes";
+
+pub async fn get_assets(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Vec<Asset>> {
+    let rows = sqlx::query_as::<_, Asset>(&format!(
+        "SELECT {ASSET_COLUMNS} FROM loan_assets WHERE loan_id = $1
+         ORDER BY balance DESC"
+    ))
+    .bind(loan_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn upsert_asset(
+    pool: &PgPool,
+    id: Option<Uuid>,
+    borrower_id: Uuid,
+    loan_id: Uuid,
+    company_id: Uuid,
+    account_type: &str,
+    institution: Option<&str>,
+    balance: f64,
+    gift_donor: Option<&str>,
+    gift_relationship: Option<&str>,
+    notes: Option<&str>,
+) -> anyhow::Result<Asset> {
+    let row = sqlx::query_as::<_, Asset>(&format!(
+        r#"
+        INSERT INTO loan_assets
+            (id, borrower_id, loan_id, company_id, account_type, institution,
+             balance, gift_donor, gift_relationship, notes, updated_at)
+        VALUES (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9, $10, now())
+        ON CONFLICT (id) DO UPDATE SET
+            account_type = EXCLUDED.account_type,
+            institution = EXCLUDED.institution,
+            balance = EXCLUDED.balance,
+            gift_donor = EXCLUDED.gift_donor,
+            gift_relationship = EXCLUDED.gift_relationship,
+            notes = EXCLUDED.notes,
+            updated_at = now()
+        RETURNING {ASSET_COLUMNS}
+        "#
+    ))
+    .bind(id)
+    .bind(borrower_id)
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(account_type)
+    .bind(institution)
+    .bind(balance)
+    .bind(gift_donor)
+    .bind(gift_relationship)
+    .bind(notes)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn delete_asset(pool: &PgPool, id: Uuid) -> anyhow::Result<()> {
+    sqlx::query("DELETE FROM loan_assets WHERE id = $1")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn get_asset(pool: &PgPool, id: Uuid) -> anyhow::Result<Option<Asset>> {
+    let row = sqlx::query_as::<_, Asset>(&format!(
+        "SELECT {ASSET_COLUMNS} FROM loan_assets WHERE id = $1"
+    ))
+    .bind(id)
+    .fetch_optional(pool)
     .await?;
     Ok(row)
 }

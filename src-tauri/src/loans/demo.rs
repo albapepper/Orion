@@ -2,7 +2,7 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Borrower, BorrowerDependent, Employment, LoanIncome, LoanSummary, LoanTerms};
+use super::{Asset, Borrower, BorrowerDependent, Employment, LoanIncome, LoanSummary, LoanTerms};
 use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
@@ -152,6 +152,47 @@ pub fn employments(loan_id: Uuid) -> Vec<Employment> {
             is_current: false,
             months_in_line_of_work: Some(96),
             business_phone: None,
+        },
+    ]
+}
+
+pub fn assets(loan_id: Uuid) -> Vec<Asset> {
+    vec![
+        Asset {
+            id: id("00000000-0000-0000-0000-000000000601"),
+            borrower_id: id(DEMO_BORROWER_ID),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            account_type: "checking".into(),
+            institution: Some("Puget Sound Credit Union".into()),
+            balance: 48_200.0,
+            gift_donor: None,
+            gift_relationship: None,
+            notes: None,
+        },
+        Asset {
+            id: id("00000000-0000-0000-0000-000000000602"),
+            borrower_id: id(DEMO_BORROWER_ID),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            account_type: "savings".into(),
+            institution: Some("Alaska USA".into()),
+            balance: 92_500.0,
+            gift_donor: None,
+            gift_relationship: None,
+            notes: None,
+        },
+        Asset {
+            id: id("00000000-0000-0000-0000-000000000603"),
+            borrower_id: id(DEMO_BORROWER_ID),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            account_type: "gift".into(),
+            institution: None,
+            balance: 25_000.0,
+            gift_donor: Some("Ruth Ellis (mother)".into()),
+            gift_relationship: Some("parent".into()),
+            notes: Some("Gift letter on file".into()),
         },
     ]
 }
