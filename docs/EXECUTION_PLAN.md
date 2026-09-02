@@ -123,9 +123,11 @@ consumes later.
       stage, ⌃q; Yes/No toggles + explanations)
 - [x] **P2-38** Demographic migration (HMDA monitoring info)
 - [x] **P2-39** Demographic backend: queries + audit hook + IPC commands
-- [ ] **P2-40** Demographic screen UI + sidebar wire (no AI context —
+- [x] **P2-40** Demographic screen UI + sidebar wire (⌃g; no AI context —
       compliance capture only)
-- [ ] **P2-41** Demographic AI context builder (minimal, per spec)
+- [x] **P2-41** Demographic AI context builder — resolved: intentionally
+      no AI path for HMDA data; `ai_chat` falls through to the generic
+      screen context, per cross-cutting rule 4
 
 ### Week 6 — Loan Overview + consistency review
 

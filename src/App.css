@@ -918,6 +918,13 @@ button.ghost.small {
   font-size: 13px;
 }
 
+.screen-hint {
+  margin-top: 14px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .row-status-cell {
   white-space: nowrap;
   min-width: 84px;

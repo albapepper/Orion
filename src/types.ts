@@ -153,6 +153,17 @@ export interface Declaration {
   explanation: string | null;
 }
 
+export interface Demographics {
+  id: string;
+  borrower_id: string;
+  loan_id: string;
+  company_id: string;
+  ethnicity: string | null;
+  race: string | null;
+  sex: string | null;
+  collection_basis: string | null;
+}
+
 export interface LoanDetail {
   summary: LoanSummary;
   borrowers: Borrower[];
@@ -164,6 +175,7 @@ export interface LoanDetail {
   property: SubjectProperty | null;
   reo: ReoProperty[];
   declarations: Declaration[];
+  demographics: Demographics[];
   terms: LoanTerms | null;
   lock: LockInfo | null;
 }
