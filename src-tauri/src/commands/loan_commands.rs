@@ -29,6 +29,7 @@ pub struct LoanDetail {
     pub summary: LoanSummary,
     pub borrowers: Vec<Borrower>,
     pub dependents: Vec<BorrowerDependent>,
+    pub employments: Vec<crate::loans::Employment>,
     pub income: Vec<LoanIncome>,
     pub terms: Option<LoanTerms>,
     pub lock: Option<LockInfo>,
@@ -74,6 +75,9 @@ pub async fn get_loan_detail(
             let dependents = crate::db::queries::get_dependents(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let employments = crate::db::queries::get_employments(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let income = crate::db::queries::get_income(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -87,6 +91,7 @@ pub async fn get_loan_detail(
                 summary,
                 borrowers,
                 dependents,
+                employments,
                 income,
                 terms,
                 lock,
@@ -101,6 +106,7 @@ pub async fn get_loan_detail(
                 summary,
                 borrowers: demo::borrowers(loan_id),
                 dependents: demo::dependents(loan_id),
+                employments: demo::employments(loan_id),
                 income: demo::income(loan_id),
                 terms: Some(demo::loan_terms(loan_id)),
                 lock: None,
@@ -405,4 +411,118 @@ pub async fn save_dependents(
     .map_err(|e| e.to_string())?;
 
     Ok(saved)
+}
+
+#[derive(Deserialize)]
+pub struct EmploymentInput {
+    pub id: Option<String>,
+    pub borrower_id: String,
+    pub employer_name: Option<String>,
+    pub position: Option<String>,
+    pub self_employed: bool,
+    pub monthly_income: Option<f64>,
+    pub start_date: Option<NaiveDate>,
+    pub end_date: Option<NaiveDate>,
+    pub is_current: bool,
+    pub months_in_line_of_work: Option<i32>,
+    pub business_phone: Option<String>,
+}
+
+#[tauri::command]
+pub async fn save_employment(
+    state: State<'_, AppState>,
+    loan_id: String,
+    employment: EmploymentInput,
+) -> Result<crate::loans::Employment, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let borrower_id = parse_uuid(&employment.borrower_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    let record_id = employment.id.as_deref().map(parse_uuid).transpose()?;
+
+    let saved = crate::db::queries::upsert_employment(
+        &pool,
+        record_id,
+        borrower_id,
+        loan_id,
+        company_id,
+        employment.employer_name.as_deref(),
+        employment.position.as_deref(),
+        employment.self_employed,
+        employment.monthly_income,
+        employment.start_date,
+        employment.end_date,
+        employment.is_current,
+        employment.months_in_line_of_work,
+        employment.business_phone.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        if record_id.is_some() {
+            "employment.update"
+        } else {
+            "employment.create"
+        },
+        "borrower_employments",
+        saved.id,
+        None,
+        Some(serde_json::to_value(&saved).map_err(|e| e.to_string())?),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
+#[tauri::command]
+pub async fn delete_employment(
+    state: State<'_, AppState>,
+    employment_id: String,
+) -> Result<(), String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let employment_id = parse_uuid(&employment_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    // Audit captures what was removed, before it's gone.
+    let before = crate::db::queries::get_employment(&pool, employment_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    crate::db::queries::delete_employment(&pool, employment_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if let Some(removed) = before {
+        crate::audit::write(
+            &pool,
+            company_id,
+            Some(removed.loan_id),
+            user_id,
+            "employment.delete",
+            "borrower_employments",
+            removed.id,
+            Some(serde_json::to_value(&removed).map_err(|e| e.to_string())?),
+            None,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
 }

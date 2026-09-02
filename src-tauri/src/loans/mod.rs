@@ -36,6 +36,23 @@ pub struct Borrower {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct Employment {
+    pub id: Uuid,
+    pub borrower_id: Uuid,
+    pub loan_id: Uuid,
+    pub company_id: Uuid,
+    pub employer_name: Option<String>,
+    pub position: Option<String>,
+    pub self_employed: bool,
+    pub monthly_income: Option<f64>,
+    pub start_date: Option<NaiveDate>,
+    pub end_date: Option<NaiveDate>,
+    pub is_current: bool,
+    pub months_in_line_of_work: Option<i32>,
+    pub business_phone: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct BorrowerDependent {
     pub id: Uuid,
     pub borrower_id: Uuid,

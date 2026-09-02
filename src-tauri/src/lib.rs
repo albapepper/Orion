@@ -49,6 +49,8 @@ pub fn run() {
             commands::loan_commands::save_income,
             commands::loan_commands::save_borrower,
             commands::loan_commands::save_dependents,
+            commands::loan_commands::save_employment,
+            commands::loan_commands::delete_employment,
             commands::loan_commands::get_loan_terms,
             commands::loan_commands::save_loan_terms,
             commands::loan_commands::acquire_loan_lock,

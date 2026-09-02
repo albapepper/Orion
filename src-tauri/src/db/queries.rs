@@ -1,7 +1,7 @@
 // Runtime-checked sqlx queries. These can be migrated to the compile-time
 // `query!` macros once a dev database + `sqlx prepare` workflow is in place.
 
-use crate::loans::{Borrower, BorrowerDependent, Loan, LoanIncome, LoanSummary, LoanTerms};
+use crate::loans::{Borrower, BorrowerDependent, Employment, Loan, LoanIncome, LoanSummary, LoanTerms};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -88,6 +88,106 @@ pub async fn save_borrower(
     .fetch_one(pool)
     .await?;
     Ok(row)
+}
+
+const EMPLOYMENT_COLUMNS: &str = "id, borrower_id, loan_id, company_id, employer_name,
+    position, self_employed, monthly_income::FLOAT8 AS monthly_income,
+    start_date, end_date, is_current, months_in_line_of_work, business_phone";
+
+pub async fn get_employments(
+    pool: &PgPool,
+    loan_id: Uuid,
+) -> anyhow::Result<Vec<Employment>> {
+    let rows = sqlx::query_as::<_, Employment>(
+        &format!(
+            "SELECT {EMPLOYMENT_COLUMNS} FROM borrower_employments
+             WHERE loan_id = $1
+             ORDER BY is_current DESC, start_date DESC"
+        ),
+    )
+    .bind(loan_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn upsert_employment(
+    pool: &PgPool,
+    id: Option<Uuid>,
+    borrower_id: Uuid,
+    loan_id: Uuid,
+    company_id: Uuid,
+    employer_name: Option<&str>,
+    position: Option<&str>,
+    self_employed: bool,
+    monthly_income: Option<f64>,
+    start_date: Option<chrono::NaiveDate>,
+    end_date: Option<chrono::NaiveDate>,
+    is_current: bool,
+    months_in_line_of_work: Option<i32>,
+    business_phone: Option<&str>,
+) -> anyhow::Result<Employment> {
+    let row = sqlx::query_as::<_, Employment>(&format!(
+        r#"
+        INSERT INTO borrower_employments
+            (id, borrower_id, loan_id, company_id, employer_name, position,
+             self_employed, monthly_income, start_date, end_date, is_current,
+             months_in_line_of_work, business_phone, updated_at)
+        VALUES
+            (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9,
+             $10, $11, $12, $13, now())
+        ON CONFLICT (id) DO UPDATE SET
+            employer_name = EXCLUDED.employer_name,
+            position = EXCLUDED.position,
+            self_employed = EXCLUDED.self_employed,
+            monthly_income = EXCLUDED.monthly_income,
+            start_date = EXCLUDED.start_date,
+            end_date = EXCLUDED.end_date,
+            is_current = EXCLUDED.is_current,
+            months_in_line_of_work = EXCLUDED.months_in_line_of_work,
+            business_phone = EXCLUDED.business_phone,
+            updated_at = now()
+        RETURNING {EMPLOYMENT_COLUMNS}
+        "#
+    ))
+    .bind(id)
+    .bind(borrower_id)
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(employer_name)
+    .bind(position)
+    .bind(self_employed)
+    .bind(monthly_income)
+    .bind(start_date)
+    .bind(end_date)
+    .bind(is_current)
+    .bind(months_in_line_of_work)
+    .bind(business_phone)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn get_employment(
+    pool: &PgPool,
+    id: Uuid,
+) -> anyhow::Result<Option<Employment>> {
+    let row = sqlx::query_as::<_, Employment>(
+        &format!("SELECT {EMPLOYMENT_COLUMNS} FROM borrower_employments WHERE id = $1"),
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn delete_employment(pool: &PgPool, id: Uuid) -> anyhow::Result<()> {
+    sqlx::query("DELETE FROM borrower_employments WHERE id = $1")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(())
 }
 
 pub async fn get_dependents(

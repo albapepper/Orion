@@ -2,7 +2,7 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Borrower, BorrowerDependent, LoanIncome, LoanSummary, LoanTerms};
+use super::{Borrower, BorrowerDependent, Employment, LoanIncome, LoanSummary, LoanTerms};
 use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
@@ -115,4 +115,39 @@ pub fn loan_terms(loan_id: Uuid) -> LoanTerms {
         property_value: Some(700_000.0),
         application_date: NaiveDate::from_ymd_opt(2026, 9, 1),
     }
+}
+
+pub fn employments(loan_id: Uuid) -> Vec<Employment> {
+    vec![
+        Employment {
+            id: id("00000000-0000-0000-0000-000000000501"),
+            borrower_id: id(DEMO_BORROWER_ID),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            employer_name: Some("Cascade Medical Group".into()),
+            position: Some("Physician Assistant".into()),
+            self_employed: false,
+            monthly_income: Some(7_250.0),
+            start_date: NaiveDate::from_ymd_opt(2021, 11, 1),
+            end_date: None,
+            is_current: true,
+            months_in_line_of_work: Some(96),
+            business_phone: Some("555-0117".into()),
+        },
+        Employment {
+            id: id("00000000-0000-0000-0000-000000000502"),
+            borrower_id: id(DEMO_BORROWER_ID),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            employer_name: Some("Lakeside Family Clinic".into()),
+            position: Some("Physician Assistant".into()),
+            self_employed: false,
+            monthly_income: Some(6_400.0),
+            start_date: NaiveDate::from_ymd_opt(2018, 6, 1),
+            end_date: NaiveDate::from_ymd_opt(2021, 10, 31),
+            is_current: false,
+            months_in_line_of_work: Some(96),
+            business_phone: None,
+        },
+    ]
 }
