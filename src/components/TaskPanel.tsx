@@ -10,6 +10,7 @@ interface Props {
 export function TaskPanel(props: Props) {
   const [collapsed, setCollapsed] = createSignal(false);
   const [newTitle, setNewTitle] = createSignal('');
+  const [error, setError] = createSignal<string | null>(null);
   const [tasks, { refetch }] = createResource(
     () => props.loanId,
     (loanId) => invoke<Task[]>('list_tasks', { loanId }),
@@ -25,9 +26,10 @@ export function TaskPanel(props: Props) {
         screen: props.screen,
       });
       setNewTitle('');
+      setError(null);
       refetch();
     } catch (e) {
-      alert(e);
+      setError(String(e));
     }
   };
 
@@ -37,9 +39,10 @@ export function TaskPanel(props: Props) {
         taskId: task.id,
         status: task.status === 'done' ? 'open' : 'done',
       });
+      setError(null);
       refetch();
     } catch (e) {
-      alert(e);
+      setError(String(e));
     }
   };
 
@@ -84,6 +87,9 @@ export function TaskPanel(props: Props) {
           />
           <button onClick={addTask}>Add</button>
         </div>
+        <Show when={error()}>
+          <div class="task-error">{error()}</div>
+        </Show>
       </Show>
     </section>
   );

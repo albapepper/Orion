@@ -31,6 +31,12 @@
   border-radius: 0 !important;
 }
 
+/* Keyboard users must always see where they are */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 body {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -236,6 +242,56 @@ kbd.keycap.inline {
 .screen-loading {
   color: var(--text-dim);
   padding: 32px 0;
+}
+
+/* ── Stage stepper: makes the cascade tangible ────────── */
+
+.stage-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 0 34px;
+}
+
+.stage-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  color: var(--text-dim);
+  border: 1px solid transparent;
+}
+
+.stage-step:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.stage-step.done {
+  color: var(--green);
+}
+
+.stage-step.active {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+.stage-step.active .keycap {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.stage-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stage-arrow {
+  color: var(--border-strong);
+  font-size: 13px;
 }
 
 /* ── Loan header: just the loan and the person, centered ── */
@@ -536,6 +592,67 @@ button.primary.small {
   margin-bottom: 6px;
 }
 
+.stub-next {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 600;
+  text-align: left;
+}
+
+.stub-next:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stub-next .keycap {
+  margin-left: auto;
+}
+
+/* ── Inline save feedback ────────────────────────────── */
+
+.demo-note {
+  margin-bottom: 14px;
+  padding: 9px 14px;
+  background: var(--amber-soft);
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  font-size: 13px;
+}
+
+.row-status-cell {
+  white-space: nowrap;
+  min-width: 84px;
+}
+
+.row-status {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.row-status.saved {
+  color: var(--green);
+}
+
+.row-status.saving {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.row-error {
+  color: var(--red);
+  font-size: 12px;
+  margin-top: 4px;
+  max-width: 220px;
+  white-space: normal;
+}
+
 /* ── ChatBox ─────────────────────────────────────────── */
 
 /* Anchored, fixed width — mirrors the NavTray on the other side */
@@ -774,6 +891,13 @@ button.primary.small {
 .task-add button:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.task-error {
+  padding: 9px 14px;
+  color: var(--red);
+  font-size: 13px;
+  border-top: 1px solid var(--border);
 }
 
 /* ── Keyboard legend ─────────────────────────────────── */

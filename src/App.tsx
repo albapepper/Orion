@@ -7,20 +7,10 @@ import { KeyLegend } from './components/KeyLegend';
 import { Dashboard } from './screens/Dashboard';
 import { IncomeScreen } from './screens/loan/IncomeScreen';
 import { StubScreen } from './screens/loan/StubScreen';
+import { LOAN_SCREENS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import './App.css';
 
-// The loan cascade, in working order: property → credit → income → assets
-type LoanScreen = 'property' | 'credit' | 'income' | 'assets';
-
 type Route = { name: 'dashboard' } | { name: LoanScreen; loanId: string };
-
-const LOAN_SCREENS: LoanScreen[] = ['property', 'credit', 'income', 'assets'];
-const SCREEN_LABELS: Record<LoanScreen, string> = {
-  property: 'Property',
-  credit: 'Credit',
-  income: 'Income Analysis',
-  assets: 'Assets',
-};
 
 function App() {
   const [route, setRoute] = createSignal<Route>({ name: 'dashboard' });
@@ -59,6 +49,14 @@ function App() {
   // Entering a loan starts at the top of the cascade
   const openLoan = (loan: LoanSummary) => navigate({ name: 'property', loanId: loan.id });
 
+  // Walk the cascade without leaving the loan
+  const shiftStage = (dir: 1 | -1) => {
+    const r = route();
+    if (r.name === 'dashboard') return;
+    const target = dir === 1 ? nextStage(r.name) : prevStage(r.name);
+    if (target) navigate({ name: target, loanId: 'loanId' in r ? r.loanId : activeLoanId()! });
+  };
+
   const inEditor = (el: EventTarget | null) =>
     el instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
 
@@ -74,6 +72,16 @@ function App() {
       if (screen) {
         e.preventDefault();
         openScreen(screen);
+        return;
+      }
+      if (e.key === '[') {
+        e.preventDefault();
+        shiftStage(-1);
+        return;
+      }
+      if (e.key === ']') {
+        e.preventDefault();
+        shiftStage(1);
         return;
       }
       const n = parseInt(e.key, 10);
@@ -136,13 +144,17 @@ function App() {
             <Dashboard loans={loans() ?? []} onOpenLoan={openLoan} />
           </Match>
           <Match when={route().name === 'income'}>
-            <IncomeScreen loanId={(route() as { loanId: string }).loanId} />
+            <IncomeScreen
+              loanId={(route() as { loanId: string }).loanId}
+              demo={status() ? !status()!.db_connected : false}
+              onNavigate={openScreen}
+            />
           </Match>
           <Match when={['property', 'credit', 'assets'].includes(route().name)}>
             <StubScreen
               loanId={(route() as { loanId: string }).loanId}
-              screen={route().name}
-              label={SCREEN_LABELS[route().name as LoanScreen]}
+              screen={route().name as LoanScreen}
+              onNavigate={openScreen}
             />
           </Match>
         </Switch>

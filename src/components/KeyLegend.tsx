@@ -12,6 +12,8 @@ const BINDINGS: Array<[string, string]> = [
   ['⌃i', 'Income screen'],
   ['⌃a', 'Assets screen'],
   ['⌃1–9', 'Open nth recent loan'],
+  ['⌃]', 'Next loan stage'],
+  ['⌃[', 'Previous loan stage'],
   ['/', 'Focus the assistant'],
   ['Home', 'Back to previous page'],
   ['?', 'Toggle this legend'],

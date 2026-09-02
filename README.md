@@ -35,7 +35,8 @@ them *fast*. Concretely:
 - New commands should be wired for both the assistant and direct keys
 
 Current bindings: `⌃d` dashboard · `⌃p/⌃c/⌃i/⌃a` property/credit/income/assets ·
-`⌃1–9` nth recent loan · `/` assistant · `Home` back · `?` legend · `Esc` close.
+`⌃[/⌃]` previous/next loan stage · `⌃1–9` nth recent loan · `/` assistant ·
+`Home` back · `?` legend · `Esc` close.
 
 **This is a comfortable, intuitive place to do work.** People live in Orion
 for the entire loan process, so screens must feel roomy and laid back — the

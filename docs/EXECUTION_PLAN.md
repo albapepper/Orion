@@ -53,7 +53,7 @@ consumes later.
 
 ### Week 0 — Staging
 
-- [ ] **P2-00** Commit the UX comfort pass (stage stepper, autosave, focus
+- [x] **P2-00** Commit the UX comfort pass (stage stepper, autosave, focus
       visibility, legend/README) as its own commit before new work starts.
 - [ ] **P2-01** MISMO 3.4 field reference: write `docs/1003-fields.md`
       mapping each of the 10 screens to its MISMO 3.4 fields/containers,
