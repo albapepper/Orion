@@ -34,7 +34,7 @@ them *fast*. Concretely:
 - `/` focuses the assistant from anywhere; `Esc` always dismisses / unfocuses
 - New commands should be wired for both the assistant and direct keys
 
-Current bindings: `⌃d` dashboard · `⌃p/⌃c/⌃i/⌃a` property/credit/income/assets ·
+Current bindings: `⌃d` dashboard · `⌃b/⌃e/⌃p/⌃t/⌃c/⌃i/⌃a/⌃l` borrower/employment/property/terms/credit/income/assets/liabilities/REO/declarations/demographic ·
 `⌃[/⌃]` previous/next loan stage · `⌃1–9` nth recent loan · `/` assistant ·
 `Home` back · `?` legend · `Esc` close.
 
@@ -45,9 +45,9 @@ columns, spread-out cards over dense grids. When you're in a loan, it feels
 like you're in *that one loan*: the only header is the loan number and
 applicant name, centered.
 
-**The loan is a cascading progression:** property → credit → income →
-assets. Opening a loan starts at property; the NavTray lists the stages in
-that order.
+**The loan is a cascading progression:** borrower → employment →
+property → terms → credit → income → assets → liabilities → REO → declarations → demographic. Opening a loan starts at
+the borrower; the NavTray lists the stages in that order.
 
 **Layout** is three fixed columns: **NavTray** (left — all navigation:
 stages, recent loans, app name; anchored, never collapses), **workspace**
