@@ -6,6 +6,7 @@ import { ChatBox } from './components/ChatBox';
 import { KeyLegend } from './components/KeyLegend';
 import { Dashboard } from './screens/Dashboard';
 import { IncomeScreen } from './screens/loan/IncomeScreen';
+import { TermsScreen } from './screens/loan/TermsScreen';
 import { StubScreen } from './screens/loan/StubScreen';
 import { LOAN_SCREENS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import './App.css';
@@ -145,6 +146,13 @@ function App() {
           </Match>
           <Match when={route().name === 'income'}>
             <IncomeScreen
+              loanId={(route() as { loanId: string }).loanId}
+              demo={status() ? !status()!.db_connected : false}
+              onNavigate={openScreen}
+            />
+          </Match>
+          <Match when={route().name === 'terms'}>
+            <TermsScreen
               loanId={(route() as { loanId: string }).loanId}
               demo={status() ? !status()!.db_connected : false}
               onNavigate={openScreen}

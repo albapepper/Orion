@@ -7,10 +7,11 @@ export interface NavItem {
   key: string; // ctrl+key shortcut, shown as a keycap
 }
 
-// Loan screens follow the cascade: property → credit → income → assets
+// Loan screens follow the cascade: property → terms → credit → income → assets
 export const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', key: 'd' },
   { id: 'property', label: 'Property', key: 'p' },
+  { id: 'terms', label: 'Terms', key: 't' },
   { id: 'credit', label: 'Credit', key: 'c' },
   { id: 'income', label: 'Income', key: 'i' },
   { id: 'assets', label: 'Assets', key: 'a' },

@@ -615,6 +615,91 @@ button.primary.small {
   margin-left: auto;
 }
 
+/* ── Form screens (roomy, not spreadsheet-dense) ─────── */
+
+.screen-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.screen-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.save-status {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.save-status.saved {
+  color: var(--green);
+}
+
+.save-status.error {
+  color: var(--red);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 32px;
+  padding: 26px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.field label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.field input,
+.field select {
+  padding: 9px 12px;
+}
+
+.terms-math {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 48px;
+  margin-top: 16px;
+  padding: 18px 26px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.math-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.math-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.math-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
 /* ── Inline save feedback ────────────────────────────── */
 
 .demo-note {

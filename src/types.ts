@@ -37,10 +37,26 @@ export interface LockInfo {
   screen: string | null;
 }
 
+export interface LoanTerms {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  loan_purpose: string;
+  mortgage_type: string;
+  amortization_type: string;
+  loan_amount: number | null;
+  interest_rate: number | null;
+  term_months: number | null;
+  lien_priority: string;
+  property_value: number | null;
+  application_date: string | null; // ISO date, YYYY-MM-DD
+}
+
 export interface LoanDetail {
   summary: LoanSummary;
   borrowers: Borrower[];
   income: LoanIncome[];
+  terms: LoanTerms | null;
   lock: LockInfo | null;
 }
 
