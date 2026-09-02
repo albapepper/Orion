@@ -7,7 +7,6 @@ import { LoanHeader } from '../../components/LoanHeader';
 
 interface Props {
   loanId: string;
-  onBack: () => void;
 }
 
 export function IncomeScreen(props: Props) {
@@ -65,7 +64,7 @@ export function IncomeScreen(props: Props) {
 
   return (
     <div class="screen">
-      <LoanHeader detail={detail()} screenLabel="Income Analysis" onBack={props.onBack} />
+      <LoanHeader detail={detail()} />
 
       <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
         <table class="data-table editable">

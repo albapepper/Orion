@@ -27,20 +27,34 @@ them *fast*. Concretely:
 
 - Every screen and panel gets a keybinding the moment it exists — never
   "keyboard support later"
+- Page shortcuts are `Ctrl`-modified so they work even while typing in a field
 - `?` opens the keyboard legend from anywhere; keycaps are rendered inline in
   the NavTray so bindings are learned passively
-- `Home` is the universal back button
+- `Home` is the universal back button — one page back, every press
 - `/` focuses the assistant from anywhere; `Esc` always dismisses / unfocuses
 - New commands should be wired for both the assistant and direct keys
 
-Current bindings: `d` dashboard · `i/a/c/p` income/assets/credit/property ·
-`1–9` nth recent loan · `/` assistant · `[` collapse NavTray · `Home` back ·
-`?` legend · `Esc` close.
+Current bindings: `⌃d` dashboard · `⌃p/⌃c/⌃i/⌃a` property/credit/income/assets ·
+`⌃1–9` nth recent loan · `/` assistant · `Home` back · `?` legend · `Esc` close.
+
+**This is a comfortable, intuitive place to do work.** People live in Orion
+for the entire loan process, so screens must feel roomy and laid back — the
+opposite of a cramped spreadsheet. Generous padding, centered content
+columns, spread-out cards over dense grids. When you're in a loan, it feels
+like you're in *that one loan*: the only header is the loan number and
+applicant name, centered.
+
+**The loan is a cascading progression:** property → credit → income →
+assets. Opening a loan starts at property; the NavTray lists the stages in
+that order.
 
 **Layout** is three fixed columns: **NavTray** (left — all navigation:
-screens, recent loans, collapse toggle, app name), **workspace** (center),
-**ChatBox** (right — all things AI, headed by the active model identifier so
-users always know what model they're talking to). No top header.
+stages, recent loans, app name; anchored, never collapses), **workspace**
+(center), **ChatBox** (right — all things AI, headed by the active model
+identifier so users always know what model they're talking to; same width as
+the NavTray). No top header. The ChatBox inserts a labeled divider whenever
+the conversation moves to a new screen, so income and assets discussions
+read as separate threads.
 
 **Visual language:** dark roast brown palette, copper accent, hard edges —
 zero border radius, 1px borders, monospace numerals. Modern-Linux feel

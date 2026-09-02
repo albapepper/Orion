@@ -9,9 +9,8 @@ import { LoanHeader } from '../../components/LoanHeader';
 
 interface Props {
   loanId: string;
-  screen: string; // "assets" | "credit" | "property"
+  screen: string; // "property" | "credit" | "assets"
   label: string;
-  onBack: () => void;
 }
 
 export function StubScreen(props: Props) {
@@ -22,7 +21,7 @@ export function StubScreen(props: Props) {
 
   return (
     <div class="screen">
-      <LoanHeader detail={detail()} screenLabel={props.label} onBack={props.onBack} />
+      <LoanHeader detail={detail()} />
 
       <div class="stub-panel">
         <div class="stub-title">{props.label}</div>

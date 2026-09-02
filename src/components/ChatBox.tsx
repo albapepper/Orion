@@ -1,11 +1,15 @@
-import { createSignal, For, onCleanup, onMount, Show } from 'solid-js';
+import { createSignal, For, onCleanup, onMount, Show, Switch, Match } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
 import type { AiResponse, AppStatus } from '../types';
 
-interface Message {
+interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
+
+// A divider marks where the conversation moved to a different screen,
+// so discussions about income vs. assets read as separate threads.
+type Entry = ChatMessage | { role: 'divider'; screen: string };
 
 interface Props {
   loanId: string | null;
@@ -14,10 +18,11 @@ interface Props {
 }
 
 export function ChatBox(props: Props) {
-  const [messages, setMessages] = createSignal<Message[]>([]);
+  const [entries, setEntries] = createSignal<Entry[]>([]);
   const [input, setInput] = createSignal('');
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
+  const [lastScreen, setLastScreen] = createSignal<string | null>(null);
   let inputRef: HTMLInputElement | undefined;
 
   // "/" anywhere in the app focuses the chat input
@@ -25,11 +30,19 @@ export function ChatBox(props: Props) {
   onMount(() => window.addEventListener('orion:focus-chat', focusHandler));
   onCleanup(() => window.removeEventListener('orion:focus-chat', focusHandler));
 
+  const history = () =>
+    entries().filter((e): e is ChatMessage => e.role !== 'divider');
+
   const send = async () => {
     const text = input().trim();
     if (!text || loading()) return;
 
-    setMessages((m) => [...m, { role: 'user', content: text }]);
+    if (lastScreen() !== props.screen) {
+      setEntries((m) => [...m, { role: 'divider', screen: props.screen }]);
+      setLastScreen(props.screen);
+    }
+
+    setEntries((m) => [...m, { role: 'user', content: text }]);
     setInput('');
     setLoading(true);
     setError(null);
@@ -38,9 +51,9 @@ export function ChatBox(props: Props) {
       const response = await invoke<AiResponse>('ai_chat', {
         loanId: props.loanId,
         screen: props.screen,
-        messages: messages(),
+        messages: history(),
       });
-      setMessages((m) => [...m, { role: 'assistant', content: response.content }]);
+      setEntries((m) => [...m, { role: 'assistant', content: response.content }]);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -56,18 +69,30 @@ export function ChatBox(props: Props) {
           <span class="model-name">{props.status?.ai_model ?? '…'}</span>
           <span class="model-provider">{props.status?.ai_provider ?? ''}</span>
         </div>
-        <span class="screen-badge">{props.screen}</span>
       </div>
 
       <div class="chat-messages">
-        <Show when={messages().length === 0 && !loading()}>
+        <Show when={entries().length === 0 && !loading()}>
           <div class="chat-empty">
-            Context-aware chat for the {props.screen} screen. Press{' '}
+            Context-aware chat — answers use what's on your screen. Press{' '}
             <kbd class="keycap inline">/</kbd> to type from anywhere.
           </div>
         </Show>
-        <For each={messages()}>
-          {(msg) => <div class={`message ${msg.role}`}>{msg.content}</div>}
+        <For each={entries()}>
+          {(entry) => (
+            <Switch>
+              <Match when={entry.role === 'divider'}>
+                <div class="chat-divider">
+                  <span>{(entry as { screen: string }).screen}</span>
+                </div>
+              </Match>
+              <Match when={entry.role !== 'divider'}>
+                <div class={`message ${entry.role}`}>
+                  {(entry as ChatMessage).content}
+                </div>
+              </Match>
+            </Switch>
+          )}
         </For>
         {loading() && <div class="message assistant loading">Thinking…</div>}
         <Show when={error()}>

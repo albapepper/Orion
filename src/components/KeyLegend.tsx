@@ -6,15 +6,14 @@ interface Props {
 }
 
 const BINDINGS: Array<[string, string]> = [
-  ['d', 'Dashboard'],
-  ['i', 'Income screen'],
-  ['a', 'Assets screen'],
-  ['c', 'Credit screen'],
-  ['p', 'Property screen'],
-  ['1–9', 'Open nth recent loan'],
+  ['⌃d', 'Dashboard'],
+  ['⌃p', 'Property screen'],
+  ['⌃c', 'Credit screen'],
+  ['⌃i', 'Income screen'],
+  ['⌃a', 'Assets screen'],
+  ['⌃1–9', 'Open nth recent loan'],
   ['/', 'Focus the assistant'],
-  ['[', 'Collapse / expand nav tray'],
-  ['Home', 'Back'],
+  ['Home', 'Back to previous page'],
   ['?', 'Toggle this legend'],
   ['Esc', 'Close / unfocus'],
 ];
@@ -36,7 +35,8 @@ export function KeyLegend(props: Props) {
             </For>
           </div>
           <div class="legend-note">
-            Orion is designed to be fully operable without a mouse.
+            Orion is designed to be fully operable without a mouse. Loan
+            screens cascade: property → credit → income → assets.
           </div>
         </div>
       </div>

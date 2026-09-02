@@ -20,6 +20,13 @@ const STATUS_URGENCY: Record<string, number> = {
 const daysSince = (iso: string) =>
   Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
 
+const idleLabel = (iso: string) => {
+  const d = daysSince(iso);
+  if (d === 0) return 'touched today';
+  if (d === 1) return 'idle 1 day';
+  return `idle ${d} days`;
+};
+
 export function Dashboard(props: Props) {
   const workQueue = () =>
     props.loans
@@ -37,17 +44,13 @@ export function Dashboard(props: Props) {
     props.loans.filter((l) => l.status === status).length;
 
   return (
-    <div class="screen">
-      <header class="screen-header">
-        <h1>Dashboard</h1>
-      </header>
-
-      <div class="pipeline-grid">
+    <div class="screen dashboard">
+      <div class="pipeline-strip">
         <For each={[...LOAN_STATUSES]}>
           {(status) => (
-            <div class="pipeline-card">
-              <div class="pipeline-count">{countFor(status)}</div>
-              <div class="pipeline-label">{status}</div>
+            <div class="pipeline-stat" classList={{ empty: countFor(status) === 0 }}>
+              <span class="pipeline-count">{countFor(status)}</span>
+              <span class="pipeline-label">{status}</span>
             </div>
           )}
         </For>
@@ -56,40 +59,30 @@ export function Dashboard(props: Props) {
       <h2 class="section-title">Up next</h2>
       <Show
         when={workQueue().length > 0}
-        fallback={<div class="screen-loading">Nothing needs attention. Pipeline is clear.</div>}
+        fallback={
+          <div class="screen-loading">Nothing needs attention. Pipeline is clear.</div>
+        }
       >
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th class="rank-col">#</th>
-              <th>Loan</th>
-              <th>Borrower</th>
-              <th>Stage</th>
-              <th>Idle</th>
-              <th>Assigned to</th>
-            </tr>
-          </thead>
-          <tbody>
-            <For each={workQueue()}>
-              {(loan, i) => (
-                <tr class="clickable" onClick={() => props.onOpenLoan(loan)}>
-                  <td class="rank-col mono">{i() + 1}</td>
-                  <td class="mono">{loan.loan_number}</td>
-                  <td>{loan.borrower_name ?? '—'}</td>
-                  <td>
-                    <span class={`status-pill ${loan.status}`}>{loan.status}</span>
-                  </td>
-                  <td class="mono">
-                    {daysSince(loan.updated_at) === 0
-                      ? 'today'
-                      : `${daysSince(loan.updated_at)}d`}
-                  </td>
-                  <td>{loan.assigned_to_name ?? 'Unassigned'}</td>
-                </tr>
-              )}
-            </For>
-          </tbody>
-        </table>
+        <div class="queue">
+          <For each={workQueue()}>
+            {(loan, i) => (
+              <button class="queue-card" onClick={() => props.onOpenLoan(loan)}>
+                <span class="queue-rank mono">{i() + 1}</span>
+                <span class="queue-who">
+                  <span class="queue-borrower">{loan.borrower_name ?? 'No borrower yet'}</span>
+                  <span class="queue-loan mono">{loan.loan_number}</span>
+                </span>
+                <span class="queue-meta">
+                  <span class={`status-pill ${loan.status}`}>{loan.status}</span>
+                  <span class="queue-idle">{idleLabel(loan.updated_at)}</span>
+                  <span class="queue-assigned">
+                    {loan.assigned_to_name ?? 'Unassigned'}
+                  </span>
+                </span>
+              </button>
+            )}
+          </For>
+        </div>
       </Show>
     </div>
   );

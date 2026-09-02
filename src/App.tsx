@@ -9,22 +9,22 @@ import { IncomeScreen } from './screens/loan/IncomeScreen';
 import { StubScreen } from './screens/loan/StubScreen';
 import './App.css';
 
-type LoanScreen = 'income' | 'assets' | 'credit' | 'property';
+// The loan cascade, in working order: property → credit → income → assets
+type LoanScreen = 'property' | 'credit' | 'income' | 'assets';
 
 type Route = { name: 'dashboard' } | { name: LoanScreen; loanId: string };
 
-const LOAN_SCREENS: LoanScreen[] = ['income', 'assets', 'credit', 'property'];
+const LOAN_SCREENS: LoanScreen[] = ['property', 'credit', 'income', 'assets'];
 const SCREEN_LABELS: Record<LoanScreen, string> = {
+  property: 'Property',
+  credit: 'Credit',
   income: 'Income Analysis',
   assets: 'Assets',
-  credit: 'Credit',
-  property: 'Property',
 };
 
 function App() {
   const [route, setRoute] = createSignal<Route>({ name: 'dashboard' });
   const [history, setHistory] = createSignal<Route[]>([]);
-  const [trayCollapsed, setTrayCollapsed] = createSignal(false);
   const [legendOpen, setLegendOpen] = createSignal(false);
   const [activeLoanId, setActiveLoanId] = createSignal<string | null>(null);
 
@@ -37,6 +37,7 @@ function App() {
     if ('loanId' in next) setActiveLoanId(next.loanId);
   };
 
+  // Home: back to the previous page, one step at a time
   const goBack = () => {
     const h = history();
     if (h.length === 0) return;
@@ -55,13 +56,36 @@ function App() {
     if (loanId) navigate({ name: id as LoanScreen, loanId });
   };
 
-  const openLoan = (loan: LoanSummary) => navigate({ name: 'income', loanId: loan.id });
+  // Entering a loan starts at the top of the cascade
+  const openLoan = (loan: LoanSummary) => navigate({ name: 'property', loanId: loan.id });
 
   const inEditor = (el: EventTarget | null) =>
     el instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    // Page shortcuts are Ctrl-modified so they work even mid-typing
+    if (e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (e.key === 'd') {
+        e.preventDefault();
+        openScreen('dashboard');
+        return;
+      }
+      const screen = LOAN_SCREENS.find((s) => s.startsWith(e.key));
+      if (screen) {
+        e.preventDefault();
+        openScreen(screen);
+        return;
+      }
+      const n = parseInt(e.key, 10);
+      if (n >= 1 && n <= 9) {
+        e.preventDefault();
+        const loan = loans()?.[n - 1];
+        if (loan) openLoan(loan);
+      }
+      return;
+    }
+
+    if (e.metaKey || e.altKey) return;
 
     if (e.key === 'Escape') {
       if (legendOpen()) setLegendOpen(false);
@@ -72,17 +96,6 @@ function App() {
     if (inEditor(e.target)) return;
 
     switch (e.key) {
-      case 'd':
-        openScreen('dashboard');
-        break;
-      case 'i':
-      case 'a':
-      case 'c':
-      case 'p':
-        openScreen(
-          LOAN_SCREENS.find((s) => s.startsWith(e.key))!,
-        );
-        break;
       case '/':
         e.preventDefault();
         window.dispatchEvent(new Event('orion:focus-chat'));
@@ -90,20 +103,10 @@ function App() {
       case '?':
         setLegendOpen((v) => !v);
         break;
-      case '[':
-        setTrayCollapsed((v) => !v);
-        break;
       case 'Home':
         e.preventDefault();
         goBack();
         break;
-      default: {
-        const n = parseInt(e.key, 10);
-        if (n >= 1 && n <= 9) {
-          const loan = loans()?.[n - 1];
-          if (loan) openLoan(loan);
-        }
-      }
     }
   };
 
@@ -118,8 +121,6 @@ function App() {
   return (
     <div class="app">
       <NavTray
-        collapsed={trayCollapsed()}
-        onToggle={() => setTrayCollapsed((v) => !v)}
         activeNav={route().name}
         onNavigate={openScreen}
         recentLoans={loans() ?? []}
@@ -135,14 +136,13 @@ function App() {
             <Dashboard loans={loans() ?? []} onOpenLoan={openLoan} />
           </Match>
           <Match when={route().name === 'income'}>
-            <IncomeScreen loanId={(route() as { loanId: string }).loanId} onBack={goBack} />
+            <IncomeScreen loanId={(route() as { loanId: string }).loanId} />
           </Match>
-          <Match when={['assets', 'credit', 'property'].includes(route().name)}>
+          <Match when={['property', 'credit', 'assets'].includes(route().name)}>
             <StubScreen
               loanId={(route() as { loanId: string }).loanId}
               screen={route().name}
               label={SCREEN_LABELS[route().name as LoanScreen]}
-              onBack={goBack}
             />
           </Match>
         </Switch>

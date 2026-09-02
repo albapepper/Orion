@@ -91,8 +91,9 @@ kbd.keycap.inline {
 
 /* ── NavTray ─────────────────────────────────────────── */
 
+/* Anchored, fixed width — mirrors the ChatBox on the other side */
 .nav-tray {
-  width: 232px;
+  width: 300px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -100,16 +101,12 @@ kbd.keycap.inline {
   border-right: 1px solid var(--border);
 }
 
-.nav-tray.collapsed {
-  width: 56px;
-}
-
 .tray-brand {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 48px;
-  padding: 0 12px;
+  gap: 10px;
+  height: 56px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -125,33 +122,8 @@ kbd.keycap.inline {
   text-transform: uppercase;
 }
 
-.tray-toggle {
-  margin-left: auto;
-  width: 22px;
-  height: 22px;
-  color: var(--text-dim);
-  border: 1px solid var(--border);
-  font-family: var(--mono);
-}
-
-.tray-toggle:hover {
-  color: var(--accent);
-  border-color: var(--border-strong);
-}
-
-.nav-tray.collapsed .tray-toggle {
-  margin-left: 0;
-}
-
-.nav-tray.collapsed .tray-brand {
-  flex-direction: column;
-  height: auto;
-  padding: 10px 0;
-  gap: 8px;
-}
-
 .tray-section {
-  padding: 10px 8px;
+  padding: 14px 10px;
 }
 
 .tray-section.recent {
@@ -171,9 +143,9 @@ kbd.keycap.inline {
 .tray-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 7px 8px;
+  padding: 10px 12px;
   text-align: left;
   color: var(--text-dim);
   border-left: 2px solid transparent;
@@ -240,22 +212,17 @@ kbd.keycap.inline {
   min-width: 0;
 }
 
+/* Roomy: this is where people live for the whole loan process */
 .screen {
   flex: 1;
-  padding: 24px 28px;
+  padding: 48px 56px 56px;
   overflow-y: auto;
 }
 
-.screen-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.screen-header h1 {
-  font-size: 20px;
-  font-weight: 700;
+.screen > * {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .section-title {
@@ -263,24 +230,7 @@ kbd.keycap.inline {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-dim);
-  margin: 26px 0 10px;
-}
-
-.screen-label {
-  color: var(--text-dim);
-  font-weight: 500;
-}
-
-.context-line {
-  margin-top: 4px;
-  color: var(--text-dim);
-}
-
-.back-link {
-  color: var(--accent);
-  font-weight: 500;
-  margin-bottom: 6px;
-  padding: 0;
+  margin: 40px auto 16px;
 }
 
 .screen-loading {
@@ -288,22 +238,56 @@ kbd.keycap.inline {
   padding: 32px 0;
 }
 
-/* ── Dashboard ───────────────────────────────────────── */
+/* ── Loan header: just the loan and the person, centered ── */
 
-.pipeline-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 10px;
+.loan-header {
+  position: relative;
+  text-align: center;
+  padding: 8px 0 36px;
 }
 
-.pipeline-card {
+.loan-header-number {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.loan-header-name {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.loan-header-lock {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+/* ── Dashboard: laid back, not a spreadsheet ─────────── */
+
+.pipeline-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 36px;
+  padding: 18px 22px;
   background: var(--surface);
   border: 1px solid var(--border);
-  padding: 14px 16px;
+}
+
+.pipeline-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.pipeline-stat.empty {
+  opacity: 0.4;
 }
 
 .pipeline-count {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
   font-family: var(--mono);
 }
@@ -311,12 +295,74 @@ kbd.keycap.inline {
 .pipeline-label {
   color: var(--text-dim);
   text-transform: capitalize;
-  margin-top: 2px;
   font-size: 13px;
 }
 
-.rank-col {
-  width: 36px;
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.queue-card {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--border-strong);
+  text-align: left;
+}
+
+.queue-card:hover {
+  border-left-color: var(--accent);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.queue-rank {
+  font-size: 18px;
+  color: var(--text-dim);
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.queue-who {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.queue-borrower {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.queue-loan {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.queue-meta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-shrink: 0;
+}
+
+.queue-idle {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.queue-assigned {
+  color: var(--text-dim);
+  font-size: 13px;
+  min-width: 90px;
+  text-align: right;
 }
 
 /* ── Tables ──────────────────────────────────────────── */
@@ -335,13 +381,13 @@ kbd.keycap.inline {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-dim);
-  padding: 9px 12px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-2);
 }
 
 .data-table td {
-  padding: 10px 12px;
+  padding: 13px 16px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -492,8 +538,9 @@ button.primary.small {
 
 /* ── ChatBox ─────────────────────────────────────────── */
 
+/* Anchored, fixed width — mirrors the NavTray on the other side */
 .chat-box {
-  width: 330px;
+  width: 300px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -504,9 +551,8 @@ button.primary.small {
 .chat-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 48px;
-  padding: 0 14px;
+  height: 56px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -543,17 +589,6 @@ button.primary.small {
   flex-shrink: 0;
 }
 
-.screen-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  text-transform: capitalize;
-  flex-shrink: 0;
-  margin-left: 8px;
-}
-
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -567,6 +602,25 @@ button.primary.small {
   color: var(--text-dim);
   font-size: 13px;
   line-height: 1.6;
+}
+
+/* Marks where the conversation moved to a different screen */
+.chat-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 2px;
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.chat-divider::before,
+.chat-divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--border);
 }
 
 .message {

@@ -4,32 +4,25 @@ import { LockBadge } from './LockBadge';
 
 interface Props {
   detail?: LoanDetail;
-  screenLabel: string;
-  onBack: () => void;
 }
 
+// Inside a loan it should feel like you're in just that one loan:
+// loan number + applicant, centered. Nothing else competes.
 export function LoanHeader(props: Props) {
   const primaryBorrower = () =>
     props.detail?.borrowers.find((b) => b.is_primary) ?? props.detail?.borrowers[0];
 
   return (
-    <header class="screen-header">
-      <div>
-        <button class="back-link" onClick={props.onBack} title="Back (Home)">
-          ← Back
-        </button>
-        <h1>
-          {props.detail?.summary.loan_number ?? '…'}
-          <span class="screen-label"> · {props.screenLabel}</span>
-        </h1>
-        <div class="context-line">
-          Borrower:{' '}
-          <Show when={primaryBorrower()} fallback="—">
-            {primaryBorrower()!.first_name} {primaryBorrower()!.last_name}
-          </Show>
-        </div>
+    <header class="loan-header">
+      <div class="loan-header-lock">
+        <LockBadge lock={props.detail?.lock ?? null} currentUserId={null} />
       </div>
-      <LockBadge lock={props.detail?.lock ?? null} currentUserId={null} />
+      <div class="loan-header-number">{props.detail?.summary.loan_number ?? '…'}</div>
+      <div class="loan-header-name">
+        <Show when={primaryBorrower()} fallback="—">
+          {primaryBorrower()!.first_name} {primaryBorrower()!.last_name}
+        </Show>
+      </div>
     </header>
   );
 }
