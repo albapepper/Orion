@@ -55,6 +55,8 @@ pub fn run() {
             commands::loan_commands::save_loan_terms,
             commands::loan_commands::save_asset,
             commands::loan_commands::delete_asset,
+            commands::loan_commands::save_liability,
+            commands::loan_commands::delete_liability,
             commands::loan_commands::acquire_loan_lock,
             commands::loan_commands::release_loan_lock,
             commands::loan_commands::get_loan_lock,

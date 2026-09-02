@@ -2,7 +2,8 @@
 // `query!` macros once a dev database + `sqlx prepare` workflow is in place.
 
 use crate::loans::{
-    Asset, Borrower, BorrowerDependent, Employment, Loan, LoanIncome, LoanSummary, LoanTerms,
+    Asset, Borrower, BorrowerDependent, Employment, Liability, Loan, LoanIncome, LoanSummary,
+    LoanTerms,
 };
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -465,4 +466,83 @@ pub async fn get_asset(pool: &PgPool, id: Uuid) -> anyhow::Result<Option<Asset>>
     .fetch_optional(pool)
     .await?;
     Ok(row)
+}
+
+const LIABILITY_COLUMNS: &str = "id, borrower_id, loan_id, company_id, liability_type,
+    creditor_name, monthly_payment::FLOAT8 AS monthly_payment,
+    unpaid_balance::FLOAT8 AS unpaid_balance, payoff_at_close, notes";
+
+pub async fn get_liabilities(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Vec<Liability>> {
+    let rows = sqlx::query_as::<_, Liability>(&format!(
+        "SELECT {LIABILITY_COLUMNS} FROM loan_liabilities WHERE loan_id = $1
+         ORDER BY monthly_payment DESC"
+    ))
+    .bind(loan_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+pub async fn get_liability(pool: &PgPool, id: Uuid) -> anyhow::Result<Option<Liability>> {
+    let row = sqlx::query_as::<_, Liability>(&format!(
+        "SELECT {LIABILITY_COLUMNS} FROM loan_liabilities WHERE id = $1"
+    ))
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn upsert_liability(
+    pool: &PgPool,
+    id: Option<Uuid>,
+    borrower_id: Uuid,
+    loan_id: Uuid,
+    company_id: Uuid,
+    liability_type: &str,
+    creditor_name: Option<&str>,
+    monthly_payment: Option<f64>,
+    unpaid_balance: Option<f64>,
+    payoff_at_close: bool,
+    notes: Option<&str>,
+) -> anyhow::Result<Liability> {
+    let row = sqlx::query_as::<_, Liability>(&format!(
+        r#"
+        INSERT INTO loan_liabilities
+            (id, borrower_id, loan_id, company_id, liability_type, creditor_name,
+             monthly_payment, unpaid_balance, payoff_at_close, notes, updated_at)
+        VALUES (COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9, $10, now())
+        ON CONFLICT (id) DO UPDATE SET
+            liability_type = EXCLUDED.liability_type,
+            creditor_name = EXCLUDED.creditor_name,
+            monthly_payment = EXCLUDED.monthly_payment,
+            unpaid_balance = EXCLUDED.unpaid_balance,
+            payoff_at_close = EXCLUDED.payoff_at_close,
+            notes = EXCLUDED.notes,
+            updated_at = now()
+        RETURNING {LIABILITY_COLUMNS}
+        "#
+    ))
+    .bind(id)
+    .bind(borrower_id)
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(liability_type)
+    .bind(creditor_name)
+    .bind(monthly_payment)
+    .bind(unpaid_balance)
+    .bind(payoff_at_close)
+    .bind(notes)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn delete_liability(pool: &PgPool, id: Uuid) -> anyhow::Result<()> {
+    sqlx::query("DELETE FROM loan_liabilities WHERE id = $1")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(())
 }

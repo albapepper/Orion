@@ -32,6 +32,7 @@ pub struct LoanDetail {
     pub employments: Vec<crate::loans::Employment>,
     pub income: Vec<LoanIncome>,
     pub assets: Vec<crate::loans::Asset>,
+    pub liabilities: Vec<crate::loans::Liability>,
     pub terms: Option<LoanTerms>,
     pub lock: Option<LockInfo>,
 }
@@ -82,6 +83,9 @@ pub async fn get_loan_detail(
             let assets = crate::db::queries::get_assets(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let liabilities = crate::db::queries::get_liabilities(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let income = crate::db::queries::get_income(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -98,6 +102,7 @@ pub async fn get_loan_detail(
                 employments,
                 income,
                 assets,
+                liabilities,
                 terms,
                 lock,
             })
@@ -114,6 +119,7 @@ pub async fn get_loan_detail(
                 employments: demo::employments(loan_id),
                 income: demo::income(loan_id),
                 assets: demo::assets(loan_id),
+                liabilities: demo::liabilities(loan_id),
                 terms: Some(demo::loan_terms(loan_id)),
                 lock: None,
             })
@@ -629,6 +635,107 @@ pub async fn delete_asset(
             user_id,
             "asset.delete",
             "loan_assets",
+            removed.id,
+            Some(serde_json::to_value(&removed).map_err(|e| e.to_string())?),
+            None,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[derive(Deserialize)]
+pub struct LiabilityInput {
+    pub id: Option<String>,
+    pub borrower_id: String,
+    pub liability_type: String,
+    pub creditor_name: Option<String>,
+    pub monthly_payment: Option<f64>,
+    pub unpaid_balance: Option<f64>,
+    pub payoff_at_close: bool,
+    pub notes: Option<String>,
+}
+
+#[tauri::command]
+pub async fn save_liability(
+    state: State<'_, AppState>,
+    loan_id: String,
+    liability: LiabilityInput,
+) -> Result<crate::loans::Liability, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let borrower_id = parse_uuid(&liability.borrower_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    let record_id = liability.id.as_deref().map(parse_uuid).transpose()?;
+
+    let saved = crate::db::queries::upsert_liability(
+        &pool,
+        record_id,
+        borrower_id,
+        loan_id,
+        company_id,
+        &liability.liability_type,
+        liability.creditor_name.as_deref(),
+        liability.monthly_payment,
+        liability.unpaid_balance,
+        liability.payoff_at_close,
+        liability.notes.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        if record_id.is_some() { "liability.update" } else { "liability.create" },
+        "loan_liabilities",
+        saved.id,
+        None,
+        Some(serde_json::to_value(&saved).map_err(|e| e.to_string())?),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
+#[tauri::command]
+pub async fn delete_liability(
+    state: State<'_, AppState>,
+    liability_id: String,
+) -> Result<(), String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let liability_id = parse_uuid(&liability_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let before = crate::db::queries::get_liability(&pool, liability_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::db::queries::delete_liability(&pool, liability_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if let Some(removed) = before {
+        crate::audit::write(
+            &pool,
+            company_id,
+            Some(removed.loan_id),
+            user_id,
+            "liability.delete",
+            "loan_liabilities",
             removed.id,
             Some(serde_json::to_value(&removed).map_err(|e| e.to_string())?),
             None,

@@ -2,7 +2,7 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Asset, Borrower, BorrowerDependent, Employment, LoanIncome, LoanSummary, LoanTerms};
+use super::{Asset, Borrower, BorrowerDependent, Employment, Liability, LoanIncome, LoanSummary, LoanTerms};
 use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
@@ -193,6 +193,35 @@ pub fn assets(loan_id: Uuid) -> Vec<Asset> {
             gift_donor: Some("Ruth Ellis (mother)".into()),
             gift_relationship: Some("parent".into()),
             notes: Some("Gift letter on file".into()),
+        },
+    ]
+}
+
+pub fn liabilities(loan_id: Uuid) -> Vec<Liability> {
+    vec![
+        Liability {
+            id: id("00000000-0000-0000-0000-000000000701"),
+            borrower_id: id(DEMO_BORROWER_ID),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            liability_type: "mortgage".into(),
+            creditor_name: Some("Meridian Home Loans".into()),
+            monthly_payment: Some(1_480.0),
+            unpaid_balance: Some(289_000.0),
+            payoff_at_close: false,
+            notes: Some("Primary residence being sold — will pay off at close".into()),
+        },
+        Liability {
+            id: id("00000000-0000-0000-0000-000000000604"),
+            borrower_id: id(DEMO_BORROWER_ID),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            liability_type: "installment".into(),
+            creditor_name: Some("Cascade Auto Finance".into()),
+            monthly_payment: Some(415.0),
+            unpaid_balance: Some(11_200.0),
+            payoff_at_close: false,
+            notes: None,
         },
     ]
 }
