@@ -150,6 +150,29 @@ async fn build_context_for_screen(
             };
             Ok(crate::loans::screens::assets::build_context(&name, &assets))
         }
+        "liabilities" => {
+            let (name, liabilities, income) = match &db {
+                Some(pool) => {
+                    let borrowers = crate::db::queries::get_borrowers(pool, loan_id).await?;
+                    let name = borrower_name(&borrowers);
+                    let liabilities =
+                        crate::db::queries::get_liabilities(pool, loan_id).await?;
+                    let income = crate::db::queries::get_income(pool, loan_id).await?;
+                    (name, liabilities, income)
+                }
+                None => (
+                    borrower_name(&demo::borrowers(loan_id)),
+                    demo::liabilities(loan_id),
+                    demo::income(loan_id),
+                ),
+            };
+            let total_monthly_income: f64 = income.iter().map(|i| i.monthly_amount).sum();
+            Ok(crate::loans::screens::liabilities::build_context(
+                &name,
+                &liabilities,
+                total_monthly_income,
+            ))
+        }
         _ => Ok(format!(
             "You are a concise, expert mortgage assistant inside the Orion \
              loan origination platform. Current screen: {screen}. Answer \

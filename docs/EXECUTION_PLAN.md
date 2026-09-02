@@ -98,7 +98,7 @@ consumes later.
       built on new shared LoanListScreen scaffolding)
 - [x] **P2-22** Liabilities migration (debt, payments, balances, payoff)
 - [x] **P2-23** Liabilities backend: queries + audit hook + IPC commands
-- [ ] **P2-24** Liabilities AI context builder (DTI impact)
+- [x] **P2-24** Liabilities AI context builder (DTI impact)
 - [ ] **P2-25** Liabilities screen UI + sidebar wire + lock check
 
 ### Week 4 — Property + REO
