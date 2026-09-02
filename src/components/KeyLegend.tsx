@@ -16,6 +16,7 @@ const BINDINGS: Array<[string, string]> = [
   ['⌃a', 'Assets screen'],
   ['⌃l', 'Liabilities screen'],
   ['⌃r', 'REO screen'],
+  ['⌃q', 'Declarations screen'],
   ['⌃1–9', 'Open nth recent loan'],
   ['⌃]', 'Next loan stage'],
   ['⌃[', 'Previous loan stage'],

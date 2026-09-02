@@ -143,6 +143,16 @@ export interface ReoProperty {
   notes: string | null;
 }
 
+export interface Declaration {
+  id: string;
+  borrower_id: string;
+  loan_id: string;
+  company_id: string;
+  question_key: string;
+  answer: boolean | null;
+  explanation: string | null;
+}
+
 export interface LoanDetail {
   summary: LoanSummary;
   borrowers: Borrower[];
@@ -153,6 +163,7 @@ export interface LoanDetail {
   liabilities: Liability[];
   property: SubjectProperty | null;
   reo: ReoProperty[];
+  declarations: Declaration[];
   terms: LoanTerms | null;
   lock: LockInfo | null;
 }
