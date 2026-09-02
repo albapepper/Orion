@@ -679,6 +679,17 @@ button.ghost.small {
   border: 1px solid var(--border);
 }
 
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.field-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 20px;
+}
+
 .field {
   display: flex;
   flex-direction: column;

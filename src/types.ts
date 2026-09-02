@@ -110,6 +110,22 @@ export interface Liability {
   notes: string | null;
 }
 
+export interface SubjectProperty {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  address_line: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  property_type: string;
+  occupancy: string;
+  year_built: number | null;
+  units: number;
+  estimated_value: number | null;
+  notes: string | null;
+}
+
 export interface LoanDetail {
   summary: LoanSummary;
   borrowers: Borrower[];
@@ -118,6 +134,7 @@ export interface LoanDetail {
   income: LoanIncome[];
   assets: Asset[];
   liabilities: Liability[];
+  property: SubjectProperty | null;
   terms: LoanTerms | null;
   lock: LockInfo | null;
 }
