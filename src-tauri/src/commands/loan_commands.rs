@@ -33,6 +33,7 @@ pub struct LoanDetail {
     pub income: Vec<LoanIncome>,
     pub assets: Vec<crate::loans::Asset>,
     pub liabilities: Vec<crate::loans::Liability>,
+    pub property: Option<crate::loans::SubjectProperty>,
     pub terms: Option<LoanTerms>,
     pub lock: Option<LockInfo>,
 }
@@ -86,6 +87,9 @@ pub async fn get_loan_detail(
             let liabilities = crate::db::queries::get_liabilities(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let property = crate::db::queries::get_subject_property(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             let income = crate::db::queries::get_income(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
@@ -103,6 +107,7 @@ pub async fn get_loan_detail(
                 income,
                 assets,
                 liabilities,
+                property,
                 terms,
                 lock,
             })
@@ -120,6 +125,7 @@ pub async fn get_loan_detail(
                 income: demo::income(loan_id),
                 assets: demo::assets(loan_id),
                 liabilities: demo::liabilities(loan_id),
+                property: Some(demo::subject_property(loan_id)),
                 terms: Some(demo::loan_terms(loan_id)),
                 lock: None,
             })
@@ -744,4 +750,68 @@ pub async fn delete_liability(
         .map_err(|e| e.to_string())?;
     }
     Ok(())
+}
+
+#[derive(Deserialize)]
+pub struct PropertyInput {
+    pub address_line: Option<String>,
+    pub city: Option<String>,
+    pub state: Option<String>,
+    pub postal_code: Option<String>,
+    pub property_type: String,
+    pub occupancy: String,
+    pub year_built: Option<i32>,
+    pub units: i32,
+    pub estimated_value: Option<f64>,
+    pub notes: Option<String>,
+}
+
+#[tauri::command]
+pub async fn save_subject_property(
+    state: State<'_, AppState>,
+    loan_id: String,
+    property: PropertyInput,
+) -> Result<crate::loans::SubjectProperty, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let saved = crate::db::queries::upsert_subject_property(
+        &pool,
+        loan_id,
+        company_id,
+        property.address_line.as_deref(),
+        property.city.as_deref(),
+        property.state.as_deref(),
+        property.postal_code.as_deref(),
+        &property.property_type,
+        &property.occupancy,
+        property.year_built,
+        property.units,
+        property.estimated_value,
+        property.notes.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "property.update",
+        "loan_subject_property",
+        saved.id,
+        None,
+        Some(serde_json::to_value(&saved).map_err(|e| e.to_string())?),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
 }

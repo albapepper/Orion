@@ -2,7 +2,7 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Asset, Borrower, BorrowerDependent, Employment, Liability, LoanIncome, LoanSummary, LoanTerms};
+use super::{Asset, Borrower, BorrowerDependent, Employment, Liability, LoanIncome, LoanSummary, LoanTerms, SubjectProperty};
 use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
@@ -224,4 +224,22 @@ pub fn liabilities(loan_id: Uuid) -> Vec<Liability> {
             notes: None,
         },
     ]
+}
+
+pub fn subject_property(loan_id: Uuid) -> SubjectProperty {
+    SubjectProperty {
+        id: id("00000000-0000-0000-0000-000000000801"),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        address_line: Some("1417 Alder Ridge Rd".into()),
+        city: Some("Bellingham".into()),
+        state: Some("WA".into()),
+        postal_code: Some("98225".into()),
+        property_type: "detached".into(),
+        occupancy: "primary".into(),
+        year_built: Some(1998),
+        units: 1,
+        estimated_value: Some(700_000.0),
+        notes: None,
+    }
 }

@@ -546,3 +546,73 @@ pub async fn delete_liability(pool: &PgPool, id: Uuid) -> anyhow::Result<()> {
         .await?;
     Ok(())
 }
+
+const PROPERTY_COLUMNS: &str = "id, loan_id, company_id, address_line, city, state, postal_code,
+    property_type, occupancy, year_built, units, estimated_value::FLOAT8 AS estimated_value, notes";
+
+pub async fn get_subject_property(
+    pool: &PgPool,
+    loan_id: Uuid,
+) -> anyhow::Result<Option<crate::loans::SubjectProperty>> {
+    let row = sqlx::query_as::<_, crate::loans::SubjectProperty>(&format!(
+        "SELECT {PROPERTY_COLUMNS} FROM loan_subject_property WHERE loan_id = $1"
+    ))
+    .bind(loan_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn upsert_subject_property(
+    pool: &PgPool,
+    loan_id: Uuid,
+    company_id: Uuid,
+    address_line: Option<&str>,
+    city: Option<&str>,
+    state: Option<&str>,
+    postal_code: Option<&str>,
+    property_type: &str,
+    occupancy: &str,
+    year_built: Option<i32>,
+    units: i32,
+    estimated_value: Option<f64>,
+    notes: Option<&str>,
+) -> anyhow::Result<crate::loans::SubjectProperty> {
+    let row = sqlx::query_as::<_, crate::loans::SubjectProperty>(&format!(
+        r#"
+        INSERT INTO loan_subject_property
+            (id, loan_id, company_id, address_line, city, state, postal_code,
+             property_type, occupancy, year_built, units, estimated_value, notes, updated_at)
+        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now())
+        ON CONFLICT (loan_id) DO UPDATE SET
+            address_line = EXCLUDED.address_line,
+            city = EXCLUDED.city,
+            state = EXCLUDED.state,
+            postal_code = EXCLUDED.postal_code,
+            property_type = EXCLUDED.property_type,
+            occupancy = EXCLUDED.occupancy,
+            year_built = EXCLUDED.year_built,
+            units = EXCLUDED.units,
+            estimated_value = EXCLUDED.estimated_value,
+            notes = EXCLUDED.notes,
+            updated_at = now()
+        RETURNING {PROPERTY_COLUMNS}
+        "#
+    ))
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(address_line)
+    .bind(city)
+    .bind(state)
+    .bind(postal_code)
+    .bind(property_type)
+    .bind(occupancy)
+    .bind(year_built)
+    .bind(units)
+    .bind(estimated_value)
+    .bind(notes)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}

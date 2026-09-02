@@ -81,6 +81,23 @@ pub struct Liability {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct SubjectProperty {
+    pub id: Uuid,
+    pub loan_id: Uuid,
+    pub company_id: Uuid,
+    pub address_line: Option<String>,
+    pub city: Option<String>,
+    pub state: Option<String>,
+    pub postal_code: Option<String>,
+    pub property_type: String,
+    pub occupancy: String,
+    pub year_built: Option<i32>,
+    pub units: i32,
+    pub estimated_value: Option<f64>,
+    pub notes: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct BorrowerDependent {
     pub id: Uuid,
     pub borrower_id: Uuid,
