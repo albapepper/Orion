@@ -230,27 +230,69 @@ what to work on next. **Milestone: DEMO-READY.**
 
 ---
 
-## Stage: Phase 4 — Pricing & AUS (ACTIVE)
+## Stage: Phase 4 — Pricing & AUS (COMPLETE)
 
 Screens 17–19 plus the MISMO serialization layer. Definition of done:
 a complete loan can be priced, serialized to MISMO 3.4, submitted to
-DU and LPA sandbox, and findings display in Orion. **Gate:
-pilot-credible.** ⚠ GSE sandbox access must be in hand by week 14.
+DU and LPA, and findings display in Orion. **Done in mock mode —
+GSE sandbox credentials flip the same commands live** (config:
+`aus.du_endpoint` / `aus.lpa_endpoint`).
 
-- [x] **P4-01** Rate sheets admin: migration + backend + screen for
-      maintaining lender rate sheets (rates, points, comp plans)
-- [x] **P4-02** Pricing screen: manual option building against the
-      active rate sheet (monthly P&I, APR-adjacent math, option rows)
-- [x] **P4-03** Pricing AI: "give me options at 6.5% with under $3K
-      in points" — pricing context builder + constrained suggestions
-- [x] **P4-04** MISMO 3.4 serialization layer: complete loan → XML
-      per docs/1003-fields.md mapping
-- [x] **P4-05** DU sandbox: submit serialized loan, store + display
-      findings (mock engine scores the file's own numbers until the
-      DU endpoint is configured; live path ships in the same command)
-- [x] **P4-06** LPA sandbox: submit serialized loan, store + display
-      findings (same mock-mode story as P4-05; Accept/Caution
-      vocabulary, obligation-ratio phrasing)
+---
+
+## Stage: Phase 5 — Team, Admin & Polish (ACTIVE)
+
+Dec 17 → Jan 27. Setup wizard · Users · Company settings · Closing ·
+Funding · Contacts panel · new-user walkthrough. **Gate: PILOT-READY.**
+
+### Week 15 — Setup wizard & company
+
+- [ ] **P5-01** Setup wizard: the backend already has the commands
+      (connect, deploy schema, save config, test AI) — build the
+      first-run screen that drives them: gate on `configured`,
+      walk DB URL → test → deploy migrations → create company →
+      AI check, with a "continue in demo mode" escape hatch
+- [ ] **P5-02** Company settings: companies row CRUD (name), settings
+      screen becomes a real admin surface (DB, AI, AUS endpoints
+      with the test buttons wired), company name in the nav tray
+
+### Week 16 — Team
+
+- [ ] **P5-03** Users admin: create/edit/deactivate users, role
+      assignment (loan_officer | processor | underwriter | admin),
+      migration for an active flag; Users screen (⌃m) absorbing the
+      persona picker
+- [ ] **P5-04** Loans & lifecycle: create_loan command (real mode has
+      no way to make a loan), set_loan_status with role gating +
+      audit, "+ New loan" on the loans screen, status stepper on
+      Overview
+
+### Week 17 — Closing & Funding
+
+- [ ] **P5-05** Closing migration + backend: per-loan closing record
+      (closing date, location, settlement agent, cost summary) with
+      audit + IPC
+- [ ] **P5-06** Closing screen UI + stage in the tracker (after AUS);
+      scheduling closing moves the loan to 'closing'
+- [ ] **P5-07** Funding migration + backend: funding record (funded
+      date, disbursement method/reference, amount) with audit + IPC
+- [ ] **P5-08** Funding screen UI + stage; funding completes the
+      pipeline (status 'funded')
+
+### Week 18 — Contacts & walkthrough
+
+- [ ] **P5-09** Contacts migration + backend: loan_contacts (role:
+      realtor | title | escrow | insurance | other) with audit + IPC
+- [ ] **P5-10** Contacts panel: bottom panel on every loan screen,
+      sibling of the task panel
+- [ ] **P5-11** New-user walkthrough: first-run tour card (demo-mode
+      explainer, key legend, first-loan CTA), remembered locally
+
+### Week 19 — Pilot polish
+
+- [ ] **P5-12** Pilot polish pass: empty states, error copy, demo→real
+      handoff (first real loan from a fresh install), pilot-readiness
+      checklist. **Gate: PILOT-READY.**
 
 ---
 
