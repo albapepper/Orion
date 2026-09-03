@@ -4,6 +4,7 @@ import type { AppStatus, LoanSummary } from './types';
 import { NavTray } from './components/NavTray';
 import { ChatBox } from './components/ChatBox';
 import { KeyLegend } from './components/KeyLegend';
+import { Walkthrough } from './components/Walkthrough';
 import { setUser } from './lib/session';
 import { OverviewScreen } from './screens/OverviewScreen';
 import { SetupWizard } from './screens/SetupWizard';
@@ -52,6 +53,15 @@ function App() {
   // P5-01: unconfigured installs meet the setup wizard first. "Continue
   // in demo mode" bypasses it for the session — demo is a feature.
   const [wizardBypassed, setWizardBypassed] = createSignal(false);
+  // P5-11: the walkthrough shows exactly once, remembered locally.
+  const [tourOpen, setTourOpen] = createSignal(false);
+  onMount(() => {
+    if (!localStorage.getItem('orion.tour.seen')) setTourOpen(true);
+  });
+  const dismissTour = () => {
+    localStorage.setItem('orion.tour.seen', '1');
+    setTourOpen(false);
+  };
 
   const [status, { refetch: refetchStatus }] = createResource(() => invoke<AppStatus>('get_status'));
   const [loans, { refetch: refetchLoans }] = createResource(() => invoke<LoanSummary[]>('list_loans'));
@@ -455,6 +465,8 @@ function App() {
       <ChatBox loanId={currentLoanId()} screen={route().name} status={status()} />
 
       <KeyLegend open={legendOpen()} onClose={() => setLegendOpen(false)} />
+
+      <Walkthrough open={tourOpen()} demo={status() ? !status()!.db_connected : false} onDismiss={dismissTour} />
     </div>
     </Show>
   );

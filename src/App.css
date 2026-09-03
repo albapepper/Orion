@@ -266,6 +266,44 @@ kbd.keycap.inline {
   color: var(--text-dim);
 }
 
+/* ── First-run walkthrough (P5-11) ───────────────────── */
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.tour-card {
+  width: 520px;
+  max-width: calc(100vw - 48px);
+  padding: 28px 32px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-top: 2px solid var(--accent);
+}
+
+.tour-list {
+  margin: 16px 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tour-list li {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  padding-left: 14px;
+  border-left: 2px solid var(--border-strong);
+}
+
 .tray-section {
   padding: 14px 10px;
 }
