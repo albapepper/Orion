@@ -223,10 +223,10 @@ what to work on next. **Milestone: DEMO-READY.**
 
 ### Carry-over from Phase 2 (P2-44 deferrals)
 
-- [ ] **P3-15** Multi-select race/ethnicity (MISMO/HMDA) — required
+- [x] **P3-15** Multi-select race/ethnicity (MISMO/HMDA) — required
       before HMDA export
-- [ ] **P3-16** Move IncomeScreen onto shared LoanListScreen
-- [ ] **P3-17** Contact/LO contact info section on the 1003
+- [x] **P3-16** Move IncomeScreen onto shared LoanListScreen
+- [x] **P3-17** Contact/LO contact info section on the 1003
 
 ---
 
@@ -245,8 +245,9 @@ pilot-credible.** ⚠ GSE sandbox access must be in hand by week 14.
       in points" — pricing context builder + constrained suggestions
 - [x] **P4-04** MISMO 3.4 serialization layer: complete loan → XML
       per docs/1003-fields.md mapping
-- [ ] **P4-05** DU sandbox: submit serialized loan, store + display
-      findings
+- [x] **P4-05** DU sandbox: submit serialized loan, store + display
+      findings (mock engine scores the file's own numbers until the
+      DU endpoint is configured; live path ships in the same command)
 - [ ] **P4-06** LPA sandbox: submit serialized loan, store + display
       findings
 
