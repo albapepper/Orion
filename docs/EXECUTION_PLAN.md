@@ -311,6 +311,32 @@ GSE certification (DU + LPA parallel) · first pilot shop. **Gate: LAUNCH.**
 
 ---
 
+## Where we stopped (handoff for the next session)
+
+As of the close of Phase 5, Phases 1–5 are fully checked off. The
+codebase runs the whole pipeline — new loan → 1003 screens → pricing →
+MISMO 3.4 export → DU/LPA findings (mock engines) → closing → funding —
+in demo mode and against a real Postgres (setup wizard gates first run).
+
+**Next session, pick up here:**
+
+1. **Parallel track is the critical path.** PT-02/PT-03 (GSE partner
+   applications) have long lead times and gate everything in Phase 6;
+   PT-04 (MISMO membership) unlocks the ULAD mapping doc.
+2. **First Phase 6 code work**: confirm every `<!-- ULAD: ... -->`
+   marker in `src-tauri/src/mismo.rs` against the ULAD mapping document
+   once PT-04 lands, then configure `aus.du_endpoint` /
+   `aus.lpa_endpoint` in Settings to flip the mock engines live. The
+   commands already handle both modes.
+3. **Pilot kickoff** runs from docs/PILOT_CHECKLIST.md.
+
+Known accepted limitations (documented, not bugs): persona sign-in has
+no passwords (single-shop desktop trust model); AUS findings are
+deterministic mocks until endpoints are configured; migrations run to
+026 — next free number is 027.
+
+---
+
 ## Parallel Track (non-code, checked here so it isn't forgotten)
 
 - [ ] **PT-01** Read Rocket employment agreement (IP / non-compete / non-solicit)
