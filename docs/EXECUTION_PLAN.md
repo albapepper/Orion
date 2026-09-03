@@ -240,10 +240,12 @@ GSE sandbox credentials flip the same commands live** (config:
 
 ---
 
-## Stage: Phase 5 — Team, Admin & Polish (ACTIVE)
+## Stage: Phase 5 — Team, Admin & Polish (COMPLETE)
 
 Dec 17 → Jan 27. Setup wizard · Users · Company settings · Closing ·
-Funding · Contacts panel · new-user walkthrough. **Gate: PILOT-READY.**
+Funding · Contacts panel · new-user walkthrough. **Gate: PILOT-READY —
+software complete; the pilot itself starts from
+docs/PILOT_CHECKLIST.md.**
 
 ### Week 15 — Setup wizard & company
 
@@ -252,45 +254,45 @@ Funding · Contacts panel · new-user walkthrough. **Gate: PILOT-READY.**
       first-run screen that drives them: gate on `configured`,
       walk DB URL → test → deploy migrations → create company →
       AI check, with a "continue in demo mode" escape hatch
-- [ ] **P5-02** Company settings: companies row CRUD (name), settings
+- [x] **P5-02** Company settings: companies row CRUD (name), settings
       screen becomes a real admin surface (DB, AI, AUS endpoints
       with the test buttons wired), company name in the nav tray
 
 ### Week 16 — Team
 
-- [ ] **P5-03** Users admin: create/edit/deactivate users, role
+- [x] **P5-03** Users admin: create/edit/deactivate users, role
       assignment (loan_officer | processor | underwriter | admin),
       migration for an active flag; Users screen (⌃m) absorbing the
       persona picker
-- [ ] **P5-04** Loans & lifecycle: create_loan command (real mode has
+- [x] **P5-04** Loans & lifecycle: create_loan command (real mode has
       no way to make a loan), set_loan_status with role gating +
       audit, "+ New loan" on the loans screen, status stepper on
       Overview
 
 ### Week 17 — Closing & Funding
 
-- [ ] **P5-05** Closing migration + backend: per-loan closing record
+- [x] **P5-05** Closing migration + backend: per-loan closing record
       (closing date, location, settlement agent, cost summary) with
       audit + IPC
-- [ ] **P5-06** Closing screen UI + stage in the tracker (after AUS);
+- [x] **P5-06** Closing screen UI + stage in the tracker (after AUS);
       scheduling closing moves the loan to 'closing'
-- [ ] **P5-07** Funding migration + backend: funding record (funded
+- [x] **P5-07** Funding migration + backend: funding record (funded
       date, disbursement method/reference, amount) with audit + IPC
-- [ ] **P5-08** Funding screen UI + stage; funding completes the
+- [x] **P5-08** Funding screen UI + stage; funding completes the
       pipeline (status 'funded')
 
 ### Week 18 — Contacts & walkthrough
 
-- [ ] **P5-09** Contacts migration + backend: loan_contacts (role:
+- [x] **P5-09** Contacts migration + backend: loan_contacts (role:
       realtor | title | escrow | insurance | other) with audit + IPC
-- [ ] **P5-10** Contacts panel: bottom panel on every loan screen,
+- [x] **P5-10** Contacts panel: bottom panel on every loan screen,
       sibling of the task panel
-- [ ] **P5-11** New-user walkthrough: first-run tour card (demo-mode
+- [x] **P5-11** New-user walkthrough: first-run tour card (demo-mode
       explainer, key legend, first-loan CTA), remembered locally
 
 ### Week 19 — Pilot polish
 
-- [ ] **P5-12** Pilot polish pass: empty states, error copy, demo→real
+- [x] **P5-12** Pilot polish pass: empty states, error copy, demo→real
       handoff (first real loan from a fresh install), pilot-readiness
       checklist. **Gate: PILOT-READY.**
 

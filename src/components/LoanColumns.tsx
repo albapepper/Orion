@@ -42,7 +42,7 @@ export function LoanColumns(props: {
           <div class="work-lock-hint">
             Banker's column is read-only — you're signed in as{' '}
             <strong>{user()!.name}</strong> ({ROLE_LABELS[user()!.role] ?? user()!.role}).
-            Switch personas in Settings (⌃s).
+            Switch personas on the Team screen (⌃m).
           </div>
         </Show>
         {props.work}

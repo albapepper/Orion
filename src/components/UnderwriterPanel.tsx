@@ -113,7 +113,7 @@ export function UnderwriterPanel(props: Props) {
             >
               Underwriter only — you're signed in as{' '}
               <strong>{user()!.name}</strong> ({ROLE_LABELS[user()!.role]}).
-              Switch personas in Settings (⌃s).
+              Switch personas on the Team screen (⌃m).
             </Show>
           </div>
         }

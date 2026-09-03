@@ -285,7 +285,9 @@ export function SetupWizard(props: Props) {
             {aiTested()
               ? ' Assistant checked.'
               : ' The assistant was left untested — you can check it any time in Settings.'}
-            The team signs in from Settings → "Working as".
+            The team signs in from Team (⌃m) → "Working as". Start your
+            first file with <strong>+ New loan</strong> on the loans screen
+            (⌃n).
           </p>
           <div class="wizard-actions">
             <button class="ghost" onClick={() => props.onFinished()}>
