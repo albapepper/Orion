@@ -132,8 +132,11 @@ pub struct Demographics {
     pub borrower_id: Uuid,
     pub loan_id: Uuid,
     pub company_id: Uuid,
-    pub ethnicity: Option<String>,
-    pub race: Option<String>,
+    /// All that apply, per MISMO/HMDA — or exactly ["not_provided"]
+    /// when the borrower declines. Empty = not collected yet.
+    pub ethnicity_choices: Vec<String>,
+    /// Same contract as `ethnicity_choices`.
+    pub race_choices: Vec<String>,
     pub sex: Option<String>,
     pub collection_basis: Option<String>,
 }

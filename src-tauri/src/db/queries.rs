@@ -847,7 +847,8 @@ pub async fn get_demographics(
     loan_id: Uuid,
 ) -> anyhow::Result<Vec<crate::loans::Demographics>> {
     let rows = sqlx::query_as::<_, crate::loans::Demographics>(
-        "SELECT id, borrower_id, loan_id, company_id, ethnicity, race, sex, collection_basis
+        "SELECT id, borrower_id, loan_id, company_id, ethnicity_choices, race_choices,
+                sex, collection_basis
          FROM borrower_demographics WHERE loan_id = $1",
     )
     .bind(loan_id)
@@ -862,30 +863,32 @@ pub async fn upsert_demographics(
     borrower_id: Uuid,
     loan_id: Uuid,
     company_id: Uuid,
-    ethnicity: Option<&str>,
-    race: Option<&str>,
+    ethnicity_choices: &[String],
+    race_choices: &[String],
     sex: Option<&str>,
     collection_basis: Option<&str>,
 ) -> anyhow::Result<crate::loans::Demographics> {
     let row = sqlx::query_as::<_, crate::loans::Demographics>(
         r#"
         INSERT INTO borrower_demographics
-            (borrower_id, loan_id, company_id, ethnicity, race, sex, collection_basis, updated_at)
+            (borrower_id, loan_id, company_id, ethnicity_choices, race_choices,
+             sex, collection_basis, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, now())
         ON CONFLICT (borrower_id) DO UPDATE SET
-            ethnicity = EXCLUDED.ethnicity,
-            race = EXCLUDED.race,
+            ethnicity_choices = EXCLUDED.ethnicity_choices,
+            race_choices = EXCLUDED.race_choices,
             sex = EXCLUDED.sex,
             collection_basis = EXCLUDED.collection_basis,
             updated_at = now()
-        RETURNING id, borrower_id, loan_id, company_id, ethnicity, race, sex, collection_basis
+        RETURNING id, borrower_id, loan_id, company_id, ethnicity_choices, race_choices,
+                  sex, collection_basis
         "#,
     )
     .bind(borrower_id)
     .bind(loan_id)
     .bind(company_id)
-    .bind(ethnicity)
-    .bind(race)
+    .bind(serde_json::to_value(ethnicity_choices)?)
+    .bind(serde_json::to_value(race_choices)?)
     .bind(sex)
     .bind(collection_basis)
     .fetch_one(pool)

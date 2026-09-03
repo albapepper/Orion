@@ -259,6 +259,25 @@ fn sex(v: &str) -> &'static str {
     }
 }
 
+fn ethnicity_type(v: &str) -> &'static str {
+    match v {
+        "hispanic_or_latino" => "HispanicOrLatino",
+        "not_hispanic_or_latino" => "NotHispanicOrLatino",
+        _ => "InformationNotProvided",
+    }
+}
+
+fn race_type(v: &str) -> &'static str {
+    match v {
+        "american_indian_or_alaska_native" => "AmericanIndianOrAlaskaNative",
+        "asian" => "Asian",
+        "black_or_african_american" => "BlackOrAfricanAmerican",
+        "native_hawaiian_or_pacific_islander" => "NativeHawaiianOrOtherPacificIslander",
+        "white" => "White",
+        _ => "InformationNotProvided",
+    }
+}
+
 // ── Number formatting ────────────────────────────────────────────────
 
 /// Amounts carry cents, no grouping: "560000.00".
@@ -692,14 +711,17 @@ fn serialize_demographics(x: &mut Xml, idx: usize, input: &MismoInput) {
         return;
     };
     x.open("GOVERNMENT_MONITORING");
-    if let Some(e) = &d.ethnicity {
+    // One container per selection — MISMO/HMDA multi-select (P3-15).
+    // "not_provided" serializes as InformationNotProvided, the
+    // decline-to-answer form.
+    for e in &d.ethnicity_choices {
         x.open("ETHNICITY");
-        x.leaf("EthnicityType", e);
+        x.leaf("EthnicityType", ethnicity_type(e));
         x.close("ETHNICITY");
     }
-    if let Some(r) = &d.race {
+    for r in &d.race_choices {
         x.open("RACE");
-        x.leaf("RaceType", r);
+        x.leaf("RaceType", race_type(r));
         x.close("RACE");
     }
     if let Some(s) = &d.sex {
@@ -832,7 +854,11 @@ pub fn completeness(input: &MismoInput) -> Vec<String> {
     if input
         .demographics
         .iter()
-        .all(|d| d.ethnicity.is_none() && d.race.is_none() && d.sex.is_none())
+        .all(|d| {
+            d.ethnicity_choices.is_empty()
+                && d.race_choices.is_empty()
+                && d.sex.is_none()
+        })
     {
         missing.push("Government monitoring (HMDA demographics)".into());
     }

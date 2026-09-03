@@ -362,9 +362,9 @@ pub fn demographics(loan_id: Uuid) -> Vec<Demographics> {
         borrower_id: id(DEMO_BORROWER_ID),
         loan_id,
         company_id: id(DEMO_COMPANY_ID),
-        ethnicity: None,
-        race: None,
-        sex: None,
+        ethnicity_choices: vec!["not_hispanic_or_latino".into()],
+        race_choices: vec!["white".into(), "native_hawaiian_or_pacific_islander".into()],
+        sex: Some("male".into()),
         collection_basis: Some("not_face_to_face".into()),
     }]
 }

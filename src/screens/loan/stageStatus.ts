@@ -145,11 +145,17 @@ export function computeStageStatuses(
       )
     : 'empty';
 
-  // Demographic (HMDA): the primary borrower's collection
+  // Demographic (HMDA): the primary borrower's collection. Multi-select
+  // race/ethnicity count when at least one choice is made (P3-15).
   const demo = (detail.demographics ?? []).find((d) => d.borrower_id === primary?.id);
   if (demo) {
-    const fields = [demo.ethnicity, demo.race, demo.sex, demo.collection_basis];
-    statuses.demographic = score(fields.length, fields.filter(present).length);
+    const fields = [
+      ...demo.ethnicity_choices,
+      ...demo.race_choices,
+      demo.sex,
+      demo.collection_basis,
+    ];
+    statuses.demographic = score(4, fields.filter(present).length);
   } else {
     statuses.demographic = 'empty';
   }

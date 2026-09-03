@@ -71,8 +71,12 @@ export function DemographicScreen(props: Props) {
         loanId: props.loanId,
         input: {
           borrower_id: b.id,
-          ethnicity: e.ethnicity !== undefined ? e.ethnicity : (row?.ethnicity ?? null),
-          race: e.race !== undefined ? e.race : (row?.race ?? null),
+          ethnicity:
+            e.ethnicity_choices !== undefined
+              ? e.ethnicity_choices
+              : (row?.ethnicity_choices ?? []),
+          race:
+            e.race_choices !== undefined ? e.race_choices : (row?.race_choices ?? []),
           sex: e.sex !== undefined ? e.sex : (row?.sex ?? null),
           collection_basis:
             e.collection_basis !== undefined
@@ -94,7 +98,7 @@ export function DemographicScreen(props: Props) {
     }
   };
 
-  const select = (f: 'ethnicity' | 'race' | 'sex' | 'collection_basis', opts: string[]) => (
+  const select = (f: 'sex' | 'collection_basis', opts: string[]) => (
     <select
       value={(field(f) as string) ?? ''}
       onChange={(e) => {
@@ -107,9 +111,46 @@ export function DemographicScreen(props: Props) {
     </select>
   );
 
+  // Multi-select "all that apply" (P3-15). Checking the decline box
+  // clears the rest; checking any real box un-declines.
+  const choices = (f: 'ethnicity_choices' | 'race_choices', opts: string[]) => {
+    const current = (field(f) as string[]) ?? [];
+    return (
+      <div class="check-group">
+        <For each={opts}>
+          {(o) => (
+            <label class="check-option">
+              <input
+                type="checkbox"
+                checked={current.includes(o)}
+                onChange={() => {
+                  let next: string[];
+                  if (o === 'not_provided') {
+                    next = current.includes(o) ? [] : ['not_provided'];
+                  } else {
+                    next = current.filter((c) => c !== 'not_provided');
+                    next = next.includes(o) ? next.filter((c) => c !== o) : [...next, o];
+                  }
+                  setField(f, next);
+                  commit();
+                }}
+              />
+              {label(o)}
+            </label>
+          )}
+        </For>
+      </div>
+    );
+  };
+
   const complete = () => {
     const row = rowFor(selected()?.id);
-    return Boolean(row?.ethnicity && row?.race && row?.sex && row?.collection_basis);
+    return Boolean(
+      row &&
+        (row.ethnicity_choices.length > 0 || row.race_choices.length > 0) &&
+        row.sex &&
+        row.collection_basis,
+    );
   };
 
   return (
@@ -150,12 +191,12 @@ export function DemographicScreen(props: Props) {
 
         <div class="form-grid">
           <div class="field">
-            <label>Ethnicity</label>
-            {select('ethnicity', ETHNICITY)}
+            <label>Ethnicity — all that apply</label>
+            {choices('ethnicity_choices', ETHNICITY)}
           </div>
           <div class="field">
-            <label>Race</label>
-            {select('race', RACE)}
+            <label>Race — all that apply</label>
+            {choices('race_choices', RACE)}
           </div>
           <div class="field">
             <label>Sex</label>
@@ -167,8 +208,10 @@ export function DemographicScreen(props: Props) {
           </div>
         </div>
         <p class="screen-hint">
-          Collected for HMDA compliance. Answers are recorded exactly as
-          given — never inferred, summarized, or sent to the assistant.
+          Collected for HMDA compliance — check every box the borrower
+          selected, or "Not Provided" if they decline. Answers are
+          recorded exactly as given — never inferred, summarized, or
+          sent to the assistant.
         </p>
 
         <Show when={status() === 'error'}>

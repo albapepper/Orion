@@ -1109,10 +1109,25 @@ pub async fn save_declaration(
 #[derive(Deserialize)]
 pub struct DemographicsInput {
     pub borrower_id: String,
-    pub ethnicity: Option<String>,
-    pub race: Option<String>,
+    pub ethnicity: Vec<String>,
+    pub race: Vec<String>,
     pub sex: Option<String>,
     pub collection_basis: Option<String>,
+}
+
+/// "not_provided" is the decline-to-answer marker — it can't be
+/// combined with actual selections. Dedupe while we're at it.
+fn normalize_choices(choices: &[String], all_key: &str) -> Vec<String> {
+    if choices.iter().any(|c| c == "not_provided") {
+        return vec!["not_provided".into()];
+    }
+    let mut out: Vec<String> = choices
+        .iter()
+        .filter(|c| all_key.split('|').any(|v| v == *c))
+        .cloned()
+        .collect();
+    out.dedup();
+    out
 }
 
 #[tauri::command]
@@ -1134,13 +1149,19 @@ pub async fn save_demographics(
         .await
         .map_err(|e| e.to_string())?;
 
+    const ETHNICITY_VALUES: &str =
+        "hispanic_or_latino|not_hispanic_or_latino|not_provided";
+    const RACE_VALUES: &str = "american_indian_or_alaska_native|asian|black_or_african_american|native_hawaiian_or_pacific_islander|white|not_provided";
+    let ethnicity = normalize_choices(&input.ethnicity, ETHNICITY_VALUES);
+    let race = normalize_choices(&input.race, RACE_VALUES);
+
     let saved = crate::db::queries::upsert_demographics(
         &pool,
         borrower_id,
         loan_id,
         company_id,
-        input.ethnicity.as_deref(),
-        input.race.as_deref(),
+        &ethnicity,
+        &race,
         input.sex.as_deref(),
         input.collection_basis.as_deref(),
     )

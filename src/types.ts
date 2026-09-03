@@ -159,8 +159,9 @@ export interface Demographics {
   borrower_id: string;
   loan_id: string;
   company_id: string;
-  ethnicity: string | null;
-  race: string | null;
+  // P3-15: all that apply, or ['not_provided'] to decline.
+  ethnicity_choices: string[];
+  race_choices: string[];
   sex: string | null;
   collection_basis: string | null;
 }
