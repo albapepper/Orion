@@ -168,6 +168,7 @@ pub async fn get_closing(
     Ok(row)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn upsert_closing(
     pool: &PgPool,
     loan_id: Uuid,
