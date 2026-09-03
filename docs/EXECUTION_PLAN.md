@@ -247,7 +247,7 @@ Funding · Contacts panel · new-user walkthrough. **Gate: PILOT-READY.**
 
 ### Week 15 — Setup wizard & company
 
-- [ ] **P5-01** Setup wizard: the backend already has the commands
+- [x] **P5-01** Setup wizard: the backend already has the commands
       (connect, deploy schema, save config, test AI) — build the
       first-run screen that drives them: gate on `configured`,
       walk DB URL → test → deploy migrations → create company →

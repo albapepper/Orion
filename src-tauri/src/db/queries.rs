@@ -8,6 +8,47 @@ use crate::loans::{
 use sqlx::PgPool;
 use uuid::Uuid;
 
+/// The one tenant row. Companies exist so a future server build can
+/// host several; the desktop install has exactly one.
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone, sqlx::FromRow)]
+pub struct Company {
+    pub id: Uuid,
+    pub name: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+pub async fn create_company(pool: &PgPool, name: &str) -> anyhow::Result<Company> {
+    let row = sqlx::query_as::<_, Company>(
+        "INSERT INTO companies (name) VALUES ($1)
+         RETURNING id, name, created_at",
+    )
+    .bind(name)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn get_company(pool: &PgPool, id: Uuid) -> anyhow::Result<Option<Company>> {
+    let row = sqlx::query_as::<_, Company>(
+        "SELECT id, name, created_at FROM companies WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+/// Every company row — the wizard offers an existing company when the
+/// schema has been deployed against before.
+pub async fn list_companies(pool: &PgPool) -> anyhow::Result<Vec<Company>> {
+    let rows = sqlx::query_as::<_, Company>(
+        "SELECT id, name, created_at FROM companies ORDER BY created_at",
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
 pub async fn list_users(
     pool: &PgPool,
     company_id: Uuid,

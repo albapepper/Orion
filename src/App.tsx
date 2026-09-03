@@ -1,4 +1,4 @@
-import { createResource, createSignal, createEffect, Match, onCleanup, onMount, Switch } from 'solid-js';
+import { createResource, createSignal, createEffect, Match, onCleanup, onMount, Show, Switch } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
 import type { AppStatus, LoanSummary } from './types';
 import { NavTray } from './components/NavTray';
@@ -6,6 +6,7 @@ import { ChatBox } from './components/ChatBox';
 import { KeyLegend } from './components/KeyLegend';
 import { setUser } from './lib/session';
 import { OverviewScreen } from './screens/OverviewScreen';
+import { SetupWizard } from './screens/SetupWizard';
 import { Dashboard } from './screens/Dashboard';
 import { LoansScreen } from './screens/LoansScreen';
 import { TasksScreen } from './screens/TasksScreen';
@@ -44,8 +45,11 @@ function App() {
   const [history, setHistory] = createSignal<Route[]>([]);
   const [legendOpen, setLegendOpen] = createSignal(false);
   const [activeLoanId, setActiveLoanId] = createSignal<string | null>(null);
+  // P5-01: unconfigured installs meet the setup wizard first. "Continue
+  // in demo mode" bypasses it for the session — demo is a feature.
+  const [wizardBypassed, setWizardBypassed] = createSignal(false);
 
-  const [status] = createResource(() => invoke<AppStatus>('get_status'));
+  const [status, { refetch: refetchStatus }] = createResource(() => invoke<AppStatus>('get_status'));
   const [loans] = createResource(() => invoke<LoanSummary[]>('list_loans'));
   // Signed-in persona drives locks, audit, and dynamic field permissions.
   const [who] = createResource(() => invoke<import('./types').UserAccount | null>('whoami'));
@@ -249,6 +253,18 @@ function App() {
   };
 
   return (
+    <Show
+      when={status() === undefined || status()!.configured || wizardBypassed()}
+      fallback={
+        <SetupWizard
+          onFinished={() => {
+            setWizardBypassed(true);
+            refetchStatus();
+          }}
+          onDemo={() => setWizardBypassed(true)}
+        />
+      }
+    >
     <div class="app">
       <NavTray
         activeNav={route().name}
@@ -401,6 +417,7 @@ function App() {
 
       <KeyLegend open={legendOpen()} onClose={() => setLegendOpen(false)} />
     </div>
+    </Show>
   );
 }
 

@@ -400,6 +400,42 @@ export interface AppStatus {
   ai_model: string;
 }
 
+// P5-01: the persisted install config (config.toml), editable by the
+// setup wizard and the settings screen.
+export interface DbConfig {
+  url: string;
+}
+
+export interface AiConfig {
+  provider: string; // "local" | "cloud"
+  endpoint: string;
+  model: string;
+  api_key: string;
+  thinking: boolean;
+}
+
+export interface AppConfig {
+  company_id: string;
+}
+
+export interface AusConfig {
+  du_endpoint: string;
+  lpa_endpoint: string;
+}
+
+export interface Config {
+  database: DbConfig;
+  ai: AiConfig;
+  app: AppConfig;
+  aus: AusConfig;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 export const LOAN_STATUSES = [
   'application',
   'processing',

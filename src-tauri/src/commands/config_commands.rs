@@ -85,3 +85,71 @@ pub async fn test_ai_connection(state: State<'_, AppState>) -> Result<String, St
         .map_err(|e| e.to_string())?;
     Ok(resp.content)
 }
+
+// ── Setup wizard: company step (P5-01) ───────────────────────────────
+
+#[tauri::command]
+pub async fn list_companies(state: State<'_, AppState>) -> Result<Vec<crate::db::queries::Company>, String> {
+    let pool = state.pool().await?;
+    crate::db::queries::list_companies(&pool)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Create the tenant row and make it the configured company in the
+/// same motion — the wizard's "Create company" button.
+#[tauri::command]
+pub async fn create_company(
+    state: State<'_, AppState>,
+    name: String,
+) -> Result<crate::db::queries::Company, String> {
+    let pool = state.pool().await?;
+    let name = name.trim();
+    if name.is_empty() {
+        return Err("Company name is required".into());
+    }
+    let company = crate::db::queries::create_company(&pool, name)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut cfg = state.config.read().await.clone();
+    cfg.app.company_id = company.id.to_string();
+    cfg.save().map_err(|e| e.to_string())?;
+    *state.config.write().await = cfg;
+
+    if let Some(user_id) = *state.current_user_id.lock().await {
+        crate::audit::write(
+            &pool,
+            company.id,
+            None,
+            user_id,
+            "company.create",
+            "companies",
+            company.id,
+            None,
+            Some(serde_json::json!({ "name": company.name })),
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    }
+
+    Ok(company)
+}
+
+/// Point the config at an existing company (wizard "use existing").
+#[tauri::command]
+pub async fn set_company(state: State<'_, AppState>, company_id: String) -> Result<(), String> {
+    let id = uuid::Uuid::parse_str(&company_id).map_err(|e| e.to_string())?;
+    {
+        let pool = state.pool().await?;
+        crate::db::queries::get_company(&pool, id)
+            .await
+            .map_err(|e| e.to_string())?
+            .ok_or("Company not found")?;
+    }
+    let mut cfg = state.config.read().await.clone();
+    cfg.app.company_id = id.to_string();
+    cfg.save().map_err(|e| e.to_string())?;
+    *state.config.write().await = cfg;
+    Ok(())
+}

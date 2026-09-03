@@ -1000,6 +1000,104 @@ kbd.keycap.inline {
   color: var(--text);
 }
 
+/* ── Setup wizard (P5-01) ────────────────────────────── */
+
+.wizard {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.wizard-card {
+  width: 560px;
+  max-width: 100%;
+  padding: 28px 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.wizard-steps {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.wizard-step {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+}
+
+.wizard-step.active {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+
+.wizard-step.past {
+  color: var(--text-dim);
+}
+
+.wizard-title {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.wizard-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  margin-bottom: 18px;
+}
+
+.wizard-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.wizard-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.wizard-ok {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ok, #1e8449);
+}
+
+.wizard-note {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.wizard-companies {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wizard-picked {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wizard-footer {
+  margin-top: 26px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
 /* ── Loan list: the whole book, filterable ───────────── */
 
 .loans-toolbar {
