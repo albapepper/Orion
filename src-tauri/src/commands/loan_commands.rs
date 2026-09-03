@@ -574,6 +574,51 @@ pub async fn save_employment(
 }
 
 #[tauri::command]
+pub async fn delete_income(
+    state: State<'_, AppState>,
+    income_id: String,
+) -> Result<(), String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let income_id = parse_uuid(&income_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let before = crate::db::queries::get_income_by_id(&pool, income_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    if let Some(owned) = &before {
+        crate::locks::ensure_can_write(&pool, owned.loan_id, user_id)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+
+    crate::db::queries::delete_income(&pool, income_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if let Some(removed) = before {
+        crate::audit::write(
+            &pool,
+            company_id,
+            Some(removed.loan_id),
+            user_id,
+            "income.delete",
+            "loan_income",
+            removed.id,
+            Some(serde_json::to_value(&removed).map_err(|e| e.to_string())?),
+            None,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn delete_employment(
     state: State<'_, AppState>,
     employment_id: String,

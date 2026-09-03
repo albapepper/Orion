@@ -346,6 +346,36 @@ pub async fn get_income(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Vec<Loan
     Ok(rows)
 }
 
+pub async fn get_income_by_id(
+    pool: &PgPool,
+    id: Uuid,
+) -> anyhow::Result<Option<LoanIncome>> {
+    let row = sqlx::query_as::<_, LoanIncome>(
+        r#"
+        SELECT id, loan_id, company_id, borrower_id, income_type,
+               monthly_amount::FLOAT8 AS monthly_amount,
+               prior_year_monthly::FLOAT8 AS prior_year_monthly,
+               verified,
+               employer_name,
+               years_on_job::FLOAT8 AS years_on_job,
+               notes
+        FROM loan_income WHERE id = $1
+        "#,
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn delete_income(pool: &PgPool, id: Uuid) -> anyhow::Result<()> {
+    sqlx::query("DELETE FROM loan_income WHERE id = $1")
+        .bind(id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
 const TERMS_COLUMNS: &str = "id, loan_id, company_id, loan_purpose, mortgage_type,
     amortization_type, loan_amount::FLOAT8 AS loan_amount, interest_rate::FLOAT8 AS interest_rate,
     term_months, lien_priority, property_value::FLOAT8 AS property_value, application_date";
