@@ -95,7 +95,9 @@ pub async fn list_loans(pool: &PgPool, company_id: Uuid) -> anyhow::Result<Vec<L
         r#"
         SELECT l.id, l.loan_number, l.status, l.updated_at,
                (b.first_name || ' ' || b.last_name) AS borrower_name,
-               u.name AS assigned_to_name
+               u.name AS assigned_to_name,
+               (SELECT count(*) FROM loan_uw_reviews r
+                WHERE r.loan_id = l.id AND r.status = 'flagged') AS flagged_reviews
         FROM loans l
         LEFT JOIN borrowers b ON b.loan_id = l.id AND b.is_primary
         LEFT JOIN users u ON u.id = l.assigned_to

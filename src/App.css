@@ -698,6 +698,51 @@ kbd.keycap.inline {
   text-align: right;
 }
 
+.queue-flag {
+  color: var(--warn, #c0392b);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Dashboard AI triage card ────────────────────────── */
+
+.ai-summary {
+  margin-top: 18px;
+  padding: 16px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+}
+
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ai-summary-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-right: auto;
+}
+
+.ai-summary-body {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ai-summary-loading,
+.ai-summary-error {
+  color: var(--text-dim);
+}
+
+.ai-summary-error {
+  color: var(--warn, #c0392b);
+  font-size: 12px;
+}
+
 /* ── Tables ──────────────────────────────────────────── */
 
 .data-table {

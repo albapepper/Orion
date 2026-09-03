@@ -176,7 +176,7 @@ what to work on next. **Milestone: DEMO-READY.**
 
 ### Week 7 — Dashboard + Loan List
 
-- [ ] **P3-01** Dashboard screen: pipeline summary (loans by stage,
+- [x] **P3-01** Dashboard screen: pipeline summary (loans by stage,
       counts, attention flags) + AI pipeline summary ("what should I
       work on next") from existing context builders
 - [ ] **P3-02** Loan List screen: filters (stage, status, owner),

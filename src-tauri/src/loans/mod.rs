@@ -179,6 +179,8 @@ pub struct LoanTerms {
 }
 
 /// A loan row enriched with the primary borrower's name for list views.
+/// `flagged_reviews` is the pipeline's attention flag — underwriter flags
+/// surface on the dashboard without opening the loan.
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct LoanSummary {
     pub id: Uuid,
@@ -187,6 +189,7 @@ pub struct LoanSummary {
     pub borrower_name: Option<String>,
     pub assigned_to_name: Option<String>,
     pub updated_at: DateTime<Utc>,
+    pub flagged_reviews: i64,
 }
 
 /// Underwriter review of one loan screen: verification status + notes.

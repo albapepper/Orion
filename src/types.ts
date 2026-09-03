@@ -5,6 +5,7 @@ export interface LoanSummary {
   borrower_name: string | null;
   assigned_to_name: string | null;
   updated_at: string;
+  flagged_reviews: number;
 }
 
 export interface Borrower {

@@ -86,6 +86,7 @@ pub fn loan_summaries() -> Vec<LoanSummary> {
             borrower_name: Some("Jordan Ellis".into()),
             assigned_to_name: Some("Demo User".into()),
             updated_at: Utc::now(),
+            flagged_reviews: 1,
         },
         LoanSummary {
             id: id("00000000-0000-0000-0000-000000000002"),
@@ -93,7 +94,10 @@ pub fn loan_summaries() -> Vec<LoanSummary> {
             status: "underwriting".into(),
             borrower_name: Some("Sam Whitfield".into()),
             assigned_to_name: None,
-            updated_at: Utc::now(),
+            // Stale on purpose — the dashboard queue and the AI summary
+            // should both have a stale file to point at.
+            updated_at: Utc::now() - chrono::Duration::days(9),
+            flagged_reviews: 0,
         },
     ]
 }

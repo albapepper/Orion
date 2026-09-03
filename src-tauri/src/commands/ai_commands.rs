@@ -19,17 +19,24 @@ pub async fn ai_chat(
         .transpose()
         .map_err(|e| e.to_string())?;
 
-    // Build screen-appropriate context from current loan data
-    let system_context = match loan_id {
-        Some(id) => build_context_for_screen(&state, id, &screen)
+    // Build screen-appropriate context from current loan data. The
+    // dashboard is pipeline-level — it needs no open loan.
+    let system_context = if screen == "dashboard" {
+        build_dashboard_context(&state)
             .await
-            .map_err(|e| e.to_string())?,
-        None => format!(
-            "You are a concise, expert mortgage assistant inside the Orion \
-             loan origination platform. No loan is currently open. Current \
-             screen: {screen}. Help the user navigate their pipeline and \
-             answer general origination questions briefly."
-        ),
+            .map_err(|e| e.to_string())?
+    } else {
+        match loan_id {
+            Some(id) => build_context_for_screen(&state, id, &screen)
+                .await
+                .map_err(|e| e.to_string())?,
+            None => format!(
+                "You are a concise, expert mortgage assistant inside the Orion \
+                 loan origination platform. No loan is currently open. Current \
+                 screen: {screen}. Help the user navigate their pipeline and \
+                 answer general origination questions briefly."
+            ),
+        }
     };
 
     let thinking = match thinking {
@@ -43,6 +50,24 @@ pub async fn ai_chat(
         .complete(&system_context, &messages, thinking)
         .await
         .map_err(|e| e.to_string())
+}
+
+async fn build_dashboard_context(state: &State<'_, AppState>) -> anyhow::Result<String> {
+    let db = state.db.read().await.clone();
+    let loans = match &db {
+        Some(pool) => {
+            let company_id = state
+                .company_id()
+                .await
+                .map_err(|e| anyhow::anyhow!(e))?;
+            crate::db::queries::list_loans(pool, company_id).await?
+        }
+        None => demo::loan_summaries(),
+    };
+    Ok(crate::loans::screens::dashboard::build_context(
+        &loans,
+        chrono::Utc::now(),
+    ))
 }
 
 async fn build_context_for_screen(
