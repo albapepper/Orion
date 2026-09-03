@@ -7,6 +7,7 @@ pub mod db;
 pub mod documents;
 pub mod loans;
 pub mod locks;
+pub mod pricing;
 pub mod tasks;
 
 use commands::AppState;
@@ -81,6 +82,12 @@ pub fn run() {
             commands::condition_commands::create_condition,
             commands::condition_commands::set_condition_status,
             commands::condition_commands::remove_condition,
+            commands::pricing_commands::list_rate_sheets,
+            commands::pricing_commands::list_rate_options,
+            commands::pricing_commands::create_rate_sheet,
+            commands::pricing_commands::set_rate_sheet_active,
+            commands::pricing_commands::add_rate_option,
+            commands::pricing_commands::remove_rate_option,
             commands::user_commands::list_users,
             commands::user_commands::whoami,
             commands::user_commands::sign_in_as,

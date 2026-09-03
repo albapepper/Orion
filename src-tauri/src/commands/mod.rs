@@ -3,6 +3,7 @@ pub mod condition_commands;
 pub mod config_commands;
 pub mod document_commands;
 pub mod loan_commands;
+pub mod pricing_commands;
 pub mod task_commands;
 pub mod user_commands;
 

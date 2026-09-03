@@ -251,6 +251,39 @@ export interface Task {
 
 export type UserRole = 'loan_officer' | 'processor' | 'underwriter' | 'admin';
 
+export type LoanProduct =
+  | '30yr_fixed'
+  | '20yr_fixed'
+  | '15yr_fixed'
+  | '7_1_arm'
+  | '5_1_arm';
+
+// A lender's rate sheet: the container (who, when, active).
+export interface RateSheet {
+  id: string;
+  company_id: string;
+  lender: string;
+  effective_date: string | null;
+  expires_date: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+// One priceable row: a rate for a product with its points.
+// Positive points = borrower pays; negative = lender credit.
+export interface RateOption {
+  id: string;
+  rate_sheet_id: string;
+  company_id: string;
+  product: LoanProduct;
+  rate: number;
+  points: number;
+  comp_plan: string | null;
+  min_loan_amount: number | null;
+  max_loan_amount: number | null;
+  created_at: string;
+}
+
 // The signed-in persona. No passwords — the desktop app binds identity to
 // a real user row so locks, audit, and field permissions are per-user.
 export interface UserAccount {

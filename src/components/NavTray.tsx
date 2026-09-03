@@ -14,6 +14,7 @@ const APP_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', key: 'd' },
   { id: 'loans', label: 'Loans', key: 'n' },
   { id: 'tasks', label: 'Tasks', key: 'k' },
+  { id: 'rates', label: 'Rate sheets', key: 'y' },
   { id: 'settings', label: 'Settings', key: 's' },
 ];
 

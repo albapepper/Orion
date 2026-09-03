@@ -1859,3 +1859,81 @@ button.link:hover {
   border-color: var(--red) !important;
   color: var(--red);
 }
+
+/* ── Rate sheets admin ───────────────────────────────── */
+
+.rates-layout {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.rates-sheets {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rates-sheets .tray-item {
+  width: 100%;
+}
+
+.rates-new {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.rates-new input,
+.rates-new select {
+  padding: 7px 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.rates-dates {
+  display: flex;
+  gap: 8px;
+}
+
+.rates-dates input {
+  flex: 1;
+  min-width: 0;
+}
+
+.rates-options {
+  flex: 1;
+  min-width: 0;
+}
+
+.rates-activate {
+  margin-bottom: 12px;
+}
+
+.rates-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.rates-add input,
+.rates-add select {
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.rates-add input[type='number'] {
+  width: 100px;
+}

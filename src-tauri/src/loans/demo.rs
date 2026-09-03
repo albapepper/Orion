@@ -585,3 +585,49 @@ pub fn underwriter_id() -> Uuid {
 pub fn loan_id(s: &str) -> Uuid {
     id(s)
 }
+
+// ── Rate sheets ──────────────────────────────────────────────────────
+
+pub fn rate_sheets() -> Vec<crate::pricing::RateSheet> {
+    let company = id(DEMO_COMPANY_ID);
+    vec![crate::pricing::RateSheet {
+        id: id("00000000-0000-0000-0000-500000000001"),
+        company_id: company,
+        lender: "Premier Lending Group".into(),
+        effective_date: NaiveDate::from_ymd_opt(2026, 9, 1),
+        expires_date: NaiveDate::from_ymd_opt(2026, 9, 30),
+        is_active: true,
+        created_at: Utc::now(),
+    }]
+}
+
+pub fn rate_options(rate_sheet_id: Uuid) -> Vec<crate::pricing::RateOption> {
+    let company = id(DEMO_COMPANY_ID);
+    let sheet = if rate_sheet_id == id("00000000-0000-0000-0000-500000000001") {
+        rate_sheet_id
+    } else {
+        id("00000000-0000-0000-0000-500000000001")
+    };
+    let opt = |suffix: &str, product: &str, rate: f64, points: f64, comp: &str| {
+        crate::pricing::RateOption {
+            id: id(&format!("00000000-0000-0000-0000-5000000001{suffix}")),
+            rate_sheet_id: sheet,
+            company_id: company,
+            product: product.into(),
+            rate,
+            points,
+            comp_plan: Some(comp.into()),
+            min_loan_amount: None,
+            max_loan_amount: None,
+            created_at: Utc::now(),
+        }
+    };
+    vec![
+        opt("01", "30yr_fixed", 6.375, 1.5, "PLG-Standard"),
+        opt("02", "30yr_fixed", 6.500, 1.0, "PLG-Standard"),
+        opt("03", "30yr_fixed", 6.625, 0.5, "PLG-Standard"),
+        opt("04", "30yr_fixed", 6.750, 0.0, "PLG-Standard"),
+        opt("05", "15yr_fixed", 5.875, 1.0, "PLG-Standard"),
+        opt("06", "7_1_arm", 6.125, 0.75, "PLG-Arm"),
+    ]
+}

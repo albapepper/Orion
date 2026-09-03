@@ -237,7 +237,7 @@ a complete loan can be priced, serialized to MISMO 3.4, submitted to
 DU and LPA sandbox, and findings display in Orion. **Gate:
 pilot-credible.** ⚠ GSE sandbox access must be in hand by week 14.
 
-- [ ] **P4-01** Rate sheets admin: migration + backend + screen for
+- [x] **P4-01** Rate sheets admin: migration + backend + screen for
       maintaining lender rate sheets (rates, points, comp plans)
 - [ ] **P4-02** Pricing screen: manual option building against the
       active rate sheet (monthly P&I, APR-adjacent math, option rows)

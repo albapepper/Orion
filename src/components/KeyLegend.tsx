@@ -9,6 +9,7 @@ const BINDINGS: Array<[string, string]> = [
   ['⌃d', 'Dashboard'],
   ['⌃n', 'Loan list'],
   ['⌃k', 'Tasks'],
+  ['⌃y', 'Rate sheets'],
   ['⌃s', 'Settings'],
   ['⌃1–9', 'Open nth recent loan'],
   ['⌃o', 'Loan overview'],
