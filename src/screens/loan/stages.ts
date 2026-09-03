@@ -14,7 +14,8 @@ export type LoanScreen =
   | 'declarations'
   | 'demographic'
   | 'documents'
-  | 'conditions';
+  | 'conditions'
+  | 'pricing';
 
 export const LOAN_SCREENS: LoanScreen[] = [
   'borrower',
@@ -30,6 +31,7 @@ export const LOAN_SCREENS: LoanScreen[] = [
   'demographic',
   'documents',
   'conditions',
+  'pricing',
 ];
 
 export const SCREEN_LABELS: Record<LoanScreen, string> = {
@@ -46,6 +48,7 @@ export const SCREEN_LABELS: Record<LoanScreen, string> = {
   demographic: 'Demographic',
   documents: 'Documents',
   conditions: 'Conditions',
+  pricing: 'Pricing',
 };
 
 // Keyboard shortcut letter for each stage (Ctrl-modified)
@@ -63,6 +66,7 @@ export const STAGE_KEYS: Record<LoanScreen, string> = {
   demographic: 'g',
   documents: 'f', // files
   conditions: 'h',
+  pricing: 'v',
 };
 
 export const nextStage = (screen: LoanScreen): LoanScreen | null =>

@@ -631,3 +631,41 @@ pub fn rate_options(rate_sheet_id: Uuid) -> Vec<crate::pricing::RateOption> {
         opt("06", "7_1_arm", 6.125, 0.75, "PLG-Arm"),
     ]
 }
+
+// ── Loan pricing options ─────────────────────────────────────────────
+
+pub fn loan_pricing(loan_id: Uuid) -> Vec<crate::pricing::LoanPricingOption> {
+    let company = id(DEMO_COMPANY_ID);
+    let quote = |suffix: &str, product: &str, rate: f64, points: f64, pi: f64, selected: bool| {
+        crate::pricing::LoanPricingOption {
+            id: id(&format!("00000000-0000-0000-0000-6000000000{suffix}")),
+            loan_id,
+            company_id: company,
+            product: product.into(),
+            rate,
+            points,
+            monthly_pi: Some(pi),
+            points_cost: Some(400_000.0 * points / 100.0),
+            comp_plan: Some("PLG-Standard".into()),
+            selected,
+            created_by: Some(id(DEMO_OFFICER_ID)),
+            created_at: Utc::now(),
+        }
+    };
+    match loan_number_for(loan_id) {
+        "ORN-2026-0002" => vec![quote(
+            "01",
+            "30yr_fixed",
+            6.625,
+            0.5,
+            2_557.0,
+            false,
+        )],
+        "ORN-2026-0003" => vec![],
+        _ => vec![
+            quote("02", "30yr_fixed", 6.375, 1.5, 2_491.0, false),
+            quote("03", "30yr_fixed", 6.500, 1.0, 2_528.0, true),
+            quote("04", "15yr_fixed", 5.875, 1.0, 3_362.0, false),
+        ],
+    }
+}

@@ -171,3 +171,141 @@ pub async fn remove_rate_option(
         .await
         .map_err(|e| e.to_string())
 }
+
+// ── Loan pricing options ─────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn add_loan_pricing(
+    state: State<'_, AppState>,
+    loan_id: String,
+    product: Option<String>,
+    rate: f64,
+    points: f64,
+    comp_plan: Option<String>,
+) -> Result<crate::pricing::LoanPricingOption, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let option = crate::pricing::add_loan_option(
+        &pool,
+        loan_id,
+        company_id,
+        product.as_deref().unwrap_or("30yr_fixed"),
+        rate,
+        points,
+        comp_plan.as_deref(),
+        user_id,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "pricing.option_add",
+        "loan_pricing_options",
+        option.id,
+        None,
+        Some(serde_json::json!({
+            "product": option.product,
+            "rate": option.rate,
+            "points": option.points,
+        })),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(option)
+}
+
+#[tauri::command]
+pub async fn remove_loan_pricing(
+    state: State<'_, AppState>,
+    loan_pricing_id: String,
+) -> Result<(), String> {
+    let pool = state.pool().await?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    let option_id = parse_uuid(&loan_pricing_id)?;
+
+    let row: (Uuid, Uuid) =
+        sqlx::query_as("SELECT company_id, loan_id FROM loan_pricing_options WHERE id = $1")
+            .bind(option_id)
+            .fetch_one(&pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+    crate::locks::ensure_can_write(&pool, row.1, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::pricing::remove_loan_option(&pool, option_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        row.0,
+        Some(row.1),
+        user_id,
+        "pricing.option_remove",
+        "loan_pricing_options",
+        option_id,
+        None,
+        Some(serde_json::json!({ "removed": true })),
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn select_loan_pricing(
+    state: State<'_, AppState>,
+    loan_id: String,
+    loan_pricing_id: String,
+) -> Result<(), String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let option_id = parse_uuid(&loan_pricing_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::pricing::select_loan_option(&pool, company_id, loan_id, option_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "pricing.select",
+        "loan_pricing_options",
+        option_id,
+        None,
+        Some(serde_json::json!({ "selected": true })),
+    )
+    .await
+    .map_err(|e| e.to_string())
+}

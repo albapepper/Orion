@@ -41,6 +41,7 @@ pub struct LoanDetail {
     pub uw_reviews: Vec<crate::loans::UwReview>,
     pub documents: Vec<crate::documents::Document>,
     pub conditions: Vec<crate::conditions::Condition>,
+    pub pricing: Vec<crate::pricing::LoanPricingOption>,
     pub lock: Option<LockInfo>,
 }
 
@@ -136,6 +137,9 @@ pub async fn get_loan_detail(
             let conditions = crate::conditions::list_for_loan(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let pricing = crate::pricing::list_loan_options(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             Ok(LoanDetail {
                 summary,
                 borrowers,
@@ -152,6 +156,7 @@ pub async fn get_loan_detail(
                 uw_reviews,
                 documents,
                 conditions,
+                pricing,
                 lock,
             })
         }
@@ -176,6 +181,7 @@ pub async fn get_loan_detail(
                 uw_reviews: demo::uw_reviews(loan_id),
                 documents: demo::documents(loan_id),
                 conditions: demo::conditions(loan_id),
+                pricing: demo::loan_pricing(loan_id),
                 // Demo presence: loan 2 pretends Dana (the underwriter
                 // persona) is holding it in Assets — switch personas in
                 // Settings to see both sides of the lock.

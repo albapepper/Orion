@@ -181,7 +181,25 @@ export interface LoanDetail {
   uw_reviews: UwReview[];
   documents: Document[];
   conditions: Condition[];
+  pricing: LoanPricingOption[];
   lock: LockInfo | null;
+}
+
+// A pricing option built for one loan from a rate-sheet row. P&I and
+// points cost are computed server-side against the loan's terms.
+export interface LoanPricingOption {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  product: string;
+  rate: number;
+  points: number;
+  monthly_pi: number | null;
+  points_cost: number | null;
+  comp_plan: string | null;
+  selected: boolean;
+  created_by: string | null;
+  created_at: string;
 }
 
 export type DocumentType =

@@ -239,7 +239,7 @@ pilot-credible.** ⚠ GSE sandbox access must be in hand by week 14.
 
 - [x] **P4-01** Rate sheets admin: migration + backend + screen for
       maintaining lender rate sheets (rates, points, comp plans)
-- [ ] **P4-02** Pricing screen: manual option building against the
+- [x] **P4-02** Pricing screen: manual option building against the
       active rate sheet (monthly P&I, APR-adjacent math, option rows)
 - [ ] **P4-03** Pricing AI: "give me options at 6.5% with under $3K
       in points" — pricing context builder + constrained suggestions

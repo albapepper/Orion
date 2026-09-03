@@ -22,6 +22,7 @@ import { DeclarationsScreen } from './screens/loan/DeclarationsScreen';
 import { DemographicScreen } from './screens/loan/DemographicScreen';
 import { DocumentsScreen } from './screens/loan/DocumentsScreen';
 import { ConditionsScreen } from './screens/loan/ConditionsScreen';
+import { PricingScreen } from './screens/loan/PricingScreen';
 import { StubScreen } from './screens/loan/StubScreen';
 import { LOAN_SCREENS, STAGE_KEYS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -365,6 +366,13 @@ function App() {
           </Match>
           <Match when={route().name === 'conditions'}>
             <ConditionsScreen
+              loanId={(route() as { loanId: string }).loanId}
+              demo={status() ? !status()!.db_connected : false}
+              onNavigate={openScreen}
+            />
+          </Match>
+          <Match when={route().name === 'pricing'}>
+            <PricingScreen
               loanId={(route() as { loanId: string }).loanId}
               demo={status() ? !status()!.db_connected : false}
               onNavigate={openScreen}

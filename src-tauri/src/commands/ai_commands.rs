@@ -288,6 +288,31 @@ async fn build_context_for_screen(
                 chrono::Utc::now(),
             ))
         }
+        "pricing" => {
+            let (name, terms) = match &db {
+                Some(pool) => {
+                    let borrowers = crate::db::queries::get_borrowers(pool, loan_id).await?;
+                    let name = borrower_name(&borrowers);
+                    let terms = crate::db::queries::get_loan_terms(pool, loan_id)
+                        .await?
+                        .unwrap_or_else(|| demo::loan_terms(loan_id));
+                    (name, Some(terms))
+                }
+                None => (
+                    borrower_name(&demo::borrowers(loan_id)),
+                    Some(demo::loan_terms(loan_id)),
+                ),
+            };
+            let options = match &db {
+                Some(pool) => crate::pricing::list_loan_options(pool, loan_id).await?,
+                None => demo::loan_pricing(loan_id),
+            };
+            Ok(crate::loans::screens::pricing::build_context(
+                &name,
+                terms.as_ref(),
+                &options,
+            ))
+        }
         _ => Ok(format!(
             "You are a concise, expert mortgage assistant inside the Orion \
              loan origination platform. Current screen: {screen}. Answer \

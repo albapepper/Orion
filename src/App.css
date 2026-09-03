@@ -1937,3 +1937,23 @@ button.link:hover {
 .rates-add input[type='number'] {
   width: 100px;
 }
+
+/* ── Pricing screen ──────────────────────────────────── */
+
+.pricing-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 36px;
+  padding: 14px 18px;
+  margin: 14px 0 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.pricing-selected {
+  background: var(--accent-soft);
+}
+
+.pricing-selected .mono {
+  color: var(--accent);
+}

@@ -175,6 +175,17 @@ export function computeStageStatuses(
         : 'progress'
     : 'empty';
 
+  // Pricing: options built against the rate sheet. Done when the LO has
+  // picked one; no terms on file means there's nothing to price yet.
+  const pricing = detail.pricing ?? [];
+  statuses.pricing = pricing.length
+    ? pricing.some((o) => o.selected)
+      ? 'done'
+      : 'progress'
+    : detail.terms
+      ? 'progress'
+      : 'empty';
+
   // Overview summarizes the file — credit is external and documents are
   // never truly "done", so neither blocks green
   const vals = TRACKER_ITEMS.filter(
