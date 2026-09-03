@@ -1,23 +1,28 @@
 import { Show, type JSX } from 'solid-js';
 import type { LockInfo } from '../types';
 import { canEditWork, ROLE_LABELS, user } from '../lib/session';
+import { ContactsPanel } from './ContactsPanel';
 
 // Loan screens read in two columns: the banker's work on the left, the
 // underwriter's notes and verifications on the right — anyone touching the
 // loan sees the state of both. Editing is gated twice, by design: roles
 // decide which column is yours, and the loan lock decides whether it's
 // your turn at all — if another user holds the lock, the work column goes
-// read-only and the badge up top says who's in the file.
+// read-only and the badge up top says who's in the file. Below the
+// columns sits the deal's contact directory (P5-10).
 export function LoanColumns(props: {
   work: JSX.Element;
   review: JSX.Element;
   lock?: LockInfo | null;
+  loanId?: string;
+  demo?: boolean;
 }) {
   const lockHeldByOther = () =>
     props.lock != null && props.lock.locked_by !== user()?.id;
   const roleLocked = () => user() !== null && !canEditWork(user());
 
   return (
+    <>
     <div class="loan-columns">
       <section
         class="loan-col work"
@@ -44,5 +49,9 @@ export function LoanColumns(props: {
       </section>
       <aside class="loan-col review">{props.review}</aside>
     </div>
+    <Show when={props.loanId}>
+      <ContactsPanel loanId={props.loanId!} demo={props.demo ?? false} />
+    </Show>
+    </>
   );
 }

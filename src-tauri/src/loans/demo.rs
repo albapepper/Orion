@@ -627,6 +627,42 @@ pub fn loan_closing(loan_id: Uuid) -> Option<crate::loans::LoanClosing> {
     })
 }
 
+/// Loan 1 has its deal team on file; the rest are still forming.
+pub fn loan_contacts(loan_id: Uuid) -> Vec<crate::loans::LoanContact> {
+    let contact = |suffix: &str, role: &str, name: &str, company: &str, phone: &str| {
+        crate::loans::LoanContact {
+            id: id(&format!("00000000-0000-0000-0000-9000000000{suffix}")),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            role: role.into(),
+            name: name.into(),
+            company: Some(company.into()),
+            email: None,
+            phone: Some(phone.into()),
+            notes: None,
+        }
+    };
+    match loan_number_for(loan_id) {
+        "ORN-2026-0003" => vec![],
+        _ => vec![
+            contact(
+                "01",
+                "realtor",
+                "Tessa Moreland",
+                "Northbay Realty",
+                "555-0134",
+            ),
+            contact(
+                "02",
+                "title",
+                "Marcy Oduya",
+                "Puget Sound Title",
+                "555-0178",
+            ),
+        ],
+    }
+}
+
 /// No demo loan has funded yet — the pipeline stops one short so the
 /// funding screen still has a job to do in demos.
 pub fn loan_funding(_loan_id: Uuid) -> Option<crate::loans::LoanFunding> {

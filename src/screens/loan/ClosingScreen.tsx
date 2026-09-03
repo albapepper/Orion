@@ -85,6 +85,8 @@ export function ClosingScreen(props: Props) {
 
       <LoanColumns
         lock={detail()?.lock ?? null}
+        loanId={props.loanId}
+        demo={props.demo}
         work={
           <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
             <div class="screen-title-row">

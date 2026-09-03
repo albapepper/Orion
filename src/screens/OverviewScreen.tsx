@@ -198,6 +198,8 @@ export function OverviewScreen(props: Props) {
 
       <LoanColumns
         lock={detail()?.lock ?? null}
+        loanId={props.loanId}
+        demo={props.demo}
         work={
           <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="overview-meta">

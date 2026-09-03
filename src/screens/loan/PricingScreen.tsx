@@ -188,6 +188,8 @@ export function PricingScreen(props: Props) {
 
       <LoanColumns
         lock={detail()?.lock ?? null}
+        loanId={props.loanId}
+        demo={props.demo}
         work={
           <>
             <div class="screen-title-row">

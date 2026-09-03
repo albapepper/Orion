@@ -4,6 +4,7 @@ pub mod aus;
 pub mod commands;
 pub mod conditions;
 pub mod config;
+pub mod contacts;
 pub mod db;
 pub mod documents;
 pub mod loans;
@@ -107,6 +108,9 @@ pub fn run() {
             commands::export_commands::save_mismo_file,
             commands::aus_commands::submit_du,
             commands::aus_commands::submit_lpa,
+            commands::contacts_commands::add_loan_contact,
+            commands::contacts_commands::remove_loan_contact,
+            commands::contacts_commands::list_contacts,
             commands::user_commands::list_users,
             commands::user_commands::whoami,
             commands::user_commands::sign_in_as,

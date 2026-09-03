@@ -33,6 +33,8 @@ export function StubScreen(props: Props) {
 
       <LoanColumns
         lock={detail()?.lock ?? null}
+        loanId={props.loanId}
+        demo={props.demo}
         work={
           <div class="stub-panel">
             <div class="stub-title">{SCREEN_LABELS[props.screen]}</div>

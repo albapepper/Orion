@@ -2,6 +2,7 @@ pub mod ai_commands;
 pub mod aus_commands;
 pub mod condition_commands;
 pub mod config_commands;
+pub mod contacts_commands;
 pub mod document_commands;
 pub mod export_commands;
 pub mod loan_commands;

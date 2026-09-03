@@ -160,6 +160,8 @@ export function DemographicScreen(props: Props) {
 
       <LoanColumns
         lock={detail()?.lock ?? null}
+        loanId={props.loanId}
+        demo={props.demo}
         work={
           <Show when={selected()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="screen-title-row">

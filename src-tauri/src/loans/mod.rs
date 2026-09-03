@@ -182,6 +182,21 @@ pub struct LoanFunding {
     pub notes: Option<String>,
 }
 
+/// A party on the deal (P5-09): realtor, title, escrow, insurance —
+/// the humans a loan team actually calls.
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct LoanContact {
+    pub id: Uuid,
+    pub loan_id: Uuid,
+    pub company_id: Uuid,
+    pub role: String,
+    pub name: String,
+    pub company: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub notes: Option<String>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct LoanIncome {
     pub id: Uuid,

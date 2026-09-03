@@ -66,6 +66,19 @@ export interface LoanFunding {
   notes: string | null;
 }
 
+// A deal party (P5-09): realtor, title, escrow, insurance, other
+export interface LoanContact {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  role: string;
+  name: string;
+  company: string | null;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+}
+
 export interface LoanIncome {
   id: string;
   loan_id: string;

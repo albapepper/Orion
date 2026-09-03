@@ -219,6 +219,8 @@ export function LoanListScreen<T extends BaseRow>(props: Props<T>) {
 
       <LoanColumns
         lock={(detail() as LoanDetail | undefined)?.lock ?? null}
+        loanId={props.loanId}
+        demo={props.demo}
         work={
           <>
             <div class="screen-title-row">
