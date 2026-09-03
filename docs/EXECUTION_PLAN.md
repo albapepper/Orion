@@ -193,14 +193,14 @@ what to work on next. **Milestone: DEMO-READY.**
 
 ### Week 9 — Documents + Conditions
 
-- [ ] **P3-06** Documents migration (per-loan doc records, type,
+- [x] **P3-06** Documents migration (per-loan doc records, type,
       stage linkage, uploaded-by)
-- [ ] **P3-07** Documents backend: attach/list/delete + audit + IPC
-- [ ] **P3-08** Documents screen UI + sidebar wire
-- [ ] **P3-09** Conditions migration (approval conditions, status,
+- [x] **P3-07** Documents backend: attach/list/delete + audit + IPC
+- [x] **P3-08** Documents screen UI + sidebar wire
+- [x] **P3-09** Conditions migration (approval conditions, status,
       source, clear-by)
-- [ ] **P3-10** Conditions backend: CRUD + audit + IPC
-- [ ] **P3-11** Conditions screen UI + sidebar wire (outstanding
+- [x] **P3-10** Conditions backend: CRUD + audit + IPC
+- [x] **P3-11** Conditions screen UI + sidebar wire (outstanding
       conditions drive the UW column flags)
 
 ### Week 10 — Lock system + presence

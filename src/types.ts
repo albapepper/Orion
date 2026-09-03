@@ -179,7 +179,58 @@ export interface LoanDetail {
   demographics: Demographics[];
   terms: LoanTerms | null;
   uw_reviews: UwReview[];
+  documents: Document[];
+  conditions: Condition[];
   lock: LockInfo | null;
+}
+
+export type DocumentType =
+  | 'application'
+  | 'income_verification'
+  | 'bank_statement'
+  | 'tax_return'
+  | 'appraisal'
+  | 'title'
+  | 'insurance'
+  | 'id_document'
+  | 'other';
+
+// A record of one document on the loan file. Bytes live outside the
+// database for now — file_name carries the reference.
+export interface Document {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  title: string;
+  doc_type: DocumentType;
+  screen: string | null;
+  file_name: string | null;
+  mime_type: string | null;
+  size_bytes: number | null;
+  uploaded_by: string | null;
+  uploaded_at: string;
+  removed_at: string | null;
+  uploaded_by_name: string | null;
+}
+
+export type ConditionStatus = 'open' | 'submitted' | 'cleared' | 'waived';
+
+// Underwriting's checklist: outstanding conditions block approval.
+export interface Condition {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  title: string;
+  detail: string | null;
+  source: 'underwriter' | 'processor' | 'system';
+  status: ConditionStatus;
+  priority: 'low' | 'normal' | 'high';
+  clear_by: string | null;
+  cleared_at: string | null;
+  cleared_by: string | null;
+  created_at: string;
+  updated_at: string;
+  cleared_by_name: string | null;
 }
 
 export interface Task {

@@ -1,8 +1,10 @@
 pub mod ai;
 pub mod audit;
 pub mod commands;
+pub mod conditions;
 pub mod config;
 pub mod db;
+pub mod documents;
 pub mod loans;
 pub mod locks;
 pub mod tasks;
@@ -72,6 +74,13 @@ pub fn run() {
             commands::task_commands::create_task,
             commands::task_commands::set_task_status,
             commands::task_commands::assign_task,
+            commands::document_commands::list_documents,
+            commands::document_commands::add_document,
+            commands::document_commands::remove_document,
+            commands::condition_commands::list_conditions,
+            commands::condition_commands::create_condition,
+            commands::condition_commands::set_condition_status,
+            commands::condition_commands::remove_condition,
             commands::user_commands::list_users,
             commands::user_commands::whoami,
             commands::user_commands::sign_in_as,

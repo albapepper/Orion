@@ -19,8 +19,10 @@ import { PropertyScreen } from './screens/loan/PropertyScreen';
 import { ReoScreen } from './screens/loan/ReoScreen';
 import { DeclarationsScreen } from './screens/loan/DeclarationsScreen';
 import { DemographicScreen } from './screens/loan/DemographicScreen';
+import { DocumentsScreen } from './screens/loan/DocumentsScreen';
+import { ConditionsScreen } from './screens/loan/ConditionsScreen';
 import { StubScreen } from './screens/loan/StubScreen';
-import { LOAN_SCREENS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
+import { LOAN_SCREENS, STAGE_KEYS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { fieldArrowNav } from './lib/fieldNav';
 import './App.css';
@@ -134,7 +136,7 @@ function App() {
         openScreen('tasks');
         return;
       }
-      const screen = LOAN_SCREENS.find((s) => s.startsWith(e.key));
+      const screen = LOAN_SCREENS.find((s) => STAGE_KEYS[s] === e.key);
       if (screen) {
         e.preventDefault();
         openScreen(screen);
@@ -321,6 +323,20 @@ function App() {
           </Match>
           <Match when={route().name === 'demographic'}>
             <DemographicScreen
+              loanId={(route() as { loanId: string }).loanId}
+              demo={status() ? !status()!.db_connected : false}
+              onNavigate={openScreen}
+            />
+          </Match>
+          <Match when={route().name === 'documents'}>
+            <DocumentsScreen
+              loanId={(route() as { loanId: string }).loanId}
+              demo={status() ? !status()!.db_connected : false}
+              onNavigate={openScreen}
+            />
+          </Match>
+          <Match when={route().name === 'conditions'}>
+            <ConditionsScreen
               loanId={(route() as { loanId: string }).loanId}
               demo={status() ? !status()!.db_connected : false}
               onNavigate={openScreen}

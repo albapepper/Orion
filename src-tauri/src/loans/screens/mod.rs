@@ -1,7 +1,9 @@
 pub mod assets;
 pub mod borrower;
+pub mod conditions;
 pub mod dashboard;
 pub mod declarations;
+pub mod documents;
 pub mod employment;
 pub mod income;
 pub mod liabilities;

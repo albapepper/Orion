@@ -39,6 +39,8 @@ pub struct LoanDetail {
     pub demographics: Vec<crate::loans::Demographics>,
     pub terms: Option<LoanTerms>,
     pub uw_reviews: Vec<crate::loans::UwReview>,
+    pub documents: Vec<crate::documents::Document>,
+    pub conditions: Vec<crate::conditions::Condition>,
     pub lock: Option<LockInfo>,
 }
 
@@ -115,6 +117,12 @@ pub async fn get_loan_detail(
             let uw_reviews = crate::db::queries::get_uw_reviews(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let documents = crate::documents::list_for_loan(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
+            let conditions = crate::conditions::list_for_loan(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             Ok(LoanDetail {
                 summary,
                 borrowers,
@@ -129,6 +137,8 @@ pub async fn get_loan_detail(
                 demographics,
                 terms,
                 uw_reviews,
+                documents,
+                conditions,
                 lock,
             })
         }
@@ -151,6 +161,8 @@ pub async fn get_loan_detail(
                 demographics: demo::demographics(loan_id),
                 terms: Some(demo::loan_terms(loan_id)),
                 uw_reviews: demo::uw_reviews(loan_id),
+                documents: demo::documents(loan_id),
+                conditions: demo::conditions(loan_id),
                 lock: None,
             })
         }

@@ -154,8 +154,32 @@ export function computeStageStatuses(
     statuses.demographic = 'empty';
   }
 
-  // Overview summarizes the file — credit is external, so it doesn't block green
-  const vals = TRACKER_ITEMS.filter((k) => k !== 'overview' && k !== 'credit').map(
+  // Documents: the file's paperwork. "Some" is the best it ever reads —
+  // a file is never really done collecting documents, so it tops out at
+  // in-progress and doesn't gate the overview's green.
+  statuses.documents = (detail.documents ?? []).length > 0 ? 'progress' : 'empty';
+
+  // Conditions: underwriting's checklist. Outstanding = work remaining;
+  // anything past its clear-by date is a problem.
+  const conditions = detail.conditions ?? [];
+  statuses.conditions = conditions.length
+    ? conditions.every((c) => c.status === 'cleared' || c.status === 'waived')
+      ? 'done'
+      : conditions.some(
+            (c) =>
+              (c.status === 'open' || c.status === 'submitted') &&
+              c.clear_by !== null &&
+              new Date(c.clear_by) < new Date(),
+          )
+        ? 'problem'
+        : 'progress'
+    : 'empty';
+
+  // Overview summarizes the file — credit is external and documents are
+  // never truly "done", so neither blocks green
+  const vals = TRACKER_ITEMS.filter(
+    (k) => k !== 'overview' && k !== 'credit' && k !== 'documents',
+  ).map(
     (k) => statuses[k],
   );
   statuses.overview = vals.includes('problem')

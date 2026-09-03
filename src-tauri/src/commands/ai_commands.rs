@@ -271,6 +271,23 @@ async fn build_context_for_screen(
                 total_monthly_income,
             ))
         }
+        "documents" => {
+            let documents = match &db {
+                Some(pool) => crate::documents::list_for_loan(pool, loan_id).await?,
+                None => demo::documents(loan_id),
+            };
+            Ok(crate::loans::screens::documents::build_context(&documents))
+        }
+        "conditions" => {
+            let conditions = match &db {
+                Some(pool) => crate::conditions::list_for_loan(pool, loan_id).await?,
+                None => demo::conditions(loan_id),
+            };
+            Ok(crate::loans::screens::conditions::build_context(
+                &conditions,
+                chrono::Utc::now(),
+            ))
+        }
         _ => Ok(format!(
             "You are a concise, expert mortgage assistant inside the Orion \
              loan origination platform. Current screen: {screen}. Answer \

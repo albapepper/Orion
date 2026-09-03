@@ -485,3 +485,93 @@ pub fn all_tasks() -> Vec<crate::tasks::Task> {
     .flat_map(|s| tasks(id(s)))
     .collect()
 }
+
+// ── Documents & conditions ───────────────────────────────────────────
+
+pub fn documents(loan_id: Uuid) -> Vec<crate::documents::Document> {
+    let officer = id(DEMO_OFFICER_ID);
+    let base = crate::documents::Document {
+        id: id("00000000-0000-0000-0000-300000000001"),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        title: String::new(),
+        doc_type: "other".into(),
+        screen: None,
+        file_name: None,
+        mime_type: Some("application/pdf".into()),
+        size_bytes: Some(184_320),
+        uploaded_by: Some(officer),
+        uploaded_at: Utc::now() - chrono::Duration::days(1),
+        removed_at: None,
+        uploaded_by_name: Some("Alex Kim".into()),
+    };
+    let doc = move |suffix: &str, title: &str, doc_type: &str, screen: Option<&str>| {
+        let mut d = base.clone();
+        d.id = id(&format!("00000000-0000-0000-0000-3000000000{suffix}"));
+        d.title = title.into();
+        d.doc_type = doc_type.into();
+        d.screen = screen.map(Into::into);
+        d
+    };
+    match loan_number_for(loan_id) {
+        "ORN-2026-0002" => vec![doc("01", "Purchase agreement", "application", Some("property"))],
+        "ORN-2026-0003" => vec![],
+        _ => vec![
+            doc("02", "Paystubs — last 30 days", "income_verification", Some("income")),
+            doc("03", "Bank statement — June", "bank_statement", Some("assets")),
+            doc("04", "W-2s 2024 & 2025", "tax_return", Some("income")),
+        ],
+    }
+}
+
+pub fn conditions(loan_id: Uuid) -> Vec<crate::conditions::Condition> {
+    let officer = id(DEMO_OFFICER_ID);
+    let uw = id(DEMO_UW_ID);
+    let base = crate::conditions::Condition {
+        id: id("00000000-0000-0000-0000-400000000001"),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        title: String::new(),
+        detail: None,
+        source: "underwriter".into(),
+        status: "open".into(),
+        priority: "normal".into(),
+        clear_by: None,
+        cleared_at: None,
+        cleared_by: None,
+        created_by: Some(uw),
+        created_at: Utc::now() - chrono::Duration::days(2),
+        updated_at: Utc::now() - chrono::Duration::days(2),
+        cleared_by_name: None,
+    };
+    let cond = move |suffix: &str, title: &str, status: &str, priority: &str, due_days: Option<i64>| {
+        let mut c = base.clone();
+        c.id = id(&format!("00000000-0000-0000-0000-4000000000{suffix}"));
+        c.title = title.into();
+        c.status = status.into();
+        c.priority = priority.into();
+        c.clear_by = due_days.map(|d| Utc::now() + chrono::Duration::days(d));
+        c.cleared_at = matches!(status, "cleared" | "waived").then(|| Utc::now() - chrono::Duration::days(1));
+        c.cleared_by = matches!(status, "cleared" | "waived").then_some(officer);
+        c.cleared_by_name = matches!(status, "cleared" | "waived").then(|| "Alex Kim".to_string());
+        c
+    };
+    match loan_number_for(loan_id) {
+        "ORN-2026-0002" => vec![
+            cond("01", "Signed gift letter", "open", "high", Some(1)),
+            cond("02", "Updated VOE within 90 days", "submitted", "normal", Some(4)),
+        ],
+        "ORN-2026-0003" => vec![],
+        _ => vec![
+            cond(
+                "02",
+                "Gift letter + sourcing for $25k deposit",
+                "open",
+                "high",
+                Some(-2),
+            ),
+            cond("03", "Homeowners insurance binder", "open", "normal", Some(6)),
+            cond("04", "Appraisal received", "cleared", "normal", None),
+        ],
+    }
+}
