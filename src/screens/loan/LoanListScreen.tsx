@@ -55,7 +55,7 @@ interface Props<T extends BaseRow> {
 export function LoanListScreen<T extends BaseRow>(props: Props<T>) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<unknown>('get_loan_detail', { loanId }) as never,
+    (loanId) => invoke<unknown>('get_loan_detail', { loanId, screen: props.screen }) as never,
   );
   const [selectedId, setSelectedId] = createSignal<string | null>(null);
   const [edits, setEdits] = createSignal<Record<string, Partial<T>>>({});
@@ -218,6 +218,7 @@ export function LoanListScreen<T extends BaseRow>(props: Props<T>) {
       />
 
       <LoanColumns
+        lock={(detail() as LoanDetail | undefined)?.lock ?? null}
         work={
           <>
             <div class="screen-title-row">

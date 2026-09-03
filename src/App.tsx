@@ -61,22 +61,35 @@ function App() {
     setHistory(h.slice(0, -1));
   };
 
+  // Leaving the loan for an app screen lets go of its lock so a teammate
+  // can step in. Fire-and-forget — demo mode has no locks to release.
+  const releaseIfLeaving = () => {
+    const r = route();
+    if ('loanId' in r && r.loanId && status()?.db_connected) {
+      invoke('release_loan_lock', { loanId: r.loanId }).catch(() => {});
+    }
+  };
+
   // Navigating to an app screen; loan screens fall back to the top recent
   // loan when none is open, so keyboard-only flow never dead-ends.
   const openScreen = (id: string) => {
     if (id === 'dashboard') {
+      releaseIfLeaving();
       navigate({ name: 'dashboard' });
       return;
     }
     if (id === 'loans') {
+      releaseIfLeaving();
       navigate({ name: 'loans' });
       return;
     }
     if (id === 'tasks') {
+      releaseIfLeaving();
       navigate({ name: 'tasks' });
       return;
     }
     if (id === 'settings') {
+      releaseIfLeaving();
       navigate({ name: 'settings' });
       return;
     }

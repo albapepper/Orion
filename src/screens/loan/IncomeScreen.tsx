@@ -24,7 +24,7 @@ const twoYearAvg = (row: LoanIncome) =>
 export function IncomeScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'income' }),
   );
   const [edits, setEdits] = createSignal<Record<string, Partial<LoanIncome>>>({});
   const [rowStatus, setRowStatus] = createSignal<Record<string, RowStatus>>({});
@@ -132,6 +132,7 @@ export function IncomeScreen(props: Props) {
       <PizzaTracker current="income" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
         <Show when={props.demo}>

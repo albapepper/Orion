@@ -40,7 +40,7 @@ const dueLabel = (c: Condition) => {
 export function ConditionsScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'conditions' }),
   );
   const [title, setTitle] = createSignal('');
   const [detailText, setDetailText] = createSignal('');
@@ -152,6 +152,7 @@ export function ConditionsScreen(props: Props) {
       <PizzaTracker current="conditions" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <>
             <div class="screen-title-row">

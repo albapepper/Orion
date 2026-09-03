@@ -36,7 +36,7 @@ const QUESTIONS: Array<[string, string]> = [
 export function DeclarationsScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'declarations' }),
   );
   const [selectedId, setSelectedId] = createSignal<string | null>(null);
   // Working edits keyed `${borrowerId}:${questionKey}`
@@ -102,6 +102,7 @@ export function DeclarationsScreen(props: Props) {
       <PizzaTracker current="declarations" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <Show when={selected()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="screen-title-row">

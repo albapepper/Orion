@@ -1,19 +1,39 @@
 import { Show, type JSX } from 'solid-js';
+import type { LockInfo } from '../types';
 import { canEditWork, ROLE_LABELS, user } from '../lib/session';
 
 // Loan screens read in two columns: the banker's work on the left, the
 // underwriter's notes and verifications on the right — anyone touching the
-// loan sees the state of both. Editing is role-gated per column: bankers
-// work the left, underwriters the right, and neither can overwrite the
-// other. Fields stack vertically inside each column so arrow keys fly
-// straight down the page.
-export function LoanColumns(props: { work: JSX.Element; review: JSX.Element }) {
-  const lockWork = () => user() !== null && !canEditWork(user());
+// loan sees the state of both. Editing is gated twice, by design: roles
+// decide which column is yours, and the loan lock decides whether it's
+// your turn at all — if another user holds the lock, the work column goes
+// read-only and the badge up top says who's in the file.
+export function LoanColumns(props: {
+  work: JSX.Element;
+  review: JSX.Element;
+  lock?: LockInfo | null;
+}) {
+  const lockHeldByOther = () =>
+    props.lock != null && props.lock.locked_by !== user()?.id;
+  const roleLocked = () => user() !== null && !canEditWork(user());
 
   return (
     <div class="loan-columns">
-      <section class="loan-col work" classList={{ locked: lockWork() }}>
-        <Show when={lockWork()}>
+      <section
+        class="loan-col work"
+        classList={{ locked: lockHeldByOther() || roleLocked() }}
+      >
+        <Show when={lockHeldByOther()}>
+          <div class="work-lock-hint">
+            <strong>{props.lock!.user_name}</strong> is editing this loan
+            <Show when={props.lock!.screen}>
+              {' '}
+              — they're on the {props.lock!.screen} screen
+            </Show>
+            . This column is read-only until they're done.
+          </div>
+        </Show>
+        <Show when={!lockHeldByOther() && roleLocked()}>
           <div class="work-lock-hint">
             Banker's column is read-only — you're signed in as{' '}
             <strong>{user()!.name}</strong> ({ROLE_LABELS[user()!.role] ?? user()!.role}).

@@ -21,7 +21,7 @@ interface Props {
 export function StubScreen(props: Props) {
   const [detail] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: props.screen }),
   );
 
   const upcoming = () => nextStage(props.screen);
@@ -32,6 +32,7 @@ export function StubScreen(props: Props) {
       <PizzaTracker current={props.screen} detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <div class="stub-panel">
             <div class="stub-title">{SCREEN_LABELS[props.screen]}</div>

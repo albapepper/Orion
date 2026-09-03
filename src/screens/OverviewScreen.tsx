@@ -17,7 +17,7 @@ const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 export function OverviewScreen(props: Props) {
   const [detail] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'overview' }),
   );
 
   const terms = () => detail()?.terms;
@@ -138,6 +138,7 @@ export function OverviewScreen(props: Props) {
       <PizzaTracker current="overview" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="overview-meta">

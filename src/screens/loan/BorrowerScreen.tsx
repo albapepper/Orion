@@ -24,7 +24,7 @@ type WorkDep = { key: string; id: string | null; age: number | null };
 export function BorrowerScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'borrower' }),
   );
   const [selectedId, setSelectedId] = createSignal<string | null>(null);
   const [edits, setEdits] = createSignal<Record<string, Partial<Borrower>>>({});
@@ -165,6 +165,7 @@ export function BorrowerScreen(props: Props) {
       <PizzaTracker current="borrower" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <>
             <Show when={selected()} fallback={<div class="screen-loading">Loading…</div>}>

@@ -22,7 +22,7 @@ const label = (s: string) =>
 export function PropertyScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'property' }),
   );
   const [edits, setEdits] = createSignal<Partial<SubjectProperty>>({});
   const [status, setStatus] = createSignal<'saving' | 'saved' | 'error' | null>(null);
@@ -104,6 +104,7 @@ export function PropertyScreen(props: Props) {
       <PizzaTracker current="property" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="screen-title-row">

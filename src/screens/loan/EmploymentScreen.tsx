@@ -18,7 +18,7 @@ type Row = Employment & { key?: string }; // key set on demo-only local rows
 export function EmploymentScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'employment' }),
   );
   const [selectedId, setSelectedId] = createSignal<string | null>(null);
   const [edits, setEdits] = createSignal<Record<string, Partial<Employment>>>({});
@@ -184,6 +184,7 @@ export function EmploymentScreen(props: Props) {
       <PizzaTracker current="employment" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <Show when={selected()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="screen-title-row">

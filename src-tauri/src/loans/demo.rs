@@ -575,3 +575,13 @@ pub fn conditions(loan_id: Uuid) -> Vec<crate::conditions::Condition> {
         ],
     }
 }
+
+/// The demo underwriter's user id — used by the fake presence lock.
+pub fn underwriter_id() -> Uuid {
+    id(DEMO_UW_ID)
+}
+
+/// Parse one of the fixed demo ids.
+pub fn loan_id(s: &str) -> Uuid {
+    id(s)
+}

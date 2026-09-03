@@ -47,6 +47,9 @@ pub async fn create_condition(
         .await
         .ok_or("No user signed in")?;
     let loan_id = parse_uuid(&loan_id)?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let source = source.as_deref().unwrap_or("underwriter").to_string();
     if !matches!(source.as_str(), "underwriter" | "processor" | "system") {
@@ -119,6 +122,9 @@ pub async fn set_condition_status(
     let (company_id, loan_id) = crate::conditions::context_of(&pool, condition_id)
         .await
         .map_err(|e| e.to_string())?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
     crate::conditions::set_status(&pool, condition_id, &status, user_id)
         .await
         .map_err(|e| e.to_string())?;
@@ -152,6 +158,9 @@ pub async fn remove_condition(
     let condition_id = parse_uuid(&condition_id)?;
 
     let (company_id, loan_id) = crate::conditions::context_of(&pool, condition_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
         .await
         .map_err(|e| e.to_string())?;
     crate::conditions::remove(&pool, condition_id)

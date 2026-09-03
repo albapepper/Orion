@@ -33,7 +33,7 @@ const label = (s: string) =>
 export function DemographicScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'demographic' }),
   );
   const [selectedId, setSelectedId] = createSignal<string | null>(null);
   const [edits, setEdits] = createSignal<Record<string, Partial<Demographics>>>({});
@@ -118,6 +118,7 @@ export function DemographicScreen(props: Props) {
       <PizzaTracker current="demographic" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <Show when={selected()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="screen-title-row">

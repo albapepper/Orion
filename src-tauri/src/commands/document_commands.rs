@@ -41,6 +41,9 @@ pub async fn add_document(
         .await
         .ok_or("No user signed in")?;
     let loan_id = parse_uuid(&loan_id)?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let doc = crate::documents::add(
         &pool,
@@ -92,6 +95,9 @@ pub async fn remove_document(
     let doc_id = parse_uuid(&document_id)?;
 
     let (company_id, loan_id) = crate::documents::context_of(&pool, doc_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
         .await
         .map_err(|e| e.to_string())?;
     crate::documents::remove(&pool, doc_id)

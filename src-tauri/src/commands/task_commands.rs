@@ -65,7 +65,10 @@ pub async fn create_task(
         .ok_or("No user signed in")?;
 
     let loan_id = parse_uuid(&loan_id)?;
-    let assigned_to = assigned_to.map(|s| parse_uuid(&s)).transpose()?;
+    let assigned_to = assigned_to.map(|s| parse_uuid(&s)).transpose()?;    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
     let due = match due_date.as_deref() {
         Some(s) if !s.is_empty() => Some(parse_due_date(s)?),
         _ => None,
@@ -129,6 +132,12 @@ pub async fn set_task_status(
     }
 
     let (company_id, loan_id) = crate::tasks::context_of(&pool, task_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
         .await
         .map_err(|e| e.to_string())?;
     crate::tasks::set_status(&pool, task_id, &status)

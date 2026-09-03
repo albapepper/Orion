@@ -26,7 +26,7 @@ const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 export function TermsScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'terms' }),
   );
   const [edits, setEdits] = createSignal<Partial<LoanTerms>>({});
   const [status, setStatus] = createSignal<'saving' | 'saved' | 'error' | null>(null);
@@ -113,6 +113,7 @@ export function TermsScreen(props: Props) {
       <PizzaTracker current="terms" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="screen-title-row">

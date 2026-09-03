@@ -64,9 +64,22 @@ fn mask_ssn_in(payload: &mut serde_json::Value) {
 pub async fn get_loan_detail(
     state: State<'_, AppState>,
     loan_id: String,
+    screen: Option<String>,
 ) -> Result<LoanDetail, String> {
     let loan_id = parse_uuid(&loan_id)?;
     let db = state.db.read().await.clone();
+
+    // Loading a loan screen IS the presence signal: it acquires the
+    // lock (or renews ours and updates which screen we're on). The
+    // returned `lock` tells the screen whether it may write.
+    if let Some(pool) = &db {
+        if let Some(screen) = screen.as_deref() {
+            let user_id = *state.current_user_id.lock().await;
+            if let Some(user_id) = user_id {
+                let _ = crate::locks::acquire_lock(pool, loan_id, user_id, screen).await;
+            }
+        }
+    }
 
     match db {
         Some(pool) => {
@@ -163,7 +176,16 @@ pub async fn get_loan_detail(
                 uw_reviews: demo::uw_reviews(loan_id),
                 documents: demo::documents(loan_id),
                 conditions: demo::conditions(loan_id),
-                lock: None,
+                // Demo presence: loan 2 pretends Dana (the underwriter
+                // persona) is holding it in Assets — switch personas in
+                // Settings to see both sides of the lock.
+                lock: (loan_id == demo::loan_id("00000000-0000-0000-0000-000000000002"))
+                    .then(|| crate::locks::LockInfo {
+                        loan_id,
+                        locked_by: demo::underwriter_id(),
+                        user_name: "Dana Reyes".into(),
+                        screen: Some("assets".into()),
+                    }),
             })
         }
     }
@@ -196,6 +218,9 @@ pub async fn save_income(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let record_id = income.id.as_deref().map(parse_uuid).transpose()?;
     let borrower_id = parse_uuid(&income.borrower_id)?;
@@ -320,6 +345,9 @@ pub async fn save_loan_terms(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let saved = crate::db::queries::upsert_loan_terms(
         &pool,
@@ -383,6 +411,17 @@ pub async fn save_borrower(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    let borrower_loan: Option<(Uuid,)> =
+        sqlx::query_as("SELECT loan_id FROM borrowers WHERE id = $1")
+            .bind(borrower_id)
+            .fetch_optional(&pool)
+            .await
+            .map_err(|e| e.to_string())?;
+    if let Some((loan_uuid,)) = borrower_loan {
+        crate::locks::ensure_can_write(&pool, loan_uuid, user_id)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
 
     let saved = crate::db::queries::save_borrower(
         &pool,
@@ -443,6 +482,9 @@ pub async fn save_dependents(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let saved = crate::db::queries::replace_dependents(
         &pool,
@@ -501,6 +543,9 @@ pub async fn save_employment(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
     let record_id = employment.id.as_deref().map(parse_uuid).transpose()?;
 
     let saved = crate::db::queries::upsert_employment(
@@ -561,6 +606,11 @@ pub async fn delete_employment(
     let before = crate::db::queries::get_employment(&pool, employment_id)
         .await
         .map_err(|e| e.to_string())?;
+    if let Some(owned) = &before {
+        crate::locks::ensure_can_write(&pool, owned.loan_id, user_id)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
 
     crate::db::queries::delete_employment(&pool, employment_id)
         .await
@@ -612,6 +662,9 @@ pub async fn save_asset(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
     let record_id = asset.id.as_deref().map(parse_uuid).transpose()?;
 
     let saved = crate::db::queries::upsert_asset(
@@ -664,6 +717,11 @@ pub async fn delete_asset(
     let before = crate::db::queries::get_asset(&pool, asset_id)
         .await
         .map_err(|e| e.to_string())?;
+    if let Some(owned) = &before {
+        crate::locks::ensure_can_write(&pool, owned.loan_id, user_id)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
 
     crate::db::queries::delete_asset(&pool, asset_id)
         .await
@@ -714,6 +772,9 @@ pub async fn save_liability(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
     let record_id = liability.id.as_deref().map(parse_uuid).transpose()?;
 
     let saved = crate::db::queries::upsert_liability(
@@ -766,6 +827,11 @@ pub async fn delete_liability(
     let before = crate::db::queries::get_liability(&pool, liability_id)
         .await
         .map_err(|e| e.to_string())?;
+    if let Some(owned) = &before {
+        crate::locks::ensure_can_write(&pool, owned.loan_id, user_id)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
     crate::db::queries::delete_liability(&pool, liability_id)
         .await
         .map_err(|e| e.to_string())?;
@@ -816,6 +882,9 @@ pub async fn save_subject_property(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let saved = crate::db::queries::upsert_subject_property(
         &pool,
@@ -883,6 +952,9 @@ pub async fn save_reo(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
     let record_id = record.id.as_deref().map(parse_uuid).transpose()?;
 
     let saved = crate::db::queries::upsert_reo(
@@ -939,6 +1011,11 @@ pub async fn delete_reo(
     let before = crate::db::queries::get_reo_by_id(&pool, reo_id)
         .await
         .map_err(|e| e.to_string())?;
+    if let Some(owned) = &before {
+        crate::locks::ensure_can_write(&pool, owned.loan_id, user_id)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
     crate::db::queries::delete_reo(&pool, reo_id)
         .await
         .map_err(|e| e.to_string())?;
@@ -984,6 +1061,9 @@ pub async fn save_declaration(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let saved = crate::db::queries::upsert_declaration(
         &pool,
@@ -1038,6 +1118,9 @@ pub async fn save_demographics(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let saved = crate::db::queries::upsert_demographics(
         &pool,
@@ -1095,6 +1178,9 @@ pub async fn save_uw_review(
         .lock()
         .await
         .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let role = crate::db::queries::get_user_role(&pool, user_id)
         .await

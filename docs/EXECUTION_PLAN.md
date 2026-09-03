@@ -32,8 +32,8 @@ Rules of engagement:
 | 1 — Foundation               | ✅ done (pre-plan)                       |
 | UX comfort pass              | ✅ done (P2-00)                          |
 | 2 — The 1003 Screens         | ✅ done (incl. P2-45 dual-column pass)   |
-| **3 — Pipeline & Workflow**  | 🔄 **ACTIVE**                            |
-| 4 — Pricing & AUS            | ⏸ outline only                          |
+| 3 — Pipeline & Workflow      | ✅ done — **DEMO-READY at code level**; live two-user check pending dev check |
+| **4 — Pricing & AUS**        | 🔄 **ACTIVE (expanded below)**           |
 | 5 — Team, Admin & Polish     | ⏸ outline only                          |
 | 6 — Certification & Pilot    | ⏸ outline only                          |
 
@@ -205,13 +205,21 @@ what to work on next. **Milestone: DEMO-READY.**
 
 ### Week 10 — Lock system + presence
 
-- [ ] **P3-12** Lock backend: acquire/renew/release per loan+screen;
+- [x] **P3-12** Lock backend: acquire/renew/release per loan+screen;
       server-side write enforcement on ALL save paths (extends the
-      P2-45 role checks to lock state)
-- [ ] **P3-13** Presence: who is on which screen of which loan,
-      visible to other sessions
-- [ ] **P3-14** Lock UI on every screen: live LockBadge, read-only
-      mode when another user holds the lock, acquisition on edit
+      P2-45 role checks to lock state). Locks carry a 10-min TTL —
+      stale locks read as free and get stolen on next acquire.
+      Acquisition + renewal + presence update ride `get_loan_detail`
+      (each screen load declares who and where); release fires on
+      leaving the loan.
+- [x] **P3-13** Presence: who is on which screen of which loan,
+      visible to other sessions (lock row + screen; LockBadge in the
+      loan header; demo mode fakes Dana holding loan 2 so both sides
+      of the lock are demonstrable via persona switching)
+- [x] **P3-14** Lock UI on every screen: live LockBadge, read-only
+      work column when another user holds the lock (LoanColumns), with
+      `ensure_can_write` refusing every backend save path as the
+      enforcement backstop
 
 ### Carry-over from Phase 2 (P2-44 deferrals)
 
@@ -222,13 +230,29 @@ what to work on next. **Milestone: DEMO-READY.**
 
 ---
 
+## Stage: Phase 4 — Pricing & AUS (ACTIVE)
+
+Screens 17–19 plus the MISMO serialization layer. Definition of done:
+a complete loan can be priced, serialized to MISMO 3.4, submitted to
+DU and LPA sandbox, and findings display in Orion. **Gate:
+pilot-credible.** ⚠ GSE sandbox access must be in hand by week 14.
+
+- [ ] **P4-01** Rate sheets admin: migration + backend + screen for
+      maintaining lender rate sheets (rates, points, comp plans)
+- [ ] **P4-02** Pricing screen: manual option building against the
+      active rate sheet (monthly P&I, APR-adjacent math, option rows)
+- [ ] **P4-03** Pricing AI: "give me options at 6.5% with under $3K
+      in points" — pricing context builder + constrained suggestions
+- [ ] **P4-04** MISMO 3.4 serialization layer: complete loan → XML
+      per docs/1003-fields.md mapping
+- [ ] **P4-05** DU sandbox: submit serialized loan, store + display
+      findings
+- [ ] **P4-06** LPA sandbox: submit serialized loan, store + display
+      findings
+
+---
+
 ## Queue: Future Stages (outlines — expanded on arrival)
-
-### Phase 4 — Pricing & AUS (Nov 12 → Dec 16)
-
-Rate sheets admin · Pricing screen · Pricing AI options · MISMO 3.4
-serializer · DU sandbox · LPA sandbox. **Gate: pilot-credible.**
-⚠ GSE sandbox access must be in hand by week 14.
 
 ### Phase 5 — Team, Admin & Polish (Dec 17 → Jan 27)
 

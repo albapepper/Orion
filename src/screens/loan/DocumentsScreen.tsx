@@ -46,7 +46,7 @@ const sizeLabel = (bytes: number | null) => {
 export function DocumentsScreen(props: Props) {
   const [detail, { refetch }] = createResource(
     () => props.loanId,
-    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId }),
+    (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'documents' }),
   );
   const [title, setTitle] = createSignal('');
   const [docType, setDocType] = createSignal<DocumentType>('income_verification');
@@ -125,6 +125,7 @@ export function DocumentsScreen(props: Props) {
       <PizzaTracker current="documents" detail={detail()} onNavigate={props.onNavigate} />
 
       <LoanColumns
+        lock={detail()?.lock ?? null}
         work={
           <>
             <div class="screen-title-row">
