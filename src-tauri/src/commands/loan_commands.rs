@@ -395,25 +395,11 @@ pub async fn save_loan_terms(
     Ok(saved)
 }
 
-#[derive(Deserialize)]
-pub struct BorrowerInput {
-    pub first_name: String,
-    pub last_name: String,
-    pub middle_name: Option<String>,
-    pub suffix_name: Option<String>,
-    pub ssn: Option<String>,
-    pub birth_date: Option<NaiveDate>,
-    pub marital_status: Option<String>,
-    pub citizenship_status: Option<String>,
-    pub email: Option<String>,
-    pub phone: Option<String>,
-}
-
 #[tauri::command]
 pub async fn save_borrower(
     state: State<'_, AppState>,
     borrower_id: String,
-    borrower: BorrowerInput,
+    borrower: crate::loans::BorrowerUpdate,
 ) -> Result<Borrower, String> {
     let pool = state.pool().await?;
     let company_id = state.company_id().await?;
@@ -435,22 +421,9 @@ pub async fn save_borrower(
             .map_err(|e| e.to_string())?;
     }
 
-    let saved = crate::db::queries::save_borrower(
-        &pool,
-        borrower_id,
-        &borrower.first_name,
-        &borrower.last_name,
-        borrower.middle_name.as_deref(),
-        borrower.suffix_name.as_deref(),
-        borrower.ssn.as_deref(),
-        borrower.birth_date,
-        borrower.marital_status.as_deref(),
-        borrower.citizenship_status.as_deref(),
-        borrower.email.as_deref(),
-        borrower.phone.as_deref(),
-    )
-    .await
-    .map_err(|e| e.to_string())?;
+    let saved = crate::db::queries::save_borrower(&pool, borrower_id, &borrower)
+        .await
+        .map_err(|e| e.to_string())?;
 
     let mut payload = serde_json::to_value(&saved).map_err(|e| e.to_string())?;
     mask_ssn_in(&mut payload);

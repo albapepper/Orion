@@ -33,6 +33,11 @@ pub struct Borrower {
     pub birth_date: Option<NaiveDate>,
     pub marital_status: Option<String>,
     pub citizenship_status: Option<String>,
+    // Mailing address (URLA p.1) — MISMO: PARTY/ADDRESSES.
+    pub mailing_address_line: Option<String>,
+    pub mailing_city: Option<String>,
+    pub mailing_state: Option<String>,
+    pub mailing_postal_code: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
@@ -165,6 +170,26 @@ pub struct LoanIncome {
     pub notes: Option<String>,
 }
 
+/// The editable shape of a borrower row (P3-17 added the mailing
+/// address). Frontend payload and the UPDATE share this struct.
+#[derive(Debug, Deserialize)]
+pub struct BorrowerUpdate {
+    pub first_name: String,
+    pub last_name: String,
+    pub middle_name: Option<String>,
+    pub suffix_name: Option<String>,
+    pub ssn: Option<String>,
+    pub birth_date: Option<NaiveDate>,
+    pub marital_status: Option<String>,
+    pub citizenship_status: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub mailing_address_line: Option<String>,
+    pub mailing_city: Option<String>,
+    pub mailing_state: Option<String>,
+    pub mailing_postal_code: Option<String>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct LoanTerms {
     pub id: Uuid,
@@ -191,6 +216,10 @@ pub struct LoanSummary {
     pub status: String,
     pub borrower_name: Option<String>,
     pub assigned_to_name: Option<String>,
+    // LO contact block (P3-17) — the originator section of the 1003.
+    pub assigned_to_email: Option<String>,
+    pub assigned_to_phone: Option<String>,
+    pub assigned_to_title: Option<String>,
     pub updated_at: DateTime<Utc>,
     pub flagged_reviews: i64,
 }

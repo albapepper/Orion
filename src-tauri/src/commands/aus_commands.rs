@@ -23,7 +23,7 @@ pub async fn submit_du(state: State<'_, AppState>, loan_id: String) -> Result<Au
     let detail = super::loan_commands::get_loan_detail(state.clone(), loan_id.to_string(), None)
         .await?;
     let input = crate::mismo::MismoInput {
-        loan_number: detail.summary.loan_number.as_str(),
+        loan_number: &detail.summary.loan_number,
         terms: detail.terms.as_ref(),
         borrowers: &detail.borrowers,
         dependents: &detail.dependents,
@@ -35,6 +35,14 @@ pub async fn submit_du(state: State<'_, AppState>, loan_id: String) -> Result<Au
         reo: &detail.reo,
         declarations: &detail.declarations,
         demographics: &detail.demographics,
+        originator: detail.summary.assigned_to_name.as_deref().map(|name| {
+            crate::mismo::Originator {
+                name,
+                email: detail.summary.assigned_to_email.as_deref(),
+                phone: detail.summary.assigned_to_phone.as_deref(),
+                title: detail.summary.assigned_to_title.as_deref(),
+            }
+        }),
     };
     let xml = crate::mismo::serialize(&input);
 

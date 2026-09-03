@@ -84,6 +84,9 @@ pub fn loan_summaries() -> Vec<LoanSummary> {    vec![
             status: "processing".into(),
             borrower_name: Some("Jordan Ellis".into()),
             assigned_to_name: Some("Demo User".into()),
+            assigned_to_email: Some("alex.kim@oriondemo.example".into()),
+            assigned_to_phone: Some("555-0102".into()),
+            assigned_to_title: Some("Senior Loan Officer".into()),
             updated_at: Utc::now(),
             flagged_reviews: 1,
         },
@@ -93,6 +96,9 @@ pub fn loan_summaries() -> Vec<LoanSummary> {    vec![
             status: "underwriting".into(),
             borrower_name: Some("Sam Whitfield".into()),
             assigned_to_name: None,
+            assigned_to_email: None,
+            assigned_to_phone: None,
+            assigned_to_title: None,
             // Stale on purpose — the dashboard queue and the AI summary
             // should both have a stale file to point at.
             updated_at: Utc::now() - chrono::Duration::days(9),
@@ -104,6 +110,9 @@ pub fn loan_summaries() -> Vec<LoanSummary> {    vec![
             status: "application".into(),
             borrower_name: Some("Avery Chen".into()),
             assigned_to_name: Some("Demo User".into()),
+            assigned_to_email: Some("alex.kim@oriondemo.example".into()),
+            assigned_to_phone: Some("555-0102".into()),
+            assigned_to_title: Some("Senior Loan Officer".into()),
             updated_at: Utc::now() - chrono::Duration::hours(5),
             flagged_reviews: 0,
         },
@@ -126,6 +135,10 @@ pub fn borrowers(loan_id: Uuid) -> Vec<Borrower> {
         birth_date: NaiveDate::from_ymd_opt(1985, 3, 14),
         marital_status: Some("married".into()),
         citizenship_status: Some("us_citizen".into()),
+        mailing_address_line: Some("412 Juniper Court".into()),
+        mailing_city: Some("Bellingham".into()),
+        mailing_state: Some("WA".into()),
+        mailing_postal_code: Some("98225".into()),
     }]
 }
 

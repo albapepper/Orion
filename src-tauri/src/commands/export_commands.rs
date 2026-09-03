@@ -17,6 +17,17 @@ pub struct MismoExport {
     pub missing: Vec<String>,
 }
 
+/// The LO contact block rides on the loan summary (P3-17). Borrowed
+/// references stay valid: the summary outlives the serializer call.
+fn originator_from_summary<'a>(detail: &'a super::loan_commands::LoanDetail) -> Option<crate::mismo::Originator<'a>> {
+    detail.summary.assigned_to_name.as_deref().map(|name| crate::mismo::Originator {
+        name,
+        email: detail.summary.assigned_to_email.as_deref(),
+        phone: detail.summary.assigned_to_phone.as_deref(),
+        title: detail.summary.assigned_to_title.as_deref(),
+    })
+}
+
 /// Serialize a complete loan to MISMO 3.4 XML (P4-04). Read-only on
 /// the file itself, but exporting a 1003 is a compliance event, so the
 /// real path writes an audit row — with no payload, just the event.
@@ -44,6 +55,7 @@ pub async fn export_loan_mismo(
         reo: &detail.reo,
         declarations: &detail.declarations,
         demographics: &detail.demographics,
+        originator: originator_from_summary(&detail),
     };
     let export = MismoExport {
         xml: crate::mismo::serialize(&input),

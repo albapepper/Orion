@@ -73,6 +73,10 @@ export function BorrowerScreen(props: Props) {
           citizenship_status: field('citizenship_status'),
           email: field('email'),
           phone: field('phone'),
+          mailing_address_line: field('mailing_address_line'),
+          mailing_city: field('mailing_city'),
+          mailing_state: field('mailing_state'),
+          mailing_postal_code: field('mailing_postal_code'),
         },
       });
       setEdits((e) => {
@@ -259,6 +263,26 @@ export function BorrowerScreen(props: Props) {
           <div class="field">
             <label>Phone</label>
             {textInput('phone')}
+          </div>
+        </div>
+
+        <h2 class="section-title" style="margin-top: 28px">Mailing address</h2>
+        <div class="form-grid">
+          <div class="field field-wide">
+            <label>Street address</label>
+            {textInput('mailing_address_line')}
+          </div>
+          <div class="field">
+            <label>City</label>
+            {textInput('mailing_city')}
+          </div>
+          <div class="field">
+            <label>State</label>
+            {textInput('mailing_state')}
+          </div>
+          <div class="field">
+            <label>ZIP</label>
+            {textInput('mailing_postal_code')}
           </div>
         </div>
 

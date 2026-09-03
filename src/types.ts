@@ -4,6 +4,10 @@ export interface LoanSummary {
   status: string;
   borrower_name: string | null;
   assigned_to_name: string | null;
+  // LO contact block (P3-17)
+  assigned_to_email: string | null;
+  assigned_to_phone: string | null;
+  assigned_to_title: string | null;
   updated_at: string;
   flagged_reviews: number;
 }
@@ -23,6 +27,11 @@ export interface Borrower {
   birth_date: string | null; // ISO date
   marital_status: string | null;
   citizenship_status: string | null;
+  // Mailing address (P3-17) — MISMO PARTY/ADDRESSES
+  mailing_address_line: string | null;
+  mailing_city: string | null;
+  mailing_state: string | null;
+  mailing_postal_code: string | null;
 }
 
 export interface BorrowerDependent {

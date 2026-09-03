@@ -196,6 +196,22 @@ export function OverviewScreen(props: Props) {
           </Show>
         </div>
 
+        {/* Loan originator contact — the originator block of the 1003 (P3-17) */}
+        <Show when={detail()!.summary.assigned_to_name}>
+          <div class="lo-contact">
+            <span class="lo-contact-name">{detail()!.summary.assigned_to_name}</span>
+            <Show when={detail()!.summary.assigned_to_title}>
+              <span>{detail()!.summary.assigned_to_title}</span>
+            </Show>
+            <Show when={detail()!.summary.assigned_to_email}>
+              <span class="mono">{detail()!.summary.assigned_to_email}</span>
+            </Show>
+            <Show when={detail()!.summary.assigned_to_phone}>
+              <span class="mono">{detail()!.summary.assigned_to_phone}</span>
+            </Show>
+          </div>
+        </Show>
+
         <div class="terms-math" style="margin-top: 20px">
           <For each={stats()}>
             {(s) => (

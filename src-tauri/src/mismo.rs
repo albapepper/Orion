@@ -23,6 +23,15 @@ use crate::loans::{
     LoanIncome, LoanTerms, ReoProperty, SubjectProperty,
 };
 
+/// The loan originator contact block (P3-17) — serialized as its own
+/// PARTY with a LoanOriginator role.
+pub struct Originator<'a> {
+    pub name: &'a str,
+    pub email: Option<&'a str>,
+    pub phone: Option<&'a str>,
+    pub title: Option<&'a str>,
+}
+
 /// Everything the serializer needs. The export command assembles this
 /// from a loan detail load, so real and demo data serialize identically.
 pub struct MismoInput<'a> {
@@ -38,6 +47,7 @@ pub struct MismoInput<'a> {
     pub reo: &'a [ReoProperty],
     pub declarations: &'a [Declaration],
     pub demographics: &'a [Demographics],
+    pub originator: Option<Originator<'a>>,
 }
 
 // ── XML writer ───────────────────────────────────────────────────────
@@ -311,7 +321,6 @@ pub fn serialize(input: &MismoInput) -> String {
     serialize_loan(&mut x, input);
     serialize_parties(&mut x, input);
     serialize_collateral(&mut x, input);
-
     x.close("DEAL");
     x.close("DEALS");
     x.close("DEAL_SET");
@@ -400,6 +409,33 @@ fn serialize_parties(x: &mut Xml, input: &MismoInput) {
             x.close("CONTACT_POINTS");
         }
 
+        // Mailing address (P3-17) — a PARTY-level address container.
+        if b.mailing_address_line.is_some()
+            || b.mailing_city.is_some()
+            || b.mailing_state.is_some()
+            || b.mailing_postal_code.is_some()
+        {
+            x.open("ADDRESSES");
+            x.open("ADDRESS");
+            x.leaf("AddressType", "Mailing");
+            x.open("ADDRESS_DETAIL");
+            if let Some(a) = &b.mailing_address_line {
+                x.leaf("AddressLineText", a);
+            }
+            if let Some(c) = &b.mailing_city {
+                x.leaf("CityName", c);
+            }
+            if let Some(s) = &b.mailing_state {
+                x.leaf("StateCode", s);
+            }
+            if let Some(z) = &b.mailing_postal_code {
+                x.leaf("PostalCode", z);
+            }
+            x.close("ADDRESS_DETAIL");
+            x.close("ADDRESS");
+            x.close("ADDRESSES");
+        }
+
         x.open("ROLES");
         x.open("ROLE");
         x.open("ROLE_DETAIL");
@@ -414,6 +450,49 @@ fn serialize_parties(x: &mut Xml, input: &MismoInput) {
         x.close("ROLES");
         x.close("PARTY");
     }
+
+    // The originator block of the 1003 (P3-17).
+    if let Some(o) = &input.originator {
+        x.open_attr("PARTY", "ID", &format!("Party-{}", input.borrowers.len() + 1));
+        x.open("CONTACT_POINTS");
+        if let Some(email) = o.email {
+            x.open("CONTACT_POINT");
+            x.leaf("ContactPointType", "Work");
+            x.open("CONTACT_DETAIL");
+            x.leaf("Email", email);
+            x.close("CONTACT_DETAIL");
+            x.close("CONTACT_POINT");
+        }
+        if let Some(phone) = o.phone {
+            x.open("CONTACT_POINT");
+            x.leaf("ContactPointType", "Work");
+            x.open("CONTACT_DETAIL");
+            x.leaf("Telephone", phone);
+            x.close("CONTACT_DETAIL");
+            x.close("CONTACT_POINT");
+        }
+        x.close("CONTACT_POINTS");
+        x.open("ROLES");
+        x.open("ROLE");
+        x.open("ROLE_DETAIL");
+        x.leaf("RoleType", "LoanOriginator");
+        x.close("ROLE_DETAIL");
+        x.open("LOAN_ORIGINATOR");
+        x.open("LOAN_ORIGINATOR_DETAIL");
+        // ULAD: confirm originator name/contact nesting for the GSEs'
+        // preferred form before certification.
+        x.comment("ULAD: confirm originator name/contact element form");
+        x.leaf("FullName", o.name);
+        if let Some(t) = o.title {
+            x.leaf("OriginatorTypeOtherDescription", t);
+        }
+        x.close("LOAN_ORIGINATOR_DETAIL");
+        x.close("LOAN_ORIGINATOR");
+        x.close("ROLE");
+        x.close("ROLES");
+        x.close("PARTY");
+    }
+
     x.close("PARTIES");
 }
 

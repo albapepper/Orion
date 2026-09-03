@@ -96,6 +96,9 @@ pub async fn list_loans(pool: &PgPool, company_id: Uuid) -> anyhow::Result<Vec<L
         SELECT l.id, l.loan_number, l.status, l.updated_at,
                (b.first_name || ' ' || b.last_name) AS borrower_name,
                u.name AS assigned_to_name,
+               u.email AS assigned_to_email,
+               u.phone AS assigned_to_phone,
+               u.title AS assigned_to_title,
                (SELECT count(*) FROM loan_uw_reviews r
                 WHERE r.loan_id = l.id AND r.status = 'flagged') AS flagged_reviews
         FROM loans l
@@ -138,40 +141,38 @@ pub async fn get_borrowers(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Vec<B
 pub async fn save_borrower(
     pool: &PgPool,
     borrower_id: Uuid,
-    first_name: &str,
-    last_name: &str,
-    middle_name: Option<&str>,
-    suffix_name: Option<&str>,
-    ssn: Option<&str>,
-    birth_date: Option<chrono::NaiveDate>,
-    marital_status: Option<&str>,
-    citizenship_status: Option<&str>,
-    email: Option<&str>,
-    phone: Option<&str>,
+    u: &crate::loans::BorrowerUpdate,
 ) -> anyhow::Result<Borrower> {
     let row = sqlx::query_as::<_, Borrower>(
         r#"
         UPDATE borrowers SET
             first_name = $2, last_name = $3, middle_name = $4, suffix_name = $5,
             ssn = $6, birth_date = $7, marital_status = $8, citizenship_status = $9,
-            email = $10, phone = $11
+            email = $10, phone = $11,
+            mailing_address_line = $12, mailing_city = $13,
+            mailing_state = $14, mailing_postal_code = $15
         WHERE id = $1
         RETURNING id, loan_id, company_id, first_name, last_name, email, phone, is_primary,
                   middle_name, suffix_name, ssn,
-                  birth_date, marital_status, citizenship_status
+                  birth_date, marital_status, citizenship_status,
+                  mailing_address_line, mailing_city, mailing_state, mailing_postal_code
         "#,
     )
     .bind(borrower_id)
-    .bind(first_name)
-    .bind(last_name)
-    .bind(middle_name)
-    .bind(suffix_name)
-    .bind(ssn)
-    .bind(birth_date)
-    .bind(marital_status)
-    .bind(citizenship_status)
-    .bind(email)
-    .bind(phone)
+    .bind(&u.first_name)
+    .bind(&u.last_name)
+    .bind(&u.middle_name)
+    .bind(&u.suffix_name)
+    .bind(&u.ssn)
+    .bind(u.birth_date)
+    .bind(&u.marital_status)
+    .bind(&u.citizenship_status)
+    .bind(&u.email)
+    .bind(&u.phone)
+    .bind(&u.mailing_address_line)
+    .bind(&u.mailing_city)
+    .bind(&u.mailing_state)
+    .bind(&u.mailing_postal_code)
     .fetch_one(pool)
     .await?;
     Ok(row)
