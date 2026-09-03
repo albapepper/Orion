@@ -135,6 +135,39 @@ kbd.keycap.inline {
   text-transform: uppercase;
 }
 
+/* Company identity (P5-02) — the install belongs to someone */
+.brand-company {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Team screen (P5-03) */
+.user-create {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.user-create input,
+.user-create select {
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.user-inactive td {
+  opacity: 0.55;
+}
+
 .tray-section {
   padding: 14px 10px;
 }

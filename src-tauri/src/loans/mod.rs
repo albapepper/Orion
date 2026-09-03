@@ -248,4 +248,8 @@ pub struct UserAccount {
     pub email: String,
     pub name: String,
     pub role: String,
+    // Contact block (P3-17) and team-management state (P5-03).
+    pub phone: Option<String>,
+    pub title: Option<String>,
+    pub active: bool,
 }

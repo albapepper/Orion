@@ -15,6 +15,7 @@ const APP_ITEMS: NavItem[] = [
   { id: 'loans', label: 'Loans', key: 'n' },
   { id: 'tasks', label: 'Tasks', key: 'k' },
   { id: 'rates', label: 'Rate sheets', key: 'y' },
+  { id: 'users', label: 'Team', key: 'm' },
   { id: 'settings', label: 'Settings', key: 's' },
 ];
 
@@ -35,6 +36,9 @@ export function NavTray(props: Props) {
       <div class="tray-brand">
         <span class="brand-mark">◆</span>
         <span class="brand-name">Orion</span>
+        <Show when={props.status?.company_name}>
+          <span class="brand-company">{props.status!.company_name}</span>
+        </Show>
       </div>
 
       <div class="tray-section">

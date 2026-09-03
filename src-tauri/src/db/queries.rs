@@ -54,7 +54,8 @@ pub async fn list_users(
     company_id: Uuid,
 ) -> anyhow::Result<Vec<crate::loans::UserAccount>> {
     let rows = sqlx::query_as::<_, crate::loans::UserAccount>(
-        "SELECT id, email, name, role FROM users WHERE company_id = $1 ORDER BY name",
+        "SELECT id, email, name, role, phone, title, active
+         FROM users WHERE company_id = $1 ORDER BY name",
     )
     .bind(company_id)
     .fetch_all(pool)
@@ -67,10 +68,84 @@ pub async fn get_user(
     user_id: Uuid,
 ) -> anyhow::Result<Option<crate::loans::UserAccount>> {
     let row = sqlx::query_as::<_, crate::loans::UserAccount>(
-        "SELECT id, email, name, role FROM users WHERE id = $1",
+        "SELECT id, email, name, role, phone, title, active FROM users WHERE id = $1",
     )
     .bind(user_id)
     .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn create_user(
+    pool: &PgPool,
+    company_id: Uuid,
+    email: &str,
+    name: &str,
+    role: &str,
+    phone: Option<&str>,
+    title: Option<&str>,
+) -> anyhow::Result<crate::loans::UserAccount> {
+    let row = sqlx::query_as::<_, crate::loans::UserAccount>(
+        "INSERT INTO users (company_id, email, name, role, phone, title)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, email, name, role, phone, title, active",
+    )
+    .bind(company_id)
+    .bind(email)
+    .bind(name)
+    .bind(role)
+    .bind(phone)
+    .bind(title)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn update_user(
+    pool: &PgPool,
+    user_id: Uuid,
+    name: &str,
+    role: &str,
+    phone: Option<&str>,
+    title: Option<&str>,
+) -> anyhow::Result<crate::loans::UserAccount> {
+    let row = sqlx::query_as::<_, crate::loans::UserAccount>(
+        "UPDATE users SET name = $2, role = $3, phone = $4, title = $5
+         WHERE id = $1
+         RETURNING id, email, name, role, phone, title, active",
+    )
+    .bind(user_id)
+    .bind(name)
+    .bind(role)
+    .bind(phone)
+    .bind(title)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn set_user_active(pool: &PgPool, user_id: Uuid, active: bool) -> anyhow::Result<()> {
+    sqlx::query("UPDATE users SET active = $2 WHERE id = $1")
+        .bind(user_id)
+        .bind(active)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+pub async fn rename_company(
+    pool: &PgPool,
+    company_id: Uuid,
+    name: &str,
+) -> anyhow::Result<Company> {
+    let row = sqlx::query_as::<_, Company>(
+        "UPDATE companies SET name = $2 WHERE id = $1
+         RETURNING id, name, created_at",
+    )
+    .bind(company_id)
+    .bind(name)
+    .fetch_one(pool)
     .await?;
     Ok(row)
 }

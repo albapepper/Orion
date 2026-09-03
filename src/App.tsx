@@ -28,6 +28,7 @@ import { AusScreen } from './screens/loan/AusScreen';
 import { StubScreen } from './screens/loan/StubScreen';
 import { LOAN_SCREENS, STAGE_KEYS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { UsersScreen } from './screens/UsersScreen';
 import { fieldArrowNav } from './lib/fieldNav';
 import './App.css';
 
@@ -36,6 +37,7 @@ type Route =
   | { name: 'loans' }
   | { name: 'tasks' }
   | { name: 'rates' }
+  | { name: 'users' }
   | { name: 'settings' }
   | { name: 'overview'; loanId: string }
   | { name: LoanScreen; loanId: string };
@@ -101,6 +103,11 @@ function App() {
       navigate({ name: 'rates' });
       return;
     }
+    if (id === 'users') {
+      releaseIfLeaving();
+      navigate({ name: 'users' });
+      return;
+    }
     if (id === 'settings') {
       releaseIfLeaving();
       navigate({ name: 'settings' });
@@ -127,7 +134,7 @@ function App() {
   // head of the cascade (⌃] enters it at the borrower).
   const shiftStage = (dir: 1 | -1) => {
     const r = route();
-    if (r.name === 'dashboard' || r.name === 'settings' || r.name === 'loans' || r.name === 'tasks' || r.name === 'rates') return;
+    if (r.name === 'dashboard' || r.name === 'settings' || r.name === 'loans' || r.name === 'tasks' || r.name === 'rates' || r.name === 'users') return;
     if (r.name === 'overview') {
       if (dir === 1) navigate({ name: 'borrower', loanId: r.loanId });
       return;
@@ -165,6 +172,11 @@ function App() {
       if (e.key === 'y') {
         e.preventDefault();
         openScreen('rates');
+        return;
+      }
+      if (e.key === 'm') {
+        e.preventDefault();
+        openScreen('users');
         return;
       }
       const screen = LOAN_SCREENS.find((s) => STAGE_KEYS[s] === e.key);
@@ -293,6 +305,9 @@ function App() {
           </Match>
           <Match when={route().name === 'rates'}>
             <RatesScreen demo={status() ? !status()!.db_connected : false} />
+          </Match>
+          <Match when={route().name === 'users'}>
+            <UsersScreen demo={status() ? !status()!.db_connected : false} />
           </Match>
           <Match when={route().name === 'settings'}>
             <SettingsScreen />

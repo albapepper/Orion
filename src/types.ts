@@ -320,6 +320,9 @@ export interface UserAccount {
   email: string;
   name: string;
   role: UserRole;
+  phone: string | null;
+  title: string | null;
+  active: boolean;
 }
 
 export type UwReviewStatus = 'pending' | 'verified' | 'flagged';
@@ -398,6 +401,7 @@ export interface AppStatus {
   db_connected: boolean;
   ai_provider: string;
   ai_model: string;
+  company_name: string | null;
 }
 
 // P5-01: the persisted install config (config.toml), editable by the

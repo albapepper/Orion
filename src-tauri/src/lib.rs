@@ -106,6 +106,10 @@ pub fn run() {
             commands::user_commands::list_users,
             commands::user_commands::whoami,
             commands::user_commands::sign_in_as,
+            commands::user_commands::create_user,
+            commands::user_commands::update_user,
+            commands::user_commands::set_user_active,
+            commands::config_commands::rename_company,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

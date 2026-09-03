@@ -9,17 +9,30 @@ pub struct AppStatus {
     pub db_connected: bool,
     pub ai_provider: String,
     pub ai_model: String,
+    pub company_name: Option<String>,
 }
 
 #[tauri::command]
 pub async fn get_status(state: State<'_, AppState>) -> Result<AppStatus, String> {
     let config = state.config.read().await;
-    let db_connected = state.db.read().await.is_some();
+    let db = state.db.read().await.clone();
+    let db_connected = db.is_some();
+    // The company name rides the status so the nav tray can show who
+    // this install belongs to.
+    let company_name = match (&db, uuid::Uuid::parse_str(&config.app.company_id)) {
+        (Some(pool), Ok(id)) => crate::db::queries::get_company(pool, id)
+            .await
+            .map_err(|e| e.to_string())?
+            .map(|c| c.name),
+        (None, _) => Some("Demo Company".to_string()),
+        _ => None,
+    };
     Ok(AppStatus {
         configured: config.is_configured(),
         db_connected,
         ai_provider: config.ai.provider.clone(),
         ai_model: config.ai.model.clone(),
+        company_name,
     })
 }
 
@@ -152,4 +165,49 @@ pub async fn set_company(state: State<'_, AppState>, company_id: String) -> Resu
     cfg.save().map_err(|e| e.to_string())?;
     *state.config.write().await = cfg;
     Ok(())
+}
+
+/// Rename the company — P5-02's settings surface. Admin only.
+#[tauri::command]
+pub async fn rename_company(
+    state: State<'_, AppState>,
+    name: String,
+) -> Result<crate::db::queries::Company, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    let role = crate::db::queries::get_user_role(&pool, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    if role.as_deref() != Some("admin") {
+        return Err("Only admins can rename the company".into());
+    }
+    let name = name.trim();
+    if name.is_empty() {
+        return Err("Company name is required".into());
+    }
+
+    let company = crate::db::queries::rename_company(&pool, company_id, name)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        None,
+        user_id,
+        "company.rename",
+        "companies",
+        company.id,
+        None,
+        Some(serde_json::json!({ "name": company.name })),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(company)
 }

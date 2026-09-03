@@ -24,18 +24,27 @@ pub fn users() -> Vec<UserAccount> {
             email: "alex.kim@orion.demo".into(),
             name: "Alex Kim".into(),
             role: "loan_officer".into(),
+            phone: Some("555-0102".into()),
+            title: Some("Senior Loan Officer".into()),
+            active: true,
         },
         UserAccount {
             id: id("00000000-0000-0000-0000-000000000d03"),
             email: "pri.nair@orion.demo".into(),
             name: "Priya Nair".into(),
             role: "processor".into(),
+            phone: Some("555-0107".into()),
+            title: Some("Processor".into()),
+            active: true,
         },
         UserAccount {
             id: id(DEMO_UW_ID),
             email: "dana.reyes@orion.demo".into(),
             name: "Dana Reyes".into(),
             role: "underwriter".into(),
+            phone: Some("555-0111".into()),
+            title: Some("Underwriter".into()),
+            active: true,
         },
     ]
 }
