@@ -2,6 +2,7 @@ pub mod ai_commands;
 pub mod config_commands;
 pub mod loan_commands;
 pub mod task_commands;
+pub mod user_commands;
 
 use crate::ai::AiProvider;
 use crate::config::Config;

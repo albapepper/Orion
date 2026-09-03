@@ -1,5 +1,6 @@
 import { For, Show } from 'solid-js';
-import type { AppStatus, LoanSummary } from '../types';
+import type { AppStatus, LoanSummary, UserAccount } from '../types';
+import { ROLE_LABELS } from '../lib/session';
 
 export interface NavItem {
   id: string;
@@ -7,22 +8,11 @@ export interface NavItem {
   key: string; // ctrl+key shortcut, shown as a keycap
 }
 
-// Loan screens follow the cascade:
-// borrower → employment → property → terms → credit → income → assets → liabilities → REO → declarations → demographic
-export const NAV_ITEMS: NavItem[] = [
+// App navigation only. Everything about a specific loan — its flow, its
+// stages — lives in the tracker at the top of the loan page.
+const APP_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', key: 'd' },
-  { id: 'overview', label: 'Overview', key: 'o' },
-  { id: 'borrower', label: 'Borrower', key: 'b' },
-  { id: 'employment', label: 'Employment', key: 'e' },
-  { id: 'property', label: 'Property', key: 'p' },
-  { id: 'terms', label: 'Terms', key: 't' },
-  { id: 'credit', label: 'Credit', key: 'c' },
-  { id: 'income', label: 'Income', key: 'i' },
-  { id: 'assets', label: 'Assets', key: 'a' },
-  { id: 'liabilities', label: 'Liabilities', key: 'l' },
-  { id: 'reo', label: 'REO', key: 'r' },
-  { id: 'declarations', label: 'Declarations', key: 'q' },
-  { id: 'demographic', label: 'Demographic', key: 'g' },
+  { id: 'settings', label: 'Settings', key: 's' },
 ];
 
 interface Props {
@@ -33,6 +23,7 @@ interface Props {
   onOpenLoan: (loan: LoanSummary) => void;
   onShowLegend: () => void;
   status?: AppStatus;
+  user?: UserAccount | null;
 }
 
 export function NavTray(props: Props) {
@@ -44,7 +35,22 @@ export function NavTray(props: Props) {
       </div>
 
       <div class="tray-section">
-        <For each={NAV_ITEMS}>
+        <Show when={props.user}>
+          {(u) => (
+            <button
+              class="tray-item identity"
+              title="Switch persona — Settings"
+              onClick={() => props.onNavigate('settings')}
+            >
+              <span class="identity-avatar">{u().name.charAt(0)}</span>
+              <span class="tray-label">
+                <span class="identity-name">{u().name}</span>
+                <span class="loan-borrower">{ROLE_LABELS[u().role] ?? u().role}</span>
+              </span>
+            </button>
+          )}
+        </Show>
+        <For each={APP_ITEMS}>
           {(item) => (
             <button
               class="tray-item"
@@ -67,6 +73,7 @@ export function NavTray(props: Props) {
               class="tray-item loan"
               classList={{ active: props.activeLoanId === loan.id }}
               onClick={() => props.onOpenLoan(loan)}
+              title={`Open ${loan.loan_number} (Ctrl+${i() + 1})`}
             >
               <kbd class="keycap">⌃{i() + 1}</kbd>
               <span class="tray-label">

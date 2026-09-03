@@ -3,7 +3,9 @@ import { invoke } from '@tauri-apps/api/core';
 import type { Borrower, LoanDetail } from '../../types';
 import { TaskPanel } from '../../components/TaskPanel';
 import { LoanHeader } from '../../components/LoanHeader';
-import { StageStepper } from '../../components/StageStepper';
+import { PizzaTracker } from '../../components/PizzaTracker';
+import { LoanColumns } from '../../components/LoanColumns';
+import { UnderwriterPanel } from '../../components/UnderwriterPanel';
 
 interface Props {
   loanId: string;
@@ -160,9 +162,12 @@ export function BorrowerScreen(props: Props) {
   return (
     <div class="screen">
       <LoanHeader detail={detail()} />
-      <StageStepper current="borrower" onNavigate={props.onNavigate} />
+      <PizzaTracker current="borrower" detail={detail()} onNavigate={props.onNavigate} />
 
-      <Show when={selected()} fallback={<div class="screen-loading">Loading…</div>}>
+      <LoanColumns
+        work={
+          <>
+            <Show when={selected()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="screen-title-row">
           <h2 class="screen-title">Applicant profile</h2>
           <span class={`save-status ${status() ?? ''}`}>
@@ -305,7 +310,18 @@ export function BorrowerScreen(props: Props) {
         <Show when={status() === 'error'}>
           <div class="form-error">{error()}</div>
         </Show>
-      </Show>
+            </Show>
+          </>
+        }
+        review={
+          <UnderwriterPanel
+            loanId={props.loanId}
+            screen="borrower"
+            review={detail()?.uw_reviews?.find((r) => r.screen === 'borrower')}
+            demo={props.demo}
+          />
+        }
+      />
 
       <TaskPanel loanId={props.loanId} screen="borrower" />
     </div>

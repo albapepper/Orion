@@ -3,10 +3,92 @@
 
 use crate::loans::{
     Asset, Borrower, BorrowerDependent, Employment, Liability, Loan, LoanIncome, LoanSummary,
-    LoanTerms, ReoProperty,
+    LoanTerms, ReoProperty, UwReview,
 };
 use sqlx::PgPool;
 use uuid::Uuid;
+
+pub async fn list_users(
+    pool: &PgPool,
+    company_id: Uuid,
+) -> anyhow::Result<Vec<crate::loans::UserAccount>> {
+    let rows = sqlx::query_as::<_, crate::loans::UserAccount>(
+        "SELECT id, email, name, role FROM users WHERE company_id = $1 ORDER BY name",
+    )
+    .bind(company_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+pub async fn get_user(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> anyhow::Result<Option<crate::loans::UserAccount>> {
+    let row = sqlx::query_as::<_, crate::loans::UserAccount>(
+        "SELECT id, email, name, role FROM users WHERE id = $1",
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn get_user_role(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Option<String>> {
+    let role: Option<(String,)> = sqlx::query_as("SELECT role FROM users WHERE id = $1")
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await?;
+    Ok(role.map(|r| r.0))
+}
+
+const UW_REVIEW_COLUMNS: &str = "r.id, r.loan_id, r.company_id, r.screen, r.status, r.note,
+    r.updated_by, r.updated_at, u.name AS updated_by_name";
+
+pub async fn get_uw_reviews(pool: &PgPool, loan_id: Uuid) -> anyhow::Result<Vec<UwReview>> {
+    let rows = sqlx::query_as::<_, UwReview>(&format!(
+        "SELECT {UW_REVIEW_COLUMNS} FROM loan_uw_reviews r
+         LEFT JOIN users u ON u.id = r.updated_by
+         WHERE r.loan_id = $1 ORDER BY r.screen"
+    ))
+    .bind(loan_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+pub async fn upsert_uw_review(
+    pool: &PgPool,
+    loan_id: Uuid,
+    company_id: Uuid,
+    screen: &str,
+    status: &str,
+    note: Option<&str>,
+    updated_by: Uuid,
+) -> anyhow::Result<UwReview> {
+    let row = sqlx::query_as::<_, UwReview>(
+        r#"
+        INSERT INTO loan_uw_reviews (loan_id, company_id, screen, status, note, updated_by, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, now())
+        ON CONFLICT (loan_id, screen) DO UPDATE SET
+            status = EXCLUDED.status,
+            note = EXCLUDED.note,
+            updated_by = EXCLUDED.updated_by,
+            updated_at = now()
+        RETURNING id, loan_id, company_id, screen, status, note, updated_by, updated_at,
+            (SELECT name FROM users WHERE id = updated_by) AS updated_by_name
+        "#,
+    )
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(screen)
+    .bind(status)
+    .bind(note)
+    .bind(updated_by)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
 
 pub async fn list_loans(pool: &PgPool, company_id: Uuid) -> anyhow::Result<Vec<LoanSummary>> {
     let rows = sqlx::query_as::<_, LoanSummary>(

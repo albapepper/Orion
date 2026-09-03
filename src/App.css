@@ -16,6 +16,10 @@
   --red: #d1705c;
   --red-soft: #33201b;
 
+  /* Softened edges: still crisp, not square */
+  --radius: 6px;
+  --radius-lg: 9px;
+
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Helvetica,
     Arial, sans-serif;
   --mono: 'SF Mono', ui-monospace, 'JetBrains Mono', Menlo, monospace;
@@ -23,12 +27,10 @@
   color: var(--text);
 }
 
-/* Hard angles everywhere. No exceptions. */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  border-radius: 0 !important;
 }
 
 /* Keyboard users must always see where they are */
@@ -53,6 +55,8 @@ textarea {
   color: inherit;
   background: var(--surface-2);
   border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 
 input:focus,
@@ -68,6 +72,8 @@ button {
   border: none;
   background: none;
   color: inherit;
+  border-radius: var(--radius);
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 kbd.keycap {
@@ -83,6 +89,7 @@ kbd.keycap {
   background: var(--surface-2);
   border: 1px solid var(--border-strong);
   border-bottom-width: 2px;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
@@ -226,7 +233,7 @@ kbd.keycap.inline {
 }
 
 .screen > * {
-  max-width: 960px;
+  max-width: 1060px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -244,54 +251,124 @@ kbd.keycap.inline {
   padding: 32px 0;
 }
 
-/* ── Stage stepper: makes the cascade tangible ────────── */
+/* ── Loan tracker: the flow at the top of every loan page ──
+   One round junction per stage, ringed by state:
+   gray empty · amber in progress · red problem · green complete */
 
-.stage-stepper {
+.tracker {
+  padding: 6px 0 30px;
+}
+
+.tracker-track {
+  display: flex;
+  align-items: flex-start;
+  list-style: none;
+}
+
+.tracker-step {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+/* the connector between junctions */
+.tracker-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: calc(50% + 24px);
+  width: calc(100% - 48px);
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+}
+
+.tracker-step:last-child::before {
+  display: none;
+}
+
+.tracker-node {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  min-width: 0;
+  color: var(--text-dim);
+}
+
+.tracker-ring {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 0 34px;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
-.stage-step {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 9px 14px;
-  color: var(--text-dim);
-  border: 1px solid transparent;
+.tracker-core {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: background-color 0.12s ease;
 }
 
-.stage-step:hover {
-  background: var(--surface);
-  color: var(--text);
-}
-
-.stage-step.done {
-  color: var(--green);
-}
-
-.stage-step.active {
-  color: var(--text);
-  background: var(--surface);
-  border-color: var(--border-strong);
-}
-
-.stage-step.active .keycap {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-.stage-label {
-  font-size: 13px;
+.tracker-label {
+  font-size: 11px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.stage-arrow {
-  color: var(--border-strong);
-  font-size: 13px;
+/* state rings */
+.tracker-step[data-status='progress'] .tracker-ring {
+  border-color: var(--amber);
+}
+.tracker-step[data-status='progress'] .tracker-core {
+  background: rgba(217, 164, 65, 0.45);
+}
+
+.tracker-step[data-status='problem'] .tracker-ring {
+  border-color: var(--red);
+}
+.tracker-step[data-status='problem'] .tracker-core {
+  background: rgba(209, 112, 92, 0.55);
+}
+
+.tracker-step[data-status='done'] .tracker-ring {
+  border-color: var(--green);
+}
+.tracker-step[data-status='done'] .tracker-core {
+  background: var(--green);
+}
+
+/* where you are in the flow */
+.tracker-step.current .tracker-ring {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.tracker-step.current .tracker-core {
+  background: var(--accent);
+}
+.tracker-step.current .tracker-label {
+  color: var(--text);
+}
+
+.tracker-node:hover .tracker-ring {
+  border-color: var(--text);
+}
+
+.tracker-node:focus-visible {
+  outline-offset: 4px;
+  border-radius: var(--radius);
 }
 
 /* ── Loan header: just the loan and the person, centered ── */
@@ -319,6 +396,206 @@ kbd.keycap.inline {
   position: absolute;
   top: 0;
   right: 0;
+}
+
+/* ── Loan columns: work left, underwriter right ──────── */
+
+.loan-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 40px;
+  align-items: start;
+}
+
+.loan-col.review {
+  position: sticky;
+  top: 0;
+}
+
+/* ── Underwriter panel: notes + verification ─────────── */
+
+.uw-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+}
+
+.uw-panel.locked {
+  border-left-color: var(--border-strong);
+  opacity: 0.85;
+}
+
+.uw-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.uw-panel-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.uw-panel-role {
+  font-size: 11px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+.uw-status-row {
+  display: flex;
+  gap: 6px;
+}
+
+.uw-status {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+}
+
+.uw-status:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.uw-status.active.pending {
+  color: var(--amber);
+  border-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.uw-status.active.verified {
+  color: var(--green);
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+
+.uw-status.active.flagged {
+  color: var(--red);
+  border-color: var(--red);
+  background: var(--red-soft);
+}
+
+.uw-status:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.uw-note {
+  width: 100%;
+  padding: 10px 12px;
+  resize: vertical;
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.uw-panel.locked .uw-note {
+  background: var(--surface);
+  color: var(--text-dim);
+}
+
+.uw-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 16px;
+}
+
+.uw-updated {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.uw-lock-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  padding: 9px 11px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+}
+
+.work-lock-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  padding: 9px 11px;
+  margin-bottom: 14px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+}
+
+.loan-col.work.locked input,
+.loan-col.work.locked select,
+.loan-col.work.locked textarea,
+.loan-col.work.locked button {
+  pointer-events: none;
+}
+
+/* ── Identity chip (nav tray + settings) ─────────────── */
+
+.identity-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.identity-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tray-item.identity .tray-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.settings-user {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.settings-user:hover {
+  background: var(--surface-2);
+}
+
+.settings-user.current {
+  background: var(--accent-soft);
+}
+
+.settings-role {
+  margin-left: 10px;
+  font-size: 11px;
+  color: var(--text-dim);
 }
 
 /* ── Dashboard: laid back, not a spreadsheet ─────────── */
@@ -567,6 +844,37 @@ button.ghost.small {
   font-size: 12px;
 }
 
+/* ── Softened edges: panels, cards, pills ────────────── */
+
+.pipeline-strip,
+.queue-card,
+.form-grid,
+.emp-block,
+.dependents-panel,
+.decl-list,
+.decl-toggle,
+.stub-panel,
+.stub-next,
+.task-panel,
+.legend-panel,
+.message,
+.overview-cell,
+.terms-math,
+.borrower-tab,
+.demo-note,
+.settings-list,
+.data-table {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.status-pill,
+.lock-badge,
+.tray-badge,
+.model-provider {
+  border-radius: 999px;
+}
+
 .form-error {
   margin-top: 10px;
   color: var(--red);
@@ -671,9 +979,9 @@ button.ghost.small {
 }
 
 .form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   padding: 26px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -844,9 +1152,9 @@ button.ghost.small {
 }
 
 .emp-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* ── Declarations screen ─────────────────────────────── */
@@ -1286,4 +1594,37 @@ button.ghost.small {
   border-top: 1px solid var(--border);
   color: var(--text-dim);
   font-size: 13px;
+}
+
+/* ── Settings ────────────────────────────────────────── */
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-key {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.settings-val {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.settings-val.ok {
+  color: var(--green);
+}
+
+.settings-val.warn {
+  color: var(--amber);
 }

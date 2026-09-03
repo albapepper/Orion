@@ -4,7 +4,9 @@ import type { LoanDetail, LoanIncome } from '../../types';
 import { INCOME_TYPES } from '../../types';
 import { TaskPanel } from '../../components/TaskPanel';
 import { LoanHeader } from '../../components/LoanHeader';
-import { StageStepper } from '../../components/StageStepper';
+import { PizzaTracker } from '../../components/PizzaTracker';
+import { LoanColumns } from '../../components/LoanColumns';
+import { UnderwriterPanel } from '../../components/UnderwriterPanel';
 
 interface Props {
   loanId: string;
@@ -127,9 +129,11 @@ export function IncomeScreen(props: Props) {
   return (
     <div class="screen">
       <LoanHeader detail={detail()} />
-      <StageStepper current="income" onNavigate={props.onNavigate} />
+      <PizzaTracker current="income" detail={detail()} onNavigate={props.onNavigate} />
 
-      <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
+      <LoanColumns
+        work={
+          <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
         <Show when={props.demo}>
           <div class="demo-note">Demo mode — edits stay on this screen and are not persisted.</div>
         </Show>
@@ -225,7 +229,17 @@ export function IncomeScreen(props: Props) {
             </tr>
           </tfoot>
         </table>
-      </Show>
+          </Show>
+        }
+        review={
+          <UnderwriterPanel
+            loanId={props.loanId}
+            screen="income"
+            review={detail()?.uw_reviews?.find((r) => r.screen === 'income')}
+            demo={props.demo}
+          />
+        }
+      />
 
       <TaskPanel loanId={props.loanId} screen="income" />
     </div>

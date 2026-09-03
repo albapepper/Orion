@@ -65,10 +65,14 @@ pub fn run() {
             commands::loan_commands::acquire_loan_lock,
             commands::loan_commands::release_loan_lock,
             commands::loan_commands::get_loan_lock,
+            commands::loan_commands::save_uw_review,
             commands::ai_commands::ai_chat,
             commands::task_commands::list_tasks,
             commands::task_commands::create_task,
             commands::task_commands::set_task_status,
+            commands::user_commands::list_users,
+            commands::user_commands::whoami,
+            commands::user_commands::sign_in_as,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

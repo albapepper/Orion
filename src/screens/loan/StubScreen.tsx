@@ -6,12 +6,15 @@ import { invoke } from '@tauri-apps/api/core';
 import type { LoanDetail } from '../../types';
 import { TaskPanel } from '../../components/TaskPanel';
 import { LoanHeader } from '../../components/LoanHeader';
-import { StageStepper } from '../../components/StageStepper';
+import { PizzaTracker } from '../../components/PizzaTracker';
+import { LoanColumns } from '../../components/LoanColumns';
+import { UnderwriterPanel } from '../../components/UnderwriterPanel';
 import { nextStage, SCREEN_LABELS, type LoanScreen } from './stages';
 
 interface Props {
   loanId: string;
   screen: LoanScreen;
+  demo?: boolean;
   onNavigate: (screen: string) => void;
 }
 
@@ -26,24 +29,36 @@ export function StubScreen(props: Props) {
   return (
     <div class="screen">
       <LoanHeader detail={detail()} />
-      <StageStepper current={props.screen} onNavigate={props.onNavigate} />
+      <PizzaTracker current={props.screen} detail={detail()} onNavigate={props.onNavigate} />
 
-      <div class="stub-panel">
-        <div class="stub-title">{SCREEN_LABELS[props.screen]}</div>
-        <p>
-          This screen is on the roadmap. The assistant already answers in the
-          context of the {props.screen} screen, and tasks filed here are tagged
-          to it.
-        </p>
-        <Show when={upcoming()}>
-          <button class="stub-next" onClick={() => props.onNavigate(upcoming()!)}>
-            <span>
-              Up next: {SCREEN_LABELS[upcoming()!]}
-            </span>
-            <kbd class="keycap">⌃]</kbd>
-          </button>
-        </Show>
-      </div>
+      <LoanColumns
+        work={
+          <div class="stub-panel">
+            <div class="stub-title">{SCREEN_LABELS[props.screen]}</div>
+            <p>
+              This screen is on the roadmap. The assistant already answers in the
+              context of the {props.screen} screen, and tasks filed here are tagged
+              to it.
+            </p>
+            <Show when={upcoming()}>
+              <button class="stub-next" onClick={() => props.onNavigate(upcoming()!)}>
+                <span>
+                  Up next: {SCREEN_LABELS[upcoming()!]}
+                </span>
+                <kbd class="keycap">⌃]</kbd>
+              </button>
+            </Show>
+          </div>
+        }
+        review={
+          <UnderwriterPanel
+            loanId={props.loanId}
+            screen={props.screen}
+            review={detail()?.uw_reviews?.find((r) => r.screen === props.screen)}
+            demo={props.demo}
+          />
+        }
+      />
 
       <TaskPanel loanId={props.loanId} screen={props.screen} />
     </div>

@@ -7,6 +7,8 @@ interface Props {
 
 const BINDINGS: Array<[string, string]> = [
   ['⌃d', 'Dashboard'],
+  ['⌃s', 'Settings'],
+  ['⌃1–9', 'Open nth recent loan'],
   ['⌃o', 'Loan overview'],
   ['⌃b', 'Borrower Info screen'],
   ['⌃e', 'Employment screen'],
@@ -19,11 +21,13 @@ const BINDINGS: Array<[string, string]> = [
   ['⌃r', 'REO screen'],
   ['⌃q', 'Declarations screen'],
   ['⌃g', 'Demographic (HMDA) screen'],
-  ['⌃1–9', 'Open nth recent loan'],
   ['⌃]', 'Next loan stage'],
   ['⌃[', 'Previous loan stage'],
+  ['← →', 'Walk the loan tracker'],
+  ['Enter', 'Open the highlighted tracker stage'],
+  ['↑ ↓', 'Move between fields'],
+  ['Home', 'Back: field → tracker → dashboard'],
   ['/', 'Focus the assistant'],
-  ['Home', 'Back to previous page'],
   ['?', 'Toggle this legend'],
   ['Esc', 'Close / unfocus'],
 ];
@@ -45,8 +49,11 @@ export function KeyLegend(props: Props) {
             </For>
           </div>
           <div class="legend-note">
-            Orion is designed to be fully operable without a mouse. Loan
-            screens cascade: property → credit → income → assets.
+            Loan screens are keyboard-first: land on a loan and the tracker
+            has focus — arrows pick a stage, Enter enters it, arrows walk
+            the fields down each column. Home backs out one level at a time:
+            field → tracker → dashboard. The dashboard, tray, and assistant
+            are ordinary mouse-driven surfaces.
           </div>
         </div>
       </div>

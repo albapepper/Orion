@@ -1,6 +1,7 @@
 import { Show } from 'solid-js';
 import type { LoanDetail } from '../types';
 import { LockBadge } from './LockBadge';
+import { user } from '../lib/session';
 
 interface Props {
   detail?: LoanDetail;
@@ -15,7 +16,7 @@ export function LoanHeader(props: Props) {
   return (
     <header class="loan-header">
       <div class="loan-header-lock">
-        <LockBadge lock={props.detail?.lock ?? null} currentUserId={null} />
+        <LockBadge lock={props.detail?.lock ?? null} currentUserId={user()?.id ?? null} />
       </div>
       <div class="loan-header-number">{props.detail?.summary.loan_number ?? '…'}</div>
       <div class="loan-header-name">

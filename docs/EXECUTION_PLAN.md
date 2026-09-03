@@ -30,9 +30,9 @@ Rules of engagement:
 | Phase                        | State                                    |
 | ---------------------------- | ---------------------------------------- |
 | 1 — Foundation               | ✅ done (pre-plan)                       |
-| UX comfort pass              | ✅ built, **uncommitted** — commit first |
-| **2 — The 1003 Screens**     | 🔄 **ACTIVE**                            |
-| 3 — Pipeline & Workflow      | ⏸ outline only                          |
+| UX comfort pass              | ✅ done (P2-00)                          |
+| 2 — The 1003 Screens         | ✅ done (incl. P2-45 dual-column pass)   |
+| **3 — Pipeline & Workflow**  | 🔄 **ACTIVE**                            |
 | 4 — Pricing & AUS            | ⏸ outline only                          |
 | 5 — Team, Admin & Polish     | ⏸ outline only                          |
 | 6 — Certification & Pilot    | ⏸ outline only                          |
@@ -149,6 +149,18 @@ consumes later.
       single-select — revisit before HMDA export); income screen could
       move to LoanListScreen; Contact/LO contact info not yet captured
       on the 1003. Real-mode (Postgres) entry test pending dev check.
+
+### Follow-on — banker/underwriter dual-column pass
+
+- [x] **P2-45** Two screens per category, side-by-side: the banker's
+      work column (left) and the underwriter's review column (right).
+      Everyone touching the loan sees both — transparency is the bet —
+      but only one is ever editable per signed-in user: loan officers/
+      processors/admins own the banking column, underwriters/admins the
+      review column (uw_reviews migration 014; `save_uw_review` enforces
+      the role server-side, UI locks the other column). Includes persona
+      sign-in + Settings picker (⌃s), PizzaTracker with per-stage
+      statuses replacing StageStepper, and per-screen UW review wiring.
 
 ---
 

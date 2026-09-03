@@ -2,9 +2,13 @@ import { createResource, For, Show } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
 import type { LoanDetail } from '../types';
 import { LoanHeader } from '../components/LoanHeader';
+import { PizzaTracker } from '../components/PizzaTracker';
+import { LoanColumns } from '../components/LoanColumns';
+import { UnderwriterPanel } from '../components/UnderwriterPanel';
 
 interface Props {
   loanId: string;
+  demo?: boolean;
   onNavigate: (screen: string) => void;
 }
 
@@ -131,8 +135,11 @@ export function OverviewScreen(props: Props) {
   return (
     <div class="screen">
       <LoanHeader detail={detail()} />
+      <PizzaTracker current="overview" detail={detail()} onNavigate={props.onNavigate} />
 
-      <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
+      <LoanColumns
+        work={
+          <Show when={detail()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="overview-meta">
           <span class={`status-pill ${detail()!.summary.status}`}>
             {detail()!.summary.status}
@@ -170,7 +177,17 @@ export function OverviewScreen(props: Props) {
           Press <kbd class="keycap inline">?</kbd> for keyboard navigation — every
           screen is reachable without the mouse.
         </p>
-      </Show>
+          </Show>
+        }
+        review={
+          <UnderwriterPanel
+            loanId={props.loanId}
+            screen="overview"
+            review={detail()?.uw_reviews?.find((r) => r.screen === 'overview')}
+            demo={props.demo}
+          />
+        }
+      />
     </div>
   );
 }

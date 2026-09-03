@@ -177,6 +177,7 @@ export interface LoanDetail {
   declarations: Declaration[];
   demographics: Demographics[];
   terms: LoanTerms | null;
+  uw_reviews: UwReview[];
   lock: LockInfo | null;
 }
 
@@ -188,6 +189,33 @@ export interface Task {
   screen: string | null;
   status: 'open' | 'in_progress' | 'done';
   created_at: string;
+}
+
+export type UserRole = 'loan_officer' | 'processor' | 'underwriter' | 'admin';
+
+// The signed-in persona. No passwords — the desktop app binds identity to
+// a real user row so locks, audit, and field permissions are per-user.
+export interface UserAccount {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+}
+
+export type UwReviewStatus = 'pending' | 'verified' | 'flagged';
+
+// Underwriter review of one loan screen: verification status + notes.
+// Everyone touching the loan can read it; only underwriters write it.
+export interface UwReview {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  screen: string;
+  status: UwReviewStatus;
+  note: string | null;
+  updated_by: string | null;
+  updated_at: string;
+  updated_by_name: string | null;
 }
 
 export interface AiResponse {

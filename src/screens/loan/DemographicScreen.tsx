@@ -3,7 +3,9 @@ import { invoke } from '@tauri-apps/api/core';
 import type { Demographics, LoanDetail } from '../../types';
 import { TaskPanel } from '../../components/TaskPanel';
 import { LoanHeader } from '../../components/LoanHeader';
-import { StageStepper } from '../../components/StageStepper';
+import { PizzaTracker } from '../../components/PizzaTracker';
+import { LoanColumns } from '../../components/LoanColumns';
+import { UnderwriterPanel } from '../../components/UnderwriterPanel';
 
 interface Props {
   loanId: string;
@@ -113,9 +115,11 @@ export function DemographicScreen(props: Props) {
   return (
     <div class="screen">
       <LoanHeader detail={detail()} />
-      <StageStepper current="demographic" onNavigate={props.onNavigate} />
+      <PizzaTracker current="demographic" detail={detail()} onNavigate={props.onNavigate} />
 
-      <Show when={selected()} fallback={<div class="screen-loading">Loading…</div>}>
+      <LoanColumns
+        work={
+          <Show when={selected()} fallback={<div class="screen-loading">Loading…</div>}>
         <div class="screen-title-row">
           <h2 class="screen-title">Government monitoring — URLA §8</h2>
           <span class="task-count">{complete() ? 'Complete' : 'Incomplete'}</span>
@@ -170,6 +174,16 @@ export function DemographicScreen(props: Props) {
           <div class="form-error">{error()}</div>
         </Show>
       </Show>
+        }
+        review={
+          <UnderwriterPanel
+            loanId={props.loanId}
+            screen="demographic"
+            review={detail()?.uw_reviews?.find((r) => r.screen === 'demographic')}
+            demo={props.demo}
+          />
+        }
+      />
 
       <TaskPanel loanId={props.loanId} screen="demographic" />
     </div>

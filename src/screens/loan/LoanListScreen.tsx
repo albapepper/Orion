@@ -7,7 +7,10 @@ import { createResource, createSignal, For, JSX, Show } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
 import { TaskPanel } from '../../components/TaskPanel';
 import { LoanHeader } from '../../components/LoanHeader';
-import { StageStepper } from '../../components/StageStepper';
+import { PizzaTracker } from '../../components/PizzaTracker';
+import { LoanColumns } from '../../components/LoanColumns';
+import { UnderwriterPanel } from '../../components/UnderwriterPanel';
+import type { LoanDetail } from '../../types';
 import type { LoanScreen } from './stages';
 
 export interface ColDef<T> {
@@ -208,33 +211,40 @@ export function LoanListScreen<T extends BaseRow>(props: Props<T>) {
   return (
     <div class="screen">
       <LoanHeader detail={detail() as never} />
-      <StageStepper current={props.screen} onNavigate={props.onNavigate} />
+      <PizzaTracker
+        current={props.screen}
+        detail={detail() as LoanDetail | undefined}
+        onNavigate={props.onNavigate}
+      />
 
-      <div class="screen-title-row">
-        <h2 class="screen-title">{props.title}</h2>
-        <button class="ghost small" style="margin-left: auto" onClick={addRow}>
-          {props.addLabel}
-        </button>
-      </div>
-      <Show when={props.demo}>
-        <div class="demo-note">Demo mode — edits stay on this screen and are not persisted.</div>
-      </Show>
-
-      <Show when={borrowers().length > 1}>
-        <div class="borrower-tabs">
-          <For each={borrowers()}>
-            {(b) => (
-              <button
-                class="borrower-tab"
-                classList={{ active: b.id === selected()?.id }}
-                onClick={() => setSelectedId(b.id)}
-              >
-                {b.first_name} {b.last_name}
+      <LoanColumns
+        work={
+          <>
+            <div class="screen-title-row">
+              <h2 class="screen-title">{props.title}</h2>
+              <button class="ghost small" style="margin-left: auto" onClick={addRow}>
+                {props.addLabel}
               </button>
-            )}
-          </For>
-        </div>
-      </Show>
+            </div>
+            <Show when={props.demo}>
+              <div class="demo-note">Demo mode — edits stay on this screen and are not persisted.</div>
+            </Show>
+
+            <Show when={borrowers().length > 1}>
+              <div class="borrower-tabs">
+                <For each={borrowers()}>
+                  {(b) => (
+                    <button
+                      class="borrower-tab"
+                      classList={{ active: b.id === selected()?.id }}
+                      onClick={() => setSelectedId(b.id)}
+                    >
+                      {b.first_name} {b.last_name}
+                    </button>
+                  )}
+                </For>
+              </div>
+            </Show>
 
       <table class="data-table editable">
         <thead>
@@ -280,6 +290,21 @@ export function LoanListScreen<T extends BaseRow>(props: Props<T>) {
           <tfoot>{props.summary?.(rows())}</tfoot>
         </Show>
       </table>
+          </>
+        }
+        review={
+          <UnderwriterPanel
+            loanId={props.loanId}
+            screen={props.screen}
+            review={
+              (detail() as LoanDetail | undefined)?.uw_reviews?.find(
+                (r) => r.screen === props.screen,
+              )
+            }
+            demo={props.demo}
+          />
+        }
+      />
 
       <TaskPanel loanId={props.loanId} screen={props.screen} />
     </div>

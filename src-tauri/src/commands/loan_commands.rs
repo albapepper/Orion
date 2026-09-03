@@ -38,6 +38,7 @@ pub struct LoanDetail {
     pub declarations: Vec<crate::loans::Declaration>,
     pub demographics: Vec<crate::loans::Demographics>,
     pub terms: Option<LoanTerms>,
+    pub uw_reviews: Vec<crate::loans::UwReview>,
     pub lock: Option<LockInfo>,
 }
 
@@ -111,6 +112,9 @@ pub async fn get_loan_detail(
             let lock = crate::locks::get_lock(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let uw_reviews = crate::db::queries::get_uw_reviews(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             Ok(LoanDetail {
                 summary,
                 borrowers,
@@ -124,6 +128,7 @@ pub async fn get_loan_detail(
                 declarations,
                 demographics,
                 terms,
+                uw_reviews,
                 lock,
             })
         }
@@ -145,6 +150,7 @@ pub async fn get_loan_detail(
                 declarations: demo::declarations(loan_id),
                 demographics: demo::demographics(loan_id),
                 terms: Some(demo::loan_terms(loan_id)),
+                uw_reviews: demo::uw_reviews(loan_id),
                 lock: None,
             })
         }
@@ -1046,6 +1052,70 @@ pub async fn save_demographics(
         saved.id,
         None,
         Some(serde_json::json!({ "record": "updated", "fields": null })),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
+#[derive(Deserialize)]
+pub struct UwReviewInput {
+    pub screen: String,
+    pub status: String,
+    pub note: Option<String>,
+}
+
+/// The underwriter column of a loan screen. Field locking is dynamic and
+/// enforced here — the UI hides the editors, but the backend refuses the
+/// write unless the signed-in user is an underwriter or admin.
+#[tauri::command]
+pub async fn save_uw_review(
+    state: State<'_, AppState>,
+    loan_id: String,
+    review: UwReviewInput,
+) -> Result<crate::loans::UwReview, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+
+    let role = crate::db::queries::get_user_role(&pool, user_id)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("Signed-in user no longer exists")?;
+    if role != "underwriter" && role != "admin" {
+        return Err("Only underwriters can update the review column".into());
+    }
+
+    let saved = crate::db::queries::upsert_uw_review(
+        &pool,
+        loan_id,
+        company_id,
+        &review.screen,
+        &review.status,
+        review.note.as_deref(),
+        user_id,
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    // The note content stays out of the audit trail — status change is
+    // what matters for the record.
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "uw_review.update",
+        "loan_uw_reviews",
+        saved.id,
+        None,
+        Some(serde_json::json!({ "screen": review.screen, "status": review.status })),
     )
     .await
     .map_err(|e| e.to_string())?;

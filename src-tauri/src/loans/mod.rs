@@ -188,3 +188,29 @@ pub struct LoanSummary {
     pub assigned_to_name: Option<String>,
     pub updated_at: DateTime<Utc>,
 }
+
+/// Underwriter review of one loan screen: verification status + notes.
+/// Everyone touching the loan can read it; only underwriters write it.
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct UwReview {
+    pub id: Uuid,
+    pub loan_id: Uuid,
+    pub company_id: Uuid,
+    pub screen: String,
+    pub status: String,
+    pub note: Option<String>,
+    pub updated_by: Option<Uuid>,
+    pub updated_at: DateTime<Utc>,
+    pub updated_by_name: Option<String>,
+}
+
+/// A signed-in identity. There is no password auth — the desktop app picks
+/// a persona ("sign in as") so locks, audit, and field permissions bind to
+/// a real user row.
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct UserAccount {
+    pub id: Uuid,
+    pub email: String,
+    pub name: String,
+    pub role: String,
+}

@@ -2,13 +2,76 @@
 // explorable on first run. Replaced by real rows once the wizard connects
 // a database.
 
-use super::{Asset, Borrower, BorrowerDependent, Declaration, Demographics, Employment, Liability, LoanIncome, LoanSummary, LoanTerms, ReoProperty, SubjectProperty};
+use super::{
+    Asset, Borrower, BorrowerDependent, Declaration, Demographics, Employment, Liability,
+    LoanIncome, LoanSummary, LoanTerms, ReoProperty, SubjectProperty, UserAccount, UwReview,
+};
 use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 
 pub const DEMO_LOAN_ID: &str = "00000000-0000-0000-0000-000000000001";
 const DEMO_BORROWER_ID: &str = "00000000-0000-0000-0000-000000000101";
 const DEMO_COMPANY_ID: &str = "00000000-0000-0000-0000-000000000009";
+pub const DEMO_OFFICER_ID: &str = "00000000-0000-0000-0000-000000000d01";
+pub const DEMO_UW_ID: &str = "00000000-0000-0000-0000-000000000d02";
+
+/// The persona the app starts as in demo mode: a loan officer, so the
+/// underwriter column starts locked and switching (Settings) is demonstrable.
+pub fn users() -> Vec<UserAccount> {
+    vec![
+        UserAccount {
+            id: id(DEMO_OFFICER_ID),
+            email: "alex.kim@orion.demo".into(),
+            name: "Alex Kim".into(),
+            role: "loan_officer".into(),
+        },
+        UserAccount {
+            id: id("00000000-0000-0000-0000-000000000d03"),
+            email: "pri.nair@orion.demo".into(),
+            name: "Priya Nair".into(),
+            role: "processor".into(),
+        },
+        UserAccount {
+            id: id(DEMO_UW_ID),
+            email: "dana.reyes@orion.demo".into(),
+            name: "Dana Reyes".into(),
+            role: "underwriter".into(),
+        },
+    ]
+}
+
+pub fn default_user() -> UserAccount {
+    users().into_iter().next().unwrap()
+}
+
+pub fn uw_reviews(loan_id: Uuid) -> Vec<UwReview> {
+    vec![
+        UwReview {
+            id: id("00000000-0000-0000-0000-000000000c01"),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            screen: "income".into(),
+            status: "verified".into(),
+            note: Some("Base + bonus match paystubs; VOE on file.".into()),
+            updated_by: Some(id(DEMO_UW_ID)),
+            updated_at: Utc::now(),
+            updated_by_name: Some("Dana Reyes".into()),
+        },
+        UwReview {
+            id: id("00000000-0000-0000-0000-000000000c02"),
+            loan_id,
+            company_id: id(DEMO_COMPANY_ID),
+            screen: "assets".into(),
+            status: "flagged".into(),
+            note: Some(
+                "Large deposit — $25k gift needs a signed gift letter and sourcing.".into(),
+            ),
+            updated_by: Some(id(DEMO_UW_ID)),
+            updated_at: Utc::now(),
+            updated_by_name: Some("Dana Reyes".into()),
+        },
+    ]
+}
 
 fn id(s: &str) -> Uuid {
     Uuid::parse_str(s).unwrap()
