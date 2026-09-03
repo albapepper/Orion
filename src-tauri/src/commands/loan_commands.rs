@@ -29,6 +29,129 @@ pub async fn list_loans(state: State<'_, AppState>) -> Result<Vec<LoanSummary>, 
 /// Start a new loan: the loan row plus its primary borrower, status
 /// 'application', number generated from the highest existing. Real
 /// mode only — the demo cast is fixed.
+#[derive(Deserialize)]
+pub struct ClosingInput {
+    pub closing_date: Option<NaiveDate>,
+    pub closing_location: Option<String>,
+    pub settlement_agent: Option<String>,
+    pub closing_costs: Option<f64>,
+    pub notes: Option<String>,
+}
+
+/// Save the closing record (P5-05). Lock-checked and audited like
+/// every other save path.
+#[tauri::command]
+pub async fn save_closing(
+    state: State<'_, AppState>,
+    loan_id: String,
+    closing: ClosingInput,
+) -> Result<crate::loans::LoanClosing, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let saved = crate::db::queries::upsert_closing(
+        &pool,
+        loan_id,
+        company_id,
+        closing.closing_date,
+        closing.closing_location.as_deref(),
+        closing.settlement_agent.as_deref(),
+        closing.closing_costs,
+        closing.notes.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "closing.update",
+        "loan_closing",
+        saved.id,
+        None,
+        Some(serde_json::json!({
+            "closing_date": saved.closing_date,
+            "closing_costs": saved.closing_costs,
+        })),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
+#[derive(Deserialize)]
+pub struct FundingInput {
+    pub funded_date: Option<NaiveDate>,
+    pub method: Option<String>,
+    pub reference: Option<String>,
+    pub amount: Option<f64>,
+    pub notes: Option<String>,
+}
+
+/// Save the funding record (P5-07). Lock-checked and audited.
+#[tauri::command]
+pub async fn save_funding(
+    state: State<'_, AppState>,
+    loan_id: String,
+    funding: FundingInput,
+) -> Result<crate::loans::LoanFunding, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let saved = crate::db::queries::upsert_funding(
+        &pool,
+        loan_id,
+        company_id,
+        funding.funded_date,
+        funding.method.as_deref(),
+        funding.reference.as_deref(),
+        funding.amount,
+        funding.notes.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "funding.update",
+        "loan_funding",
+        saved.id,
+        None,
+        Some(serde_json::json!({
+            "funded_date": saved.funded_date,
+            "amount": saved.amount,
+        })),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(saved)
+}
+
 #[tauri::command]
 pub async fn create_loan(
     state: State<'_, AppState>,
@@ -166,6 +289,8 @@ pub struct LoanDetail {
     pub conditions: Vec<crate::conditions::Condition>,
     pub pricing: Vec<crate::pricing::LoanPricingOption>,
     pub aus: Vec<crate::aus::AusSubmission>,
+    pub closing: Option<crate::loans::LoanClosing>,
+    pub funding: Option<crate::loans::LoanFunding>,
     pub lock: Option<LockInfo>,
 }
 
@@ -267,6 +392,12 @@ pub async fn get_loan_detail(
             let aus = crate::aus::list_for_loan(&pool, loan_id)
                 .await
                 .map_err(|e| e.to_string())?;
+            let closing = crate::db::queries::get_closing(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
+            let funding = crate::db::queries::get_funding(&pool, loan_id)
+                .await
+                .map_err(|e| e.to_string())?;
             Ok(LoanDetail {
                 summary,
                 borrowers,
@@ -285,6 +416,8 @@ pub async fn get_loan_detail(
                 conditions,
                 pricing,
                 aus,
+                closing,
+                funding,
                 lock,
             })
         }
@@ -311,6 +444,8 @@ pub async fn get_loan_detail(
                 conditions: demo::conditions(loan_id),
                 pricing: demo::loan_pricing(loan_id),
                 aus: demo::aus_submissions(loan_id),
+                closing: demo::loan_closing(loan_id),
+                funding: demo::loan_funding(loan_id),
                 // Demo presence: loan 2 pretends Dana (the underwriter
                 // persona) is holding it in Assets — switch personas in
                 // Settings to see both sides of the lock.

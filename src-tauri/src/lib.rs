@@ -56,6 +56,8 @@ pub fn run() {
             commands::loan_commands::list_loans,
             commands::loan_commands::create_loan,
             commands::loan_commands::set_loan_status,
+            commands::loan_commands::save_closing,
+            commands::loan_commands::save_funding,
             commands::loan_commands::get_loan_detail,
             commands::loan_commands::save_income,
             commands::loan_commands::save_borrower,

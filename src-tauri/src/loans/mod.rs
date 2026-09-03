@@ -155,6 +155,33 @@ pub struct BorrowerDependent {
     pub age: Option<i32>,
 }
 
+/// The closing appointment (P5-05): when, where, who conducts it, and
+/// the cost summary the borrower signs against.
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct LoanClosing {
+    pub id: Uuid,
+    pub loan_id: Uuid,
+    pub company_id: Uuid,
+    pub closing_date: Option<NaiveDate>,
+    pub closing_location: Option<String>,
+    pub settlement_agent: Option<String>,
+    pub closing_costs: Option<f64>,
+    pub notes: Option<String>,
+}
+
+/// The disbursement (P5-07): the day money moved and how to trace it.
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+pub struct LoanFunding {
+    pub id: Uuid,
+    pub loan_id: Uuid,
+    pub company_id: Uuid,
+    pub funded_date: Option<NaiveDate>,
+    pub method: Option<String>,
+    pub reference: Option<String>,
+    pub amount: Option<f64>,
+    pub notes: Option<String>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 pub struct LoanIncome {
     pub id: Uuid,

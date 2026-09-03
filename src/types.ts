@@ -42,6 +42,30 @@ export interface BorrowerDependent {
   age: number | null;
 }
 
+// The closing appointment (P5-05)
+export interface LoanClosing {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  closing_date: string | null;
+  closing_location: string | null;
+  settlement_agent: string | null;
+  closing_costs: number | null;
+  notes: string | null;
+}
+
+// The disbursement (P5-07)
+export interface LoanFunding {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  funded_date: string | null;
+  method: string | null;
+  reference: string | null;
+  amount: number | null;
+  notes: string | null;
+}
+
 export interface LoanIncome {
   id: string;
   loan_id: string;
@@ -193,6 +217,8 @@ export interface LoanDetail {
   conditions: Condition[];
   pricing: LoanPricingOption[];
   aus: AusSubmission[];
+  closing: LoanClosing | null;
+  funding: LoanFunding | null;
   lock: LockInfo | null;
 }
 

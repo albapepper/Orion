@@ -608,6 +608,31 @@ pub fn loan_id(s: &str) -> Uuid {
     id(s)
 }
 
+// ── Closing & funding ────────────────────────────────────────────────
+
+/// Loan 1 has a closing on the books; the rest haven't gotten there.
+pub fn loan_closing(loan_id: Uuid) -> Option<crate::loans::LoanClosing> {
+    if loan_number_for(loan_id) != "ORN-2026-0001" {
+        return None;
+    }
+    Some(crate::loans::LoanClosing {
+        id: id("00000000-0000-0000-0000-800000000001"),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        closing_date: NaiveDate::from_ymd_opt(2026, 9, 24),
+        closing_location: Some("Puget Sound Title — Bellingham office".into()),
+        settlement_agent: Some("Marcy Oduya".into()),
+        closing_costs: Some(11_240.0),
+        notes: Some("Borrower + spouse sign; wire remainder of down payment 24h ahead.".into()),
+    })
+}
+
+/// No demo loan has funded yet — the pipeline stops one short so the
+/// funding screen still has a job to do in demos.
+pub fn loan_funding(_loan_id: Uuid) -> Option<crate::loans::LoanFunding> {
+    None
+}
+
 // ── AUS submissions ──────────────────────────────────────────────────
 
 /// Demo runs the real mock engines over the demo file, so the findings

@@ -214,6 +214,22 @@ export function computeStageStatuses(
         : 'progress'
     : 'empty';
 
+  // Closing: the appointment is on the books when a date exists.
+  const closing = detail.closing ?? null;
+  statuses.closing = closing
+    ? closing.closing_date
+      ? 'done'
+      : 'progress'
+    : 'empty';
+
+  // Funding: done when money moved — a funded date on the record.
+  const funding = detail.funding ?? null;
+  statuses.funding = funding
+    ? funding.funded_date
+      ? 'done'
+      : 'progress'
+    : 'empty';
+
   // Overview summarizes the file — credit is external and documents are
   // never truly "done", so neither blocks green
   const vals = TRACKER_ITEMS.filter(

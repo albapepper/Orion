@@ -152,6 +152,116 @@ pub async fn rename_company(
 
 // ── Loan lifecycle (P5-04) ───────────────────────────────────────────
 
+/// The closing record (P5-05). 1:1 with the loan.
+pub async fn get_closing(
+    pool: &PgPool,
+    loan_id: Uuid,
+) -> anyhow::Result<Option<crate::loans::LoanClosing>> {
+    let row = sqlx::query_as::<_, crate::loans::LoanClosing>(
+        "SELECT id, loan_id, company_id, closing_date, closing_location,
+                settlement_agent, closing_costs::FLOAT8 AS closing_costs, notes
+         FROM loan_closing WHERE loan_id = $1",
+    )
+    .bind(loan_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn upsert_closing(
+    pool: &PgPool,
+    loan_id: Uuid,
+    company_id: Uuid,
+    closing_date: Option<chrono::NaiveDate>,
+    closing_location: Option<&str>,
+    settlement_agent: Option<&str>,
+    closing_costs: Option<f64>,
+    notes: Option<&str>,
+) -> anyhow::Result<crate::loans::LoanClosing> {
+    let row = sqlx::query_as::<_, crate::loans::LoanClosing>(
+        r#"
+        INSERT INTO loan_closing
+            (loan_id, company_id, closing_date, closing_location, settlement_agent,
+             closing_costs, notes, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+        ON CONFLICT (loan_id) DO UPDATE SET
+            closing_date = EXCLUDED.closing_date,
+            closing_location = EXCLUDED.closing_location,
+            settlement_agent = EXCLUDED.settlement_agent,
+            closing_costs = EXCLUDED.closing_costs,
+            notes = EXCLUDED.notes,
+            updated_at = now()
+        RETURNING id, loan_id, company_id, closing_date, closing_location,
+                  settlement_agent, closing_costs::FLOAT8 AS closing_costs, notes
+        "#,
+    )
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(closing_date)
+    .bind(closing_location)
+    .bind(settlement_agent)
+    .bind(closing_costs)
+    .bind(notes)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+/// The funding record (P5-07). 1:1 with the loan.
+pub async fn get_funding(
+    pool: &PgPool,
+    loan_id: Uuid,
+) -> anyhow::Result<Option<crate::loans::LoanFunding>> {
+    let row = sqlx::query_as::<_, crate::loans::LoanFunding>(
+        "SELECT id, loan_id, company_id, funded_date, method,
+                reference, amount::FLOAT8 AS amount, notes
+         FROM loan_funding WHERE loan_id = $1",
+    )
+    .bind(loan_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn upsert_funding(
+    pool: &PgPool,
+    loan_id: Uuid,
+    company_id: Uuid,
+    funded_date: Option<chrono::NaiveDate>,
+    method: Option<&str>,
+    reference: Option<&str>,
+    amount: Option<f64>,
+    notes: Option<&str>,
+) -> anyhow::Result<crate::loans::LoanFunding> {
+    let row = sqlx::query_as::<_, crate::loans::LoanFunding>(
+        r#"
+        INSERT INTO loan_funding
+            (loan_id, company_id, funded_date, method, reference, amount, notes, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+        ON CONFLICT (loan_id) DO UPDATE SET
+            funded_date = EXCLUDED.funded_date,
+            method = EXCLUDED.method,
+            reference = EXCLUDED.reference,
+            amount = EXCLUDED.amount,
+            notes = EXCLUDED.notes,
+            updated_at = now()
+        RETURNING id, loan_id, company_id, funded_date, method,
+                  reference, amount::FLOAT8 AS amount, notes
+        "#,
+    )
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(funded_date)
+    .bind(method)
+    .bind(reference)
+    .bind(amount)
+    .bind(notes)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
 /// Next loan number: ORN-YYYY-NNNN, seeded from the highest existing
 /// suffix. Lexicographic DESC works while every number is zero-padded.
 pub async fn next_loan_number(pool: &PgPool) -> anyhow::Result<String> {
