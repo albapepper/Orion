@@ -164,13 +164,65 @@ consumes later.
 
 ---
 
+## Stage: Phase 3 — Pipeline & Workflow (ACTIVE)
+
+Build screens 11–16 — the team layer. The dual-column rule from P2-45
+extends here: everyone sees the work, roles decide who edits what.
+
+**Definition of done** (from roadmap): two users can open the same
+loan, one has edit access, the other sees who's editing and on which
+screen. Both see the same task list. The dashboard tells each user
+what to work on next. **Milestone: DEMO-READY.**
+
+### Week 7 — Dashboard + Loan List
+
+- [ ] **P3-01** Dashboard screen: pipeline summary (loans by stage,
+      counts, attention flags) + AI pipeline summary ("what should I
+      work on next") from existing context builders
+- [ ] **P3-02** Loan List screen: filters (stage, status, owner),
+      sort, open-loan navigation
+
+### Week 8 — Tasks 2.0
+
+- [ ] **P3-03** Tasks migration expansion (assignee, due date,
+      priority, status; per-screen linkage already exists)
+- [ ] **P3-04** Tasks backend: create/assign/complete, unified
+      cross-loan task list, audit hook, IPC commands
+- [ ] **P3-05** Tasks UI: unified Tasks view + TaskPanel upgrade +
+      AI context (overdue, unassigned)
+
+### Week 9 — Documents + Conditions
+
+- [ ] **P3-06** Documents migration (per-loan doc records, type,
+      stage linkage, uploaded-by)
+- [ ] **P3-07** Documents backend: attach/list/delete + audit + IPC
+- [ ] **P3-08** Documents screen UI + sidebar wire
+- [ ] **P3-09** Conditions migration (approval conditions, status,
+      source, clear-by)
+- [ ] **P3-10** Conditions backend: CRUD + audit + IPC
+- [ ] **P3-11** Conditions screen UI + sidebar wire (outstanding
+      conditions drive the UW column flags)
+
+### Week 10 — Lock system + presence
+
+- [ ] **P3-12** Lock backend: acquire/renew/release per loan+screen;
+      server-side write enforcement on ALL save paths (extends the
+      P2-45 role checks to lock state)
+- [ ] **P3-13** Presence: who is on which screen of which loan,
+      visible to other sessions
+- [ ] **P3-14** Lock UI on every screen: live LockBadge, read-only
+      mode when another user holds the lock, acquisition on edit
+
+### Carry-over from Phase 2 (P2-44 deferrals)
+
+- [ ] **P3-15** Multi-select race/ethnicity (MISMO/HMDA) — required
+      before HMDA export
+- [ ] **P3-16** Move IncomeScreen onto shared LoanListScreen
+- [ ] **P3-17** Contact/LO contact info section on the 1003
+
+---
+
 ## Queue: Future Stages (outlines — expanded on arrival)
-
-### Phase 3 — Pipeline & Workflow (Oct 15 → Nov 11)
-
-Dashboard AI summary · Loan List filters · Loan Overview · Tasks 2.0 ·
-Documents · Conditions · lock system on every screen + presence.
-**Gate: DEMO-READY.**
 
 ### Phase 4 — Pricing & AUS (Nov 12 → Dec 16)
 
