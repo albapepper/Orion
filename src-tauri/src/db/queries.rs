@@ -150,6 +150,90 @@ pub async fn rename_company(
     Ok(row)
 }
 
+// ── Loan lifecycle (P5-04) ───────────────────────────────────────────
+
+/// Next loan number: ORN-YYYY-NNNN, seeded from the highest existing
+/// suffix. Lexicographic DESC works while every number is zero-padded.
+pub async fn next_loan_number(pool: &PgPool) -> anyhow::Result<String> {
+    let row: Option<(String,)> =
+        sqlx::query_as("SELECT loan_number FROM loans ORDER BY loan_number DESC LIMIT 1")
+            .fetch_optional(pool)
+            .await?;
+    let year = chrono::Utc::now().format("%Y");
+    let n = match row {
+        Some((num,)) => num
+            .rsplit('-')
+            .next()
+            .and_then(|s| s.parse::<u32>().ok())
+            .unwrap_or(0)
+            + 1,
+        None => 1,
+    };
+    Ok(format!("ORN-{year}-{n:04}"))
+}
+
+pub async fn insert_loan(
+    pool: &PgPool,
+    company_id: Uuid,
+    loan_number: &str,
+) -> anyhow::Result<Loan> {
+    let row = sqlx::query_as::<_, Loan>(
+        "INSERT INTO loans (company_id, loan_number, status)
+         VALUES ($1, $2, 'application')
+         RETURNING id, company_id, loan_number, status, assigned_to, created_at, updated_at",
+    )
+    .bind(company_id)
+    .bind(loan_number)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+pub async fn insert_borrower(
+    pool: &PgPool,
+    loan_id: Uuid,
+    company_id: Uuid,
+    first_name: &str,
+    last_name: &str,
+) -> anyhow::Result<Borrower> {
+    let row = sqlx::query_as::<_, Borrower>(
+        r#"
+        INSERT INTO borrowers (loan_id, company_id, first_name, last_name, is_primary)
+        VALUES ($1, $2, $3, $4, true)
+        RETURNING id, loan_id, company_id, first_name, last_name, email, phone, is_primary,
+                  middle_name, suffix_name, ssn, birth_date, marital_status, citizenship_status,
+                  mailing_address_line, mailing_city, mailing_state, mailing_postal_code
+        "#,
+    )
+    .bind(loan_id)
+    .bind(company_id)
+    .bind(first_name)
+    .bind(last_name)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+/// Move the pipeline forward. Returns the status it came from so the
+/// audit row records both ends of the move.
+pub async fn set_loan_status(
+    pool: &PgPool,
+    loan_id: Uuid,
+    status: &str,
+) -> anyhow::Result<String> {
+    let old: (String,) = sqlx::query_as("SELECT status FROM loans WHERE id = $1")
+        .bind(loan_id)
+        .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("Loan not found"))?;
+    sqlx::query("UPDATE loans SET status = $2 WHERE id = $1")
+        .bind(loan_id)
+        .bind(status)
+        .execute(pool)
+        .await?;
+    Ok(old.0)
+}
+
 pub async fn get_user_role(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Option<String>> {
     let role: Option<(String,)> = sqlx::query_as("SELECT role FROM users WHERE id = $1")
         .bind(user_id)

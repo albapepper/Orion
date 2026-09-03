@@ -24,6 +24,129 @@ pub async fn list_loans(state: State<'_, AppState>) -> Result<Vec<LoanSummary>, 
     }
 }
 
+// ── Loan lifecycle (P5-04) ───────────────────────────────────────────
+
+/// Start a new loan: the loan row plus its primary borrower, status
+/// 'application', number generated from the highest existing. Real
+/// mode only — the demo cast is fixed.
+#[tauri::command]
+pub async fn create_loan(
+    state: State<'_, AppState>,
+    first_name: String,
+    last_name: String,
+) -> Result<LoanSummary, String> {
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    let first_name = first_name.trim();
+    let last_name = last_name.trim();
+    if first_name.is_empty() || last_name.is_empty() {
+        return Err("Borrower first and last name are required".into());
+    }
+
+    let loan_number = crate::db::queries::next_loan_number(&pool)
+        .await
+        .map_err(|e| e.to_string())?;
+    let loan = crate::db::queries::insert_loan(&pool, company_id, &loan_number)
+        .await
+        .map_err(|e| e.to_string())?;
+    crate::db::queries::insert_borrower(&pool, loan.id, company_id, first_name, last_name)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan.id),
+        user_id,
+        "loan.create",
+        "loans",
+        loan.id,
+        None,
+        Some(serde_json::json!({
+            "loan_number": loan_number,
+            "borrower": format!("{first_name} {last_name}"),
+        })),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(LoanSummary {
+        id: loan.id,
+        loan_number,
+        status: loan.status,
+        borrower_name: Some(format!("{first_name} {last_name}")),
+        assigned_to_name: None,
+        assigned_to_email: None,
+        assigned_to_phone: None,
+        assigned_to_title: None,
+        updated_at: loan.updated_at,
+        flagged_reviews: 0,
+    })
+}
+
+/// Advance the pipeline. Loan officers and processors move files;
+/// underwriters stay in their lane (their lever is the UW review).
+#[tauri::command]
+pub async fn set_loan_status(
+    state: State<'_, AppState>,
+    loan_id: String,
+    status: String,
+) -> Result<(), String> {
+    const STATUSES: &[&str] = &[
+        "application",
+        "processing",
+        "underwriting",
+        "approval",
+        "closing",
+        "funded",
+    ];
+    if !STATUSES.contains(&status.as_str()) {
+        return Err(format!("Unknown status: {status}"));
+    }
+    let pool = state.pool().await?;
+    let company_id = state.company_id().await?;
+    let loan_id = parse_uuid(&loan_id)?;
+    let user_id = state
+        .current_user_id
+        .lock()
+        .await
+        .ok_or("No user signed in")?;
+    let role = crate::db::queries::get_user_role(&pool, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    if !matches!(role.as_deref(), Some("admin") | Some("loan_officer") | Some("processor")) {
+        return Err("Only loan officers and processors can change loan status".into());
+    }
+    crate::locks::ensure_can_write(&pool, loan_id, user_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let old = crate::db::queries::set_loan_status(&pool, loan_id, &status)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    crate::audit::write(
+        &pool,
+        company_id,
+        Some(loan_id),
+        user_id,
+        "loan.status",
+        "loans",
+        loan_id,
+        Some(serde_json::json!({ "status": old })),
+        Some(serde_json::json!({ "status": status })),
+    )
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 #[derive(Serialize)]
 pub struct LoanDetail {
     pub summary: LoanSummary,

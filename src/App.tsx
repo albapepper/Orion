@@ -52,7 +52,7 @@ function App() {
   const [wizardBypassed, setWizardBypassed] = createSignal(false);
 
   const [status, { refetch: refetchStatus }] = createResource(() => invoke<AppStatus>('get_status'));
-  const [loans] = createResource(() => invoke<LoanSummary[]>('list_loans'));
+  const [loans, { refetch: refetchLoans }] = createResource(() => invoke<LoanSummary[]>('list_loans'));
   // Signed-in persona drives locks, audit, and dynamic field permissions.
   const [who] = createResource(() => invoke<import('./types').UserAccount | null>('whoami'));
   createEffect(() => setUser(who() ?? null));
@@ -295,7 +295,15 @@ function App() {
             <Dashboard loans={loans() ?? []} onOpenLoan={openLoan} />
           </Match>
           <Match when={route().name === 'loans'}>
-            <LoansScreen loans={loans() ?? []} onOpenLoan={openLoan} />
+            <LoansScreen
+              loans={loans() ?? []}
+              demo={status() ? !status()!.db_connected : false}
+              onOpenLoan={openLoan}
+              onCreated={(loan) => {
+                refetchLoans();
+                openLoan(loan);
+              }}
+            />
           </Match>
           <Match when={route().name === 'tasks'}>
             <TasksScreen

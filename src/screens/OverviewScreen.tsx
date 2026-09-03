@@ -1,6 +1,7 @@
 import { createResource, createSignal, For, Show } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
 import type { LoanDetail, MismoExport } from '../types';
+import { LOAN_STATUSES } from '../types';
 import { LoanHeader } from '../components/LoanHeader';
 import { PizzaTracker } from '../components/PizzaTracker';
 import { LoanColumns } from '../components/LoanColumns';
@@ -15,7 +16,7 @@ interface Props {
 const money = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
 export function OverviewScreen(props: Props) {
-  const [detail] = createResource(
+  const [detail, { refetch }] = createResource(
     () => props.loanId,
     (loanId) => invoke<LoanDetail>('get_loan_detail', { loanId, screen: 'overview' }),
   );
@@ -49,6 +50,19 @@ export function OverviewScreen(props: Props) {
 
   const primary = () =>
     detail()?.borrowers.find((b) => b.is_primary) ?? detail()?.borrowers[0];
+
+  // ── Pipeline position (P5-04) — click a stage to move the file ────
+  const [statusError, setStatusError] = createSignal<string | null>(null);
+  const setStatus = async (status: string) => {
+    if (props.demo || status === detail()?.summary.status) return;
+    setStatusError(null);
+    try {
+      await invoke('set_loan_status', { loanId: props.loanId, status });
+      refetch();
+    } catch (e) {
+      setStatusError(String(e));
+    }
+  };
 
   // ── MISMO 3.4 export (P4-04) ───────────────────────────────────────
   const [exportResult, setExportResult] = createSignal<MismoExport | null>(null);
@@ -210,6 +224,23 @@ export function OverviewScreen(props: Props) {
               <span class="mono">{detail()!.summary.assigned_to_phone}</span>
             </Show>
           </div>
+        </Show>
+
+        <div class="status-stepper" title={props.demo ? 'Demo mode — status is fixed' : 'Pipeline position — click to move'}>
+          <For each={[...LOAN_STATUSES]}>
+            {(s) => (
+              <button
+                class="stepper-step"
+                classList={{ current: detail()!.summary.status === s }}
+                onClick={() => setStatus(s)}
+              >
+                {s}
+              </button>
+            )}
+          </For>
+        </div>
+        <Show when={statusError()}>
+          <div class="task-error">{statusError()}</div>
         </Show>
 
         <div class="terms-math" style="margin-top: 20px">

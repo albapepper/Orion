@@ -54,6 +54,8 @@ pub fn run() {
             commands::config_commands::create_company,
             commands::config_commands::set_company,
             commands::loan_commands::list_loans,
+            commands::loan_commands::create_loan,
+            commands::loan_commands::set_loan_status,
             commands::loan_commands::get_loan_detail,
             commands::loan_commands::save_income,
             commands::loan_commands::save_borrower,

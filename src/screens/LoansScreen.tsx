@@ -1,10 +1,13 @@
 import { createMemo, createSignal, For, Show } from 'solid-js';
+import { invoke } from '@tauri-apps/api/core';
 import type { LoanSummary } from '../types';
 import { LOAN_STATUSES } from '../types';
 
 interface Props {
   loans: LoanSummary[];
+  demo: boolean;
   onOpenLoan: (loan: LoanSummary) => void;
+  onCreated: (loan: LoanSummary) => void;
 }
 
 type SortKey = 'updated' | 'number' | 'borrower';
@@ -25,6 +28,32 @@ export function LoansScreen(props: Props) {
   const [ownerFilter, setOwnerFilter] = createSignal('all');
   const [query, setQuery] = createSignal('');
   const [sortKey, setSortKey] = createSignal<SortKey>('updated');
+
+  // ── New loan (P5-04) ───────────────────────────────────────────────
+  const [creating, setCreating] = createSignal(false);
+  const [firstName, setFirstName] = createSignal('');
+  const [lastName, setLastName] = createSignal('');
+  const [createError, setCreateError] = createSignal<string | null>(null);
+  const [busy, setBusy] = createSignal(false);
+
+  const createLoan = async () => {
+    setBusy(true);
+    setCreateError(null);
+    try {
+      const loan = await invoke<LoanSummary>('create_loan', {
+        firstName: firstName(),
+        lastName: lastName(),
+      });
+      setCreating(false);
+      setFirstName('');
+      setLastName('');
+      props.onCreated(loan);
+    } catch (e) {
+      setCreateError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const owners = () => [
     ...new Set(
@@ -72,7 +101,43 @@ export function LoansScreen(props: Props) {
       <div class="screen-title-row">
         <h2 class="screen-title">Loans</h2>
         <span class="save-status">{filtered().length} of {props.loans.length}</span>
+        <Show when={!props.demo}>
+          <button
+            class="ghost small"
+            style="margin-left: auto"
+            onClick={() => setCreating(!creating())}
+          >
+            {creating() ? 'Cancel' : '+ New loan'}
+          </button>
+        </Show>
       </div>
+
+      <Show when={creating()}>
+        <div class="user-create">
+          <input
+            type="text"
+            placeholder="Borrower first name"
+            value={firstName()}
+            onInput={(e) => setFirstName(e.currentTarget.value)}
+          />
+          <input
+            type="text"
+            placeholder="Borrower last name"
+            value={lastName()}
+            onInput={(e) => setLastName(e.currentTarget.value)}
+          />
+          <button
+            class="ghost"
+            disabled={busy() || !firstName().trim() || !lastName().trim()}
+            onClick={createLoan}
+          >
+            Create loan
+          </button>
+        </div>
+        <Show when={createError()}>
+          <div class="form-error">{createError()}</div>
+        </Show>
+      </Show>
 
       <div class="loans-toolbar">
         <input
