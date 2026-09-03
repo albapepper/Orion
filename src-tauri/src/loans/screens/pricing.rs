@@ -1,8 +1,9 @@
 use crate::loans::LoanTerms;
 use crate::pricing::LoanPricingOption;
 
-fn money(v: f64) -> String {
-    // Thousands-separated dollars (Rust format strings have no grouping).
+/// Thousands-separated dollars (Rust format strings have no grouping).
+/// Shared with the pricing AI so suggested and manual rows render alike.
+pub(crate) fn money(v: f64) -> String {
     let s = format!("{v:.0}");
     let bytes = s.as_bytes();
     let mut grouped = String::with_capacity(s.len() + s.len() / 3);

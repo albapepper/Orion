@@ -7,7 +7,9 @@ pub mod db;
 pub mod documents;
 pub mod loans;
 pub mod locks;
+pub mod mismo;
 pub mod pricing;
+pub mod pricing_ai;
 pub mod tasks;
 
 use commands::AppState;
@@ -91,6 +93,9 @@ pub fn run() {
             commands::pricing_commands::add_loan_pricing,
             commands::pricing_commands::remove_loan_pricing,
             commands::pricing_commands::select_loan_pricing,
+            commands::pricing_commands::pricing_suggestions,
+            commands::export_commands::export_loan_mismo,
+            commands::export_commands::save_mismo_file,
             commands::user_commands::list_users,
             commands::user_commands::whoami,
             commands::user_commands::sign_in_as,

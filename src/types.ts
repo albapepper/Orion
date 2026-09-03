@@ -332,6 +332,36 @@ export interface AiResponse {
   thinking: string | null;
 }
 
+// P4-03 pricing AI: one suggested row off the active sheet, priced
+// against this loan's terms server-side. Not saved until added.
+export interface PricingSuggestion {
+  sheet_option_id: string;
+  product: string;
+  rate: number;
+  points: number;
+  monthly_pi: number | null;
+  points_cost: number | null;
+  comp_plan: string | null;
+  tags: string[];
+}
+
+export interface PricingSuggestions {
+  request: string;
+  max_rate: number | null;
+  max_points: number | null;
+  max_points_cost: number | null;
+  product: string | null;
+  notes: string[];
+  matches: PricingSuggestion[];
+}
+
+// P4-04: a complete loan serialized to MISMO 3.4. `missing` lists the
+// gaps between this loan and a submittable 1003 — advice, not a gate.
+export interface MismoExport {
+  xml: string;
+  missing: string[];
+}
+
 export interface AppStatus {
   configured: boolean;
   db_connected: boolean;

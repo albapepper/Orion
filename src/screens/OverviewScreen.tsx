@@ -1,6 +1,6 @@
-import { createResource, For, Show } from 'solid-js';
+import { createResource, createSignal, For, Show } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
-import type { LoanDetail } from '../types';
+import type { LoanDetail, MismoExport } from '../types';
 import { LoanHeader } from '../components/LoanHeader';
 import { PizzaTracker } from '../components/PizzaTracker';
 import { LoanColumns } from '../components/LoanColumns';
@@ -49,6 +49,51 @@ export function OverviewScreen(props: Props) {
 
   const primary = () =>
     detail()?.borrowers.find((b) => b.is_primary) ?? detail()?.borrowers[0];
+
+  // ── MISMO 3.4 export (P4-04) ───────────────────────────────────────
+  const [exportResult, setExportResult] = createSignal<MismoExport | null>(null);
+  const [exporting, setExporting] = createSignal(false);
+  const [exportError, setExportError] = createSignal<string | null>(null);
+  const [savedPath, setSavedPath] = createSignal<string | null>(null);
+  const [copied, setCopied] = createSignal(false);
+
+  const runExport = async () => {
+    setExporting(true);
+    setExportError(null);
+    setSavedPath(null);
+    try {
+      const res = await invoke<MismoExport>('export_loan_mismo', { loanId: props.loanId });
+      setExportResult(res);
+    } catch (e) {
+      setExportError(String(e));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const fileName = () => `${detail()?.summary.loan_number ?? 'loan'}-1003.xml`;
+
+  const saveExport = async () => {
+    try {
+      const p = await invoke<string>('save_mismo_file', {
+        xml: exportResult()!.xml,
+        fileName: fileName(),
+      });
+      setSavedPath(p);
+    } catch (e) {
+      setExportError(String(e));
+    }
+  };
+
+  const copyExport = async () => {
+    try {
+      await navigator.clipboard.writeText(exportResult()!.xml);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      setExportError(String(e));
+    }
+  };
 
   const stats = () => {
     const t = terms();
@@ -173,6 +218,41 @@ export function OverviewScreen(props: Props) {
             )}
           </For>
         </div>
+
+        <h2 class="section-title">Export 1003</h2>
+        <div class="export-row">
+          <button class="ghost" disabled={exporting()} onClick={runExport}>
+            {exporting() ? 'Serializing…' : 'Build MISMO 3.4 XML'}
+          </button>
+        </div>
+        <Show when={exportError()}>
+          <div class="task-error">{exportError()}</div>
+        </Show>
+        <Show when={exportResult()}>
+          <Show when={exportResult()!.missing.length}>
+            <div class="mismo-missing">
+              <span class="mismo-missing-title">Not submission-ready:</span>
+              <For each={exportResult()!.missing}>
+                {(m) => <span class="mismo-missing-item">{m}</span>}
+              </For>
+            </div>
+          </Show>
+          <div class="export-row">
+            <button class="ghost small" onClick={saveExport}>
+              Save to Downloads
+            </button>
+            <button class="ghost small" onClick={copyExport}>
+              {copied() ? 'Copied' : 'Copy XML'}
+            </button>
+            <Show when={savedPath()}>
+              <span class="mono mismo-path">{savedPath()}</span>
+            </Show>
+          </div>
+          <details class="mismo-preview-wrap">
+            <summary>Preview XML</summary>
+            <pre class="mismo-preview mono">{exportResult()!.xml}</pre>
+          </details>
+        </Show>
 
         <p class="screen-hint">
           Press <kbd class="keycap inline">?</kbd> for keyboard navigation — every

@@ -241,9 +241,9 @@ pilot-credible.** ⚠ GSE sandbox access must be in hand by week 14.
       maintaining lender rate sheets (rates, points, comp plans)
 - [x] **P4-02** Pricing screen: manual option building against the
       active rate sheet (monthly P&I, APR-adjacent math, option rows)
-- [ ] **P4-03** Pricing AI: "give me options at 6.5% with under $3K
+- [x] **P4-03** Pricing AI: "give me options at 6.5% with under $3K
       in points" — pricing context builder + constrained suggestions
-- [ ] **P4-04** MISMO 3.4 serialization layer: complete loan → XML
+- [x] **P4-04** MISMO 3.4 serialization layer: complete loan → XML
       per docs/1003-fields.md mapping
 - [ ] **P4-05** DU sandbox: submit serialized loan, store + display
       findings

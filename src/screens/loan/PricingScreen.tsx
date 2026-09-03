@@ -1,6 +1,13 @@
 import { createResource, createSignal, For, Show } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
-import type { LoanDetail, LoanPricingOption, RateOption, RateSheet } from '../../types';
+import type {
+  LoanDetail,
+  LoanPricingOption,
+  PricingSuggestion,
+  PricingSuggestions,
+  RateOption,
+  RateSheet,
+} from '../../types';
 import { TaskPanel } from '../../components/TaskPanel';
 import { LoanHeader } from '../../components/LoanHeader';
 import { PizzaTracker } from '../../components/PizzaTracker';
@@ -52,26 +59,28 @@ export function PricingScreen(props: Props) {
   const terms = () => detail()?.terms;
   const loanAmount = () => terms()?.loan_amount ?? null;
 
-  const addFromSheet = async (opt: RateOption) => {
+  const addPricing = async (
+    product: string,
+    rate: number,
+    points: number,
+    compPlan: string | null,
+  ) => {
     if (props.demo) {
       const t = terms();
       const pi =
-        t?.loan_amount != null
-          ? monthlyPI(t.loan_amount, opt.rate, t.term_months ?? null)
-          : null;
+        t?.loan_amount != null ? monthlyPI(t.loan_amount, rate, t.term_months ?? null) : null;
       setLocalOptions([
         ...(localOptions() ?? options()),
         {
           id: crypto.randomUUID(),
           loan_id: props.loanId,
           company_id: '',
-          product: opt.product,
-          rate: opt.rate,
-          points: opt.points,
+          product,
+          rate,
+          points,
           monthly_pi: pi,
-          points_cost:
-            t?.loan_amount != null ? (opt.points / 100) * t.loan_amount : null,
-          comp_plan: opt.comp_plan,
+          points_cost: t?.loan_amount != null ? (points / 100) * t.loan_amount : null,
+          comp_plan: compPlan,
           selected: false,
           created_by: null,
           created_at: new Date().toISOString(),
@@ -82,10 +91,10 @@ export function PricingScreen(props: Props) {
     try {
       await invoke('add_loan_pricing', {
         loanId: props.loanId,
-        product: opt.product,
-        rate: opt.rate,
-        points: opt.points,
-        compPlan: opt.comp_plan,
+        product,
+        rate,
+        points,
+        compPlan,
       });
       setError(null);
       refetch();
@@ -94,12 +103,46 @@ export function PricingScreen(props: Props) {
     }
   };
 
+  const addFromSheet = (opt: RateOption) =>
+    addPricing(opt.product, opt.rate, opt.points, opt.comp_plan);
+
   // Sheet rows and loan options live in different tables with different
   // ids — match on the price itself to gray out already-added rows.
   const onSheet = (opt: RateOption) =>
     !options().some(
       (o) =>
         o.product === opt.product && o.rate === opt.rate && o.points === opt.points,
+    );
+
+  // ── Pricing AI (P4-03) ─────────────────────────────────────────────
+  // One-shot ask: request in, constrained suggestions out. Adding a
+  // suggestion rides the same audited path as the sheet table.
+  const [aiRequest, setAiRequest] = createSignal('options at 6.5% with under $3K in points');
+  const [aiResult, setAiResult] = createSignal<PricingSuggestions | null>(null);
+  const [aiLoading, setAiLoading] = createSignal(false);
+  const [aiError, setAiError] = createSignal<string | null>(null);
+
+  const askForOptions = async () => {
+    if (!aiRequest().trim() || aiLoading()) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const res = await invoke<PricingSuggestions>('pricing_suggestions', {
+        loanId: props.loanId,
+        request: aiRequest(),
+      });
+      setAiResult(res);
+    } catch (e) {
+      setAiError(String(e));
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // A suggestion duplicates an option already on the loan.
+  const suggestionAdded = (s: PricingSuggestion) =>
+    options().some(
+      (o) => o.product === s.product && o.rate === s.rate && o.points === s.points,
     );
 
   const selectOption = async (option: LoanPricingOption) => {
@@ -181,6 +224,89 @@ export function PricingScreen(props: Props) {
                 </div>
               </div>
             </Show>
+
+            <div class="ai-summary pricing-ai">
+              <div class="ai-summary-header">
+                <span class="ai-summary-title">Pricing AI</span>
+                <input
+                  class="pricing-ai-input"
+                  value={aiRequest()}
+                  placeholder='e.g. "options at 6.5% with under $3K in points"'
+                  onInput={(e) => setAiRequest(e.currentTarget.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && askForOptions()}
+                />
+                <button class="ghost small" disabled={aiLoading()} onClick={askForOptions}>
+                  {aiLoading() ? 'Thinking…' : 'Find options'}
+                </button>
+              </div>
+              <Show when={aiError()}>
+                <div class="ai-summary-error">{aiError()}</div>
+              </Show>
+              <Show when={aiResult()}>
+                <div class="ai-summary-body">
+                  <For each={aiResult()!.notes}>
+                    {(n) => <div class="pricing-ai-note">{n}</div>}
+                  </For>
+                  <Show
+                    when={aiResult()!.matches.length}
+                    fallback={<div class="demo-note">No sheet rows matched.</div>}
+                  >
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>Product</th>
+                          <th>Rate</th>
+                          <th>Points</th>
+                          <th>Monthly P&I</th>
+                          <th>Points cost</th>
+                          <th>Comp plan</th>
+                          <th />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <For each={aiResult()!.matches}>
+                          {(s) => (
+                            <tr>
+                              <td>
+                                {label(s.product)}
+                                <For each={s.tags}>
+                                  {(t) => <span class="pricing-ai-tag">{t}</span>}
+                                </For>
+                              </td>
+                              <td class="mono">{s.rate.toFixed(3)}%</td>
+                              <td class="mono">
+                                {s.points > 0
+                                  ? `+${s.points.toFixed(3)}`
+                                  : s.points.toFixed(3)}
+                              </td>
+                              <td class="mono">{money(s.monthly_pi)}</td>
+                              <td class="mono">{money(s.points_cost)}</td>
+                              <td>{s.comp_plan ?? '—'}</td>
+                              <td>
+                                <Show
+                                  when={!suggestionAdded(s)}
+                                  fallback={<span class="loans-none">added</span>}
+                                >
+                                  <button
+                                    class="ghost small"
+                                    title="Add this option to the loan"
+                                    onClick={() =>
+                                      addPricing(s.product, s.rate, s.points, s.comp_plan)
+                                    }
+                                  >
+                                    + Add
+                                  </button>
+                                </Show>
+                              </td>
+                            </tr>
+                          )}
+                        </For>
+                      </tbody>
+                    </table>
+                  </Show>
+                </div>
+              </Show>
+            </div>
 
             <h2 class="section-title">From the active sheet</h2>
             <Show

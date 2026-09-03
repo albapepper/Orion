@@ -309,3 +309,83 @@ pub async fn select_loan_pricing(
     .await
     .map_err(|e| e.to_string())
 }
+
+// ── Pricing AI (P4-03) ───────────────────────────────────────────────
+
+/// Constrained suggestions: plain-language request in ("options at
+/// 6.5% with under $3K in points"), rate-sheet rows computed against
+/// this loan's terms out. Read-only — nothing is saved, so no lock
+/// and no audit; adding a suggestion rides the normal add path.
+#[tauri::command]
+pub async fn pricing_suggestions(
+    state: State<'_, AppState>,
+    loan_id: String,
+    request: String,
+) -> Result<crate::pricing_ai::PricingSuggestions, String> {
+    let db = state.db.read().await.clone();
+    let loan_id = parse_uuid(&loan_id)?;
+
+    // The loan's terms drive all the money math.
+    let terms = match &db {
+        Some(pool) => crate::db::queries::get_loan_terms(pool, loan_id)
+            .await
+            .map_err(|e| e.to_string())?,
+        None => Some(crate::loans::demo::loan_terms(loan_id)),
+    };
+
+    // Suggestions price off the active sheet only.
+    let (sheet, options) = match &db {
+        Some(pool) => {
+            let company_id = state.company_id().await?;
+            let sheets = crate::pricing::list_sheets(pool, company_id)
+                .await
+                .map_err(|e| e.to_string())?;
+            match sheets.into_iter().find(|s| s.is_active) {
+                Some(sheet) => {
+                    let options = crate::pricing::list_options(pool, sheet.id)
+                        .await
+                        .map_err(|e| e.to_string())?;
+                    (Some(sheet), options)
+                }
+                None => (None, Vec::new()),
+            }
+        }
+        None => {
+            let sheet = crate::loans::demo::rate_sheets()
+                .into_iter()
+                .find(|s| s.is_active);
+            match &sheet {
+                Some(s) => {
+                    let options = crate::loans::demo::rate_options(s.id);
+                    (sheet, options)
+                }
+                None => (None, Vec::new()),
+            }
+        }
+    };
+
+    // Parse the request deterministically first; only fall back to the
+    // model when the regex pass finds nothing at all.
+    let mut constraints = crate::pricing_ai::parse_constraints(&request);
+    let mut parse_note: Option<String> = None;
+    if constraints.is_empty() {
+        let provider = state.provider().await;
+        match crate::pricing_ai::parse_constraints_ai(&provider, &request).await {
+            Ok(c) => constraints = c,
+            Err(e) => {
+                parse_note = Some(format!(
+                    "Couldn't read that as constraints ({e})."
+                ))
+            }
+        }
+    }
+
+    Ok(crate::pricing_ai::suggest(
+        &request,
+        terms.as_ref(),
+        sheet.as_ref(),
+        &options,
+        constraints,
+        parse_note,
+    ))
+}
