@@ -1,6 +1,7 @@
 // The loan cascade, in working order:
 // borrower → employment → property → terms → credit → income → assets
 // → liabilities → reo → declarations → demographic → documents → conditions
+// → pricing → AUS
 export type LoanScreen =
   | 'borrower'
   | 'employment'
@@ -15,7 +16,8 @@ export type LoanScreen =
   | 'demographic'
   | 'documents'
   | 'conditions'
-  | 'pricing';
+  | 'pricing'
+  | 'aus';
 
 export const LOAN_SCREENS: LoanScreen[] = [
   'borrower',
@@ -32,6 +34,7 @@ export const LOAN_SCREENS: LoanScreen[] = [
   'documents',
   'conditions',
   'pricing',
+  'aus',
 ];
 
 export const SCREEN_LABELS: Record<LoanScreen, string> = {
@@ -49,6 +52,7 @@ export const SCREEN_LABELS: Record<LoanScreen, string> = {
   documents: 'Documents',
   conditions: 'Conditions',
   pricing: 'Pricing',
+  aus: 'AUS',
 };
 
 // Keyboard shortcut letter for each stage (Ctrl-modified)
@@ -67,6 +71,7 @@ export const STAGE_KEYS: Record<LoanScreen, string> = {
   documents: 'f', // files
   conditions: 'h',
   pricing: 'v',
+  aus: 'u',
 };
 
 export const nextStage = (screen: LoanScreen): LoanScreen | null =>

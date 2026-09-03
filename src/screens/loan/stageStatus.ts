@@ -186,6 +186,22 @@ export function computeStageStatuses(
       ? 'progress'
       : 'empty';
 
+  // AUS: findings from an automated underwriting submission. An
+  // approval is done; a refer is a problem; anything else submitted
+  // counts as in progress.
+  const aus = detail.aus ?? [];
+  statuses.aus = aus.length
+    ? aus.some((s) => s.recommendation === 'Approve/Eligible')
+      ? 'done'
+      : aus.some(
+            (s) =>
+              s.recommendation === 'Refer with Caution' ||
+              s.recommendation === 'Unable to Determine',
+          )
+        ? 'problem'
+        : 'progress'
+    : 'empty';
+
   // Overview summarizes the file — credit is external and documents are
   // never truly "done", so neither blocks green
   const vals = TRACKER_ITEMS.filter(

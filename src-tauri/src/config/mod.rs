@@ -9,6 +9,19 @@ pub struct Config {
     pub ai: AiConfig,
     #[serde(default)]
     pub app: AppConfig,
+    #[serde(default)]
+    pub aus: AusConfig,
+}
+
+/// Automated underwriting endpoints. Empty endpoint = mock mode: the
+/// engine is simulated from the file's own numbers so the workflow is
+/// demoable before GSE sandbox credentials land (P4-05/06).
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct AusConfig {
+    #[serde(default)]
+    pub du_endpoint: String,
+    #[serde(default)]
+    pub lpa_endpoint: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]

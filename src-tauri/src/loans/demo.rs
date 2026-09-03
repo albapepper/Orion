@@ -586,6 +586,45 @@ pub fn loan_id(s: &str) -> Uuid {
     id(s)
 }
 
+// ── AUS submissions ──────────────────────────────────────────────────
+
+/// Demo runs the real mock engine over the demo file, so the findings
+/// on screen always match the loan's actual numbers.
+pub fn aus_submissions(loan_id: Uuid) -> Vec<crate::aus::AusSubmission> {
+    let terms = loan_terms(loan_id);
+    let borrowers = borrowers(loan_id);
+    let income = income(loan_id);
+    let liabilities = liabilities(loan_id);
+    let declarations = declarations(loan_id);
+    let facts = crate::aus::FileFacts {
+        loan_number: loan_number_for(loan_id),
+        terms: Some(&terms),
+        borrowers: &borrowers,
+        income: &income,
+        liabilities: &liabilities,
+        declarations: &declarations,
+    };
+    let (recommendation, case_id, messages) = crate::aus::mock_findings(&facts);
+    vec![crate::aus::AusSubmission {
+        id: id("00000000-0000-0000-0000-700000000001"),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        system: "du-mock".into(),
+        case_id,
+        recommendation: Some(recommendation),
+        messages: serde_json::to_value(
+            messages
+                .iter()
+                .map(|m| serde_json::to_value(m).expect("message serializes"))
+                .collect::<Vec<_>>(),
+        )
+        .expect("messages serialize"),
+        raw_response: None,
+        submitted_by: Some(id(DEMO_OFFICER_ID)),
+        submitted_at: Utc::now(),
+    }]
+}
+
 // ── Rate sheets ──────────────────────────────────────────────────────
 
 pub fn rate_sheets() -> Vec<crate::pricing::RateSheet> {

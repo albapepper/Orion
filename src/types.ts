@@ -182,6 +182,7 @@ export interface LoanDetail {
   documents: Document[];
   conditions: Condition[];
   pricing: LoanPricingOption[];
+  aus: AusSubmission[];
   lock: LockInfo | null;
 }
 
@@ -360,6 +361,26 @@ export interface PricingSuggestions {
 export interface MismoExport {
   xml: string;
   missing: string[];
+}
+
+// P4-05: one automated underwriting submission. `system` is "du" when
+// live, "du-mock"/"lpa-mock" when scored by the built-in mock engine.
+export interface AusMessage {
+  severity: 'error' | 'warning' | 'info' | string;
+  text: string;
+}
+
+export interface AusSubmission {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  system: string;
+  case_id: string | null;
+  recommendation: string | null;
+  messages: AusMessage[];
+  raw_response: string | null;
+  submitted_by: string | null;
+  submitted_at: string;
 }
 
 export interface AppStatus {

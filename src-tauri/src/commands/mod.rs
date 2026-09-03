@@ -1,4 +1,5 @@
 pub mod ai_commands;
+pub mod aus_commands;
 pub mod condition_commands;
 pub mod config_commands;
 pub mod document_commands;

@@ -841,6 +841,122 @@ kbd.keycap.inline {
   line-height: 1.5;
 }
 
+/* ── AUS: DU submissions + findings (P4-05) ──────────── */
+
+.aus-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 12px 0;
+}
+
+.aus-mode-badge {
+  padding: 2px 8px;
+  border: 1px solid var(--warn, #c0392b);
+  color: var(--warn, #c0392b);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.aus-mode-note {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.aus-card {
+  margin: 14px 0;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.aus-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.aus-system {
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.aus-rec {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 10px;
+}
+
+.aus-rec-approve {
+  color: var(--ok, #1e8449);
+  border: 1px solid var(--ok, #1e8449);
+}
+
+.aus-rec-refer {
+  color: var(--warn, #c0392b);
+  border: 1px solid var(--warn, #c0392b);
+}
+
+.aus-rec-caution {
+  color: var(--amber, #b9770e);
+  border: 1px solid var(--amber, #b9770e);
+}
+
+.aus-rec-unknown {
+  color: var(--text-dim);
+  border: 1px solid var(--border-strong);
+}
+
+.aus-when {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.aus-case {
+  margin-top: 6px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.aus-findings {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.aus-findings li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+}
+
+.aus-sev-dot {
+  flex: 0 0 8px;
+  height: 8px;
+  border-radius: 50%;
+  align-self: center;
+}
+
+.aus-sev-error .aus-sev-dot {
+  background: var(--warn, #c0392b);
+}
+
+.aus-sev-warning .aus-sev-dot {
+  background: var(--amber, #b9770e);
+}
+
+.aus-sev-info .aus-sev-dot {
+  background: var(--ok, #1e8449);
+}
+
 /* ── Loan list: the whole book, filterable ───────────── */
 
 .loans-toolbar {
