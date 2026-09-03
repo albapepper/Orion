@@ -185,11 +185,17 @@ export interface LoanDetail {
 export interface Task {
   id: string;
   loan_id: string;
+  loan_number: string;
   title: string;
   description: string | null;
+  assigned_to: string | null;
+  assigned_to_name: string | null;
   screen: string | null;
   status: 'open' | 'in_progress' | 'done';
+  priority: 'low' | 'normal' | 'high';
+  due_date: string | null;
   created_at: string;
+  completed_at: string | null;
 }
 
 export type UserRole = 'loan_officer' | 'processor' | 'underwriter' | 'admin';

@@ -241,7 +241,7 @@ export function IncomeScreen(props: Props) {
         }
       />
 
-      <TaskPanel loanId={props.loanId} screen="income" />
+      <TaskPanel loanId={props.loanId} screen="income" demo={props.demo} />
     </div>
   );
 }

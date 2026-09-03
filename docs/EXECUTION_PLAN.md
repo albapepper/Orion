@@ -184,11 +184,11 @@ what to work on next. **Milestone: DEMO-READY.**
 
 ### Week 8 — Tasks 2.0
 
-- [ ] **P3-03** Tasks migration expansion (assignee, due date,
+- [x] **P3-03** Tasks migration expansion (assignee, due date,
       priority, status; per-screen linkage already exists)
-- [ ] **P3-04** Tasks backend: create/assign/complete, unified
+- [x] **P3-04** Tasks backend: create/assign/complete, unified
       cross-loan task list, audit hook, IPC commands
-- [ ] **P3-05** Tasks UI: unified Tasks view + TaskPanel upgrade +
+- [x] **P3-05** Tasks UI: unified Tasks view + TaskPanel upgrade +
       AI context (overdue, unassigned)
 
 ### Week 9 — Documents + Conditions

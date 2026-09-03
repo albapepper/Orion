@@ -326,7 +326,7 @@ export function EmploymentScreen(props: Props) {
         }
       />
 
-      <TaskPanel loanId={props.loanId} screen="employment" />
+      <TaskPanel loanId={props.loanId} screen="employment" demo={props.demo} />
     </div>
   );
 }

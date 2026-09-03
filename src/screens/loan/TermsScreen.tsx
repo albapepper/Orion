@@ -276,7 +276,7 @@ export function TermsScreen(props: Props) {
         }
       />
 
-      <TaskPanel loanId={props.loanId} screen="terms" />
+      <TaskPanel loanId={props.loanId} screen="terms" demo={props.demo} />
     </div>
   );
 }

@@ -208,7 +208,7 @@ export function PropertyScreen(props: Props) {
         }
       />
 
-      <TaskPanel loanId={props.loanId} screen="property" />
+      <TaskPanel loanId={props.loanId} screen="property" demo={props.demo} />
     </div>
   );
 }

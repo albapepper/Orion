@@ -323,7 +323,7 @@ export function BorrowerScreen(props: Props) {
         }
       />
 
-      <TaskPanel loanId={props.loanId} screen="borrower" />
+      <TaskPanel loanId={props.loanId} screen="borrower" demo={props.demo} />
     </div>
   );
 }

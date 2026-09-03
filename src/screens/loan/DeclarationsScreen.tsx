@@ -190,7 +190,7 @@ export function DeclarationsScreen(props: Props) {
         }
       />
 
-      <TaskPanel loanId={props.loanId} screen="declarations" />
+      <TaskPanel loanId={props.loanId} screen="declarations" demo={props.demo} />
     </div>
   );
 }

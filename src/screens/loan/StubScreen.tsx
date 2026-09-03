@@ -60,7 +60,7 @@ export function StubScreen(props: Props) {
         }
       />
 
-      <TaskPanel loanId={props.loanId} screen={props.screen} />
+      <TaskPanel loanId={props.loanId} screen={props.screen} demo={props.demo} />
     </div>
   );
 }

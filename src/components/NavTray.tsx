@@ -13,6 +13,7 @@ export interface NavItem {
 const APP_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', key: 'd' },
   { id: 'loans', label: 'Loans', key: 'n' },
+  { id: 'tasks', label: 'Tasks', key: 'k' },
   { id: 'settings', label: 'Settings', key: 's' },
 ];
 

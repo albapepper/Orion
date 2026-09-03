@@ -7,4 +7,5 @@ pub mod income;
 pub mod liabilities;
 pub mod property;
 pub mod reo;
+pub mod tasks;
 pub mod terms;

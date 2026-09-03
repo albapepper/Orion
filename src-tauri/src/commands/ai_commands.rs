@@ -20,9 +20,13 @@ pub async fn ai_chat(
         .map_err(|e| e.to_string())?;
 
     // Build screen-appropriate context from current loan data. The
-    // dashboard is pipeline-level — it needs no open loan.
+    // dashboard and tasks screens are pipeline-level — no open loan.
     let system_context = if screen == "dashboard" {
         build_dashboard_context(&state)
+            .await
+            .map_err(|e| e.to_string())?
+    } else if screen == "tasks" {
+        build_tasks_context(&state)
             .await
             .map_err(|e| e.to_string())?
     } else {
@@ -66,6 +70,24 @@ async fn build_dashboard_context(state: &State<'_, AppState>) -> anyhow::Result<
     };
     Ok(crate::loans::screens::dashboard::build_context(
         &loans,
+        chrono::Utc::now(),
+    ))
+}
+
+async fn build_tasks_context(state: &State<'_, AppState>) -> anyhow::Result<String> {
+    let db = state.db.read().await.clone();
+    let tasks = match &db {
+        Some(pool) => {
+            let company_id = state
+                .company_id()
+                .await
+                .map_err(|e| anyhow::anyhow!(e))?;
+            crate::tasks::list_for_company(pool, company_id).await?
+        }
+        None => demo::all_tasks(),
+    };
+    Ok(crate::loans::screens::tasks::build_context(
+        &tasks,
         chrono::Utc::now(),
     ))
 }

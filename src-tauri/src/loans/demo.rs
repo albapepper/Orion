@@ -77,8 +77,7 @@ fn id(s: &str) -> Uuid {
     Uuid::parse_str(s).unwrap()
 }
 
-pub fn loan_summaries() -> Vec<LoanSummary> {
-    vec![
+pub fn loan_summaries() -> Vec<LoanSummary> {    vec![
         LoanSummary {
             id: id(DEMO_LOAN_ID),
             loan_number: "ORN-2026-0001".into(),
@@ -368,4 +367,121 @@ pub fn demographics(loan_id: Uuid) -> Vec<Demographics> {
         sex: None,
         collection_basis: Some("not_face_to_face".into()),
     }]
+}
+
+// ── Tasks ────────────────────────────────────────────────────────────
+
+fn loan_number_for(loan_id: Uuid) -> &'static str {
+    match loan_id {
+        x if x == id("00000000-0000-0000-0000-000000000002") => "ORN-2026-0002",
+        x if x == id("00000000-0000-0000-0000-000000000003") => "ORN-2026-0003",
+        _ => "ORN-2026-0001",
+    }
+}
+
+fn demo_user_name(user_id: Uuid) -> Option<String> {
+    match user_id {
+        x if x == id(DEMO_OFFICER_ID) => Some("Alex Kim".into()),
+        x if x == id(DEMO_UW_ID) => Some("Dana Reyes".into()),
+        x if x == id("00000000-0000-0000-0000-000000000d03") => Some("Priya Nair".into()),
+        _ => None,
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn task(
+    suffix: &str,
+    loan_id: Uuid,
+    title: &str,
+    screen: Option<&str>,
+    assigned_to: Option<Uuid>,
+    status: &str,
+    priority: &str,
+    due_days: Option<i64>,
+) -> crate::tasks::Task {
+    crate::tasks::Task {
+        id: id(&format!("00000000-0000-0000-0000-2000000000{suffix}")),
+        loan_id,
+        company_id: id(DEMO_COMPANY_ID),
+        title: title.into(),
+        description: None,
+        assigned_to,
+        screen: screen.map(Into::into),
+        status: status.into(),
+        priority: priority.into(),
+        due_date: due_days.map(|d| Utc::now() + chrono::Duration::days(d)),
+        created_by: id(DEMO_OFFICER_ID),
+        created_at: Utc::now(),
+        completed_at: (status == "done").then(Utc::now),
+        assigned_to_name: assigned_to.and_then(demo_user_name),
+        loan_number: loan_number_for(loan_id).into(),
+    }
+}
+
+/// Per-loan task lists for the TaskPanel. Loan 1 carries the interesting
+/// mix (overdue + unassigned, due soon, done); the other loans get one
+/// row each so the unified view has spread.
+pub fn tasks(loan_id: Uuid) -> Vec<crate::tasks::Task> {
+    let officer = id(DEMO_OFFICER_ID);
+    let uw = id(DEMO_UW_ID);
+    let processor = id("00000000-0000-0000-0000-000000000d03");
+    match loan_number_for(loan_id) {
+        "ORN-2026-0002" => vec![task(
+            "01", loan_id, "Assign a processor", None, None, "open", "low", None,
+        )],
+        "ORN-2026-0003" => vec![task(
+            "02",
+            loan_id,
+            "Schedule intake call",
+            None,
+            Some(officer),
+            "open",
+            "normal",
+            Some(5),
+        )],
+        _ => vec![
+            task(
+                "03",
+                loan_id,
+                "Gift letter for the $25k deposit",
+                Some("assets"),
+                None,
+                "open",
+                "high",
+                Some(-1),
+            ),
+            task(
+                "04",
+                loan_id,
+                "VOE for current employer",
+                Some("employment"),
+                Some(processor),
+                "open",
+                "normal",
+                Some(2),
+            ),
+            task(
+                "05",
+                loan_id,
+                "Pull preliminary credit",
+                Some("credit"),
+                Some(uw),
+                "done",
+                "normal",
+                None,
+            ),
+        ],
+    }
+}
+
+/// The unified Tasks view in demo mode: every demo loan's tasks.
+pub fn all_tasks() -> Vec<crate::tasks::Task> {
+    [
+        DEMO_LOAN_ID,
+        "00000000-0000-0000-0000-000000000002",
+        "00000000-0000-0000-0000-000000000003",
+    ]
+    .iter()
+    .flat_map(|s| tasks(id(s)))
+    .collect()
 }

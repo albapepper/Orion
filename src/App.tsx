@@ -8,6 +8,7 @@ import { setUser } from './lib/session';
 import { OverviewScreen } from './screens/OverviewScreen';
 import { Dashboard } from './screens/Dashboard';
 import { LoansScreen } from './screens/LoansScreen';
+import { TasksScreen } from './screens/TasksScreen';
 import { IncomeScreen } from './screens/loan/IncomeScreen';
 import { TermsScreen } from './screens/loan/TermsScreen';
 import { BorrowerScreen } from './screens/loan/BorrowerScreen';
@@ -27,6 +28,7 @@ import './App.css';
 type Route =
   | { name: 'dashboard' }
   | { name: 'loans' }
+  | { name: 'tasks' }
   | { name: 'settings' }
   | { name: 'overview'; loanId: string }
   | { name: LoanScreen; loanId: string };
@@ -68,6 +70,10 @@ function App() {
       navigate({ name: 'loans' });
       return;
     }
+    if (id === 'tasks') {
+      navigate({ name: 'tasks' });
+      return;
+    }
     if (id === 'settings') {
       navigate({ name: 'settings' });
       return;
@@ -81,6 +87,11 @@ function App() {
     navigate({ name: id as LoanScreen, loanId });
   };
 
+  // Entering a loan at a specific screen (e.g. from a task row)
+  const openLoanAt = (loanId: string, screen: string | null) => {
+    navigate({ name: (screen ?? 'borrower') as LoanScreen, loanId });
+  };
+
   // Entering a loan starts at the top of the cascade: the borrower
   const openLoan = (loan: LoanSummary) => navigate({ name: 'borrower', loanId: loan.id });
 
@@ -88,7 +99,7 @@ function App() {
   // head of the cascade (⌃] enters it at the borrower).
   const shiftStage = (dir: 1 | -1) => {
     const r = route();
-    if (r.name === 'dashboard' || r.name === 'settings' || r.name === 'loans') return;
+    if (r.name === 'dashboard' || r.name === 'settings' || r.name === 'loans' || r.name === 'tasks') return;
     if (r.name === 'overview') {
       if (dir === 1) navigate({ name: 'borrower', loanId: r.loanId });
       return;
@@ -116,6 +127,11 @@ function App() {
       if (e.key === 'n') {
         e.preventDefault();
         openScreen('loans');
+        return;
+      }
+      if (e.key === 'k') {
+        e.preventDefault();
+        openScreen('tasks');
         return;
       }
       const screen = LOAN_SCREENS.find((s) => s.startsWith(e.key));
@@ -223,6 +239,12 @@ function App() {
           </Match>
           <Match when={route().name === 'loans'}>
             <LoansScreen loans={loans() ?? []} onOpenLoan={openLoan} />
+          </Match>
+          <Match when={route().name === 'tasks'}>
+            <TasksScreen
+              demo={status() ? !status()!.db_connected : false}
+              onOpenLoanScreen={openLoanAt}
+            />
           </Match>
           <Match when={route().name === 'settings'}>
             <SettingsScreen />

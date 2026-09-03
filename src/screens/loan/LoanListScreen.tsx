@@ -306,7 +306,7 @@ export function LoanListScreen<T extends BaseRow>(props: Props<T>) {
         }
       />
 
-      <TaskPanel loanId={props.loanId} screen={props.screen} />
+      <TaskPanel loanId={props.loanId} screen={props.screen} demo={props.demo} />
     </div>
   );
 }

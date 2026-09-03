@@ -185,7 +185,7 @@ export function DemographicScreen(props: Props) {
         }
       />
 
-      <TaskPanel loanId={props.loanId} screen="demographic" />
+      <TaskPanel loanId={props.loanId} screen="demographic" demo={props.demo} />
     </div>
   );
 }
