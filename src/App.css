@@ -743,6 +743,46 @@ kbd.keycap.inline {
   font-size: 12px;
 }
 
+/* ── Loan list: the whole book, filterable ───────────── */
+
+.loans-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.loans-toolbar input,
+.loans-toolbar select {
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.loans-toolbar input {
+  flex: 1;
+  min-width: 180px;
+  max-width: 340px;
+}
+
+.loans-table {
+  margin-top: 4px;
+}
+
+.loan-row {
+  cursor: pointer;
+}
+
+.loan-row:hover {
+  background: var(--surface-2);
+}
+
+.loans-none {
+  color: var(--text-dim);
+}
+
 /* ── Tables ──────────────────────────────────────────── */
 
 .data-table {

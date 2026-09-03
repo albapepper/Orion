@@ -99,6 +99,15 @@ pub fn loan_summaries() -> Vec<LoanSummary> {
             updated_at: Utc::now() - chrono::Duration::days(9),
             flagged_reviews: 0,
         },
+        LoanSummary {
+            id: id("00000000-0000-0000-0000-000000000003"),
+            loan_number: "ORN-2026-0003".into(),
+            status: "application".into(),
+            borrower_name: Some("Avery Chen".into()),
+            assigned_to_name: Some("Demo User".into()),
+            updated_at: Utc::now() - chrono::Duration::hours(5),
+            flagged_reviews: 0,
+        },
     ]
 }
 

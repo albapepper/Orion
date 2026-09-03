@@ -7,6 +7,7 @@ import { KeyLegend } from './components/KeyLegend';
 import { setUser } from './lib/session';
 import { OverviewScreen } from './screens/OverviewScreen';
 import { Dashboard } from './screens/Dashboard';
+import { LoansScreen } from './screens/LoansScreen';
 import { IncomeScreen } from './screens/loan/IncomeScreen';
 import { TermsScreen } from './screens/loan/TermsScreen';
 import { BorrowerScreen } from './screens/loan/BorrowerScreen';
@@ -25,6 +26,7 @@ import './App.css';
 
 type Route =
   | { name: 'dashboard' }
+  | { name: 'loans' }
   | { name: 'settings' }
   | { name: 'overview'; loanId: string }
   | { name: LoanScreen; loanId: string };
@@ -62,6 +64,10 @@ function App() {
       navigate({ name: 'dashboard' });
       return;
     }
+    if (id === 'loans') {
+      navigate({ name: 'loans' });
+      return;
+    }
     if (id === 'settings') {
       navigate({ name: 'settings' });
       return;
@@ -82,7 +88,7 @@ function App() {
   // head of the cascade (⌃] enters it at the borrower).
   const shiftStage = (dir: 1 | -1) => {
     const r = route();
-    if (r.name === 'dashboard' || r.name === 'settings') return;
+    if (r.name === 'dashboard' || r.name === 'settings' || r.name === 'loans') return;
     if (r.name === 'overview') {
       if (dir === 1) navigate({ name: 'borrower', loanId: r.loanId });
       return;
@@ -105,6 +111,11 @@ function App() {
       if (e.key === 's') {
         e.preventDefault();
         navigate({ name: 'settings' });
+        return;
+      }
+      if (e.key === 'n') {
+        e.preventDefault();
+        openScreen('loans');
         return;
       }
       const screen = LOAN_SCREENS.find((s) => s.startsWith(e.key));
@@ -209,6 +220,9 @@ function App() {
         <Switch>
           <Match when={route().name === 'dashboard'}>
             <Dashboard loans={loans() ?? []} onOpenLoan={openLoan} />
+          </Match>
+          <Match when={route().name === 'loans'}>
+            <LoansScreen loans={loans() ?? []} onOpenLoan={openLoan} />
           </Match>
           <Match when={route().name === 'settings'}>
             <SettingsScreen />

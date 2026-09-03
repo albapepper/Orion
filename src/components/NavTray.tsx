@@ -12,6 +12,7 @@ export interface NavItem {
 // stages — lives in the tracker at the top of the loan page.
 const APP_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', key: 'd' },
+  { id: 'loans', label: 'Loans', key: 'n' },
   { id: 'settings', label: 'Settings', key: 's' },
 ];
 

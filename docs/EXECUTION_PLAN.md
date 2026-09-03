@@ -179,7 +179,7 @@ what to work on next. **Milestone: DEMO-READY.**
 - [x] **P3-01** Dashboard screen: pipeline summary (loans by stage,
       counts, attention flags) + AI pipeline summary ("what should I
       work on next") from existing context builders
-- [ ] **P3-02** Loan List screen: filters (stage, status, owner),
+- [x] **P3-02** Loan List screen: filters (stage, status, owner),
       sort, open-loan navigation
 
 ### Week 8 — Tasks 2.0
