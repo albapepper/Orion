@@ -99,6 +99,7 @@ pub fn run() {
             commands::export_commands::export_loan_mismo,
             commands::export_commands::save_mismo_file,
             commands::aus_commands::submit_du,
+            commands::aus_commands::submit_lpa,
             commands::user_commands::list_users,
             commands::user_commands::whoami,
             commands::user_commands::sign_in_as,

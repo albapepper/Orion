@@ -248,8 +248,9 @@ pilot-credible.** ⚠ GSE sandbox access must be in hand by week 14.
 - [x] **P4-05** DU sandbox: submit serialized loan, store + display
       findings (mock engine scores the file's own numbers until the
       DU endpoint is configured; live path ships in the same command)
-- [ ] **P4-06** LPA sandbox: submit serialized loan, store + display
-      findings
+- [x] **P4-06** LPA sandbox: submit serialized loan, store + display
+      findings (same mock-mode story as P4-05; Accept/Caution
+      vocabulary, obligation-ratio phrasing)
 
 ---
 

@@ -1,5 +1,5 @@
 use super::AppState;
-use crate::aus::AusSubmission;
+use crate::aus::{AusEngine, AusSubmission};
 use tauri::State;
 use uuid::Uuid;
 
@@ -7,15 +7,32 @@ fn parse_uuid(s: &str) -> Result<Uuid, String> {
     Uuid::parse_str(s).map_err(|e| e.to_string())
 }
 
-// ── AUS: DU sandbox (P4-05); LPA (P4-06) rides the same table ────────
+// ── AUS: DU (P4-05) and LPA (P4-06) sandboxes ────────────────────────
+// One shared flow, two engines: the serialized loan goes out, findings
+// come back into the same table. With a configured endpoint the MISMO
+// document goes to the sandbox and whatever comes back is parsed
+// best-effort; without one, the mock engine scores the file's own
+// numbers. Submission is a loan-affecting write: lock-checked and
+// audited.
 
-/// Submit the serialized loan to DU. With a configured endpoint the
-/// MISMO document goes to the sandbox and whatever comes back is
-/// parsed best-effort; without one, the mock engine scores the file's
-/// own numbers. Submission is a loan-affecting write: lock-checked
-/// and audited.
 #[tauri::command]
 pub async fn submit_du(state: State<'_, AppState>, loan_id: String) -> Result<AusSubmission, String> {
+    submit(state, loan_id, AusEngine::Du).await
+}
+
+#[tauri::command]
+pub async fn submit_lpa(
+    state: State<'_, AppState>,
+    loan_id: String,
+) -> Result<AusSubmission, String> {
+    submit(state, loan_id, AusEngine::Lpa).await
+}
+
+async fn submit(
+    state: State<'_, AppState>,
+    loan_id: String,
+    engine: AusEngine,
+) -> Result<AusSubmission, String> {
     let loan_id = parse_uuid(&loan_id)?;
     let db = state.db.read().await.clone();
 
@@ -46,34 +63,29 @@ pub async fn submit_du(state: State<'_, AppState>, loan_id: String) -> Result<Au
     };
     let xml = crate::mismo::serialize(&input);
 
-    let endpoint = state.config.read().await.aus.du_endpoint.clone();
+    let endpoint = match engine {
+        AusEngine::Du => state.config.read().await.aus.du_endpoint.clone(),
+        AusEngine::Lpa => state.config.read().await.aus.lpa_endpoint.clone(),
+    };
 
     match (&db, endpoint.is_empty()) {
         // Demo mode: mock findings, nothing persisted.
         (None, _) => {
-            let facts = crate::aus::FileFacts {
-                loan_number: detail.summary.loan_number.as_str(),
-                terms: detail.terms.as_ref(),
-                borrowers: &detail.borrowers,
-                income: &detail.income,
-                liabilities: &detail.liabilities,
-                declarations: &detail.declarations,
-            };
-            let (recommendation, case_id, messages) = crate::aus::mock_findings(&facts);
+            let outcome = mock(&detail, engine);
             Ok(AusSubmission {
                 id: Uuid::new_v4(),
                 loan_id,
                 company_id: Uuid::nil(),
-                system: "du-mock".into(),
-                case_id,
-                recommendation: Some(recommendation),
-                messages: serde_json::to_value(messages).map_err(|e| e.to_string())?,
+                system: outcome.system.into(),
+                case_id: outcome.case_id,
+                recommendation: Some(outcome.recommendation),
+                messages: serde_json::to_value(outcome.messages).map_err(|e| e.to_string())?,
                 raw_response: None,
                 submitted_by: None,
                 submitted_at: chrono::Utc::now(),
             })
         }
-        // Real mode, no endpoint: mock findings, persisted as du-mock.
+        // Real mode, no endpoint: mock findings, persisted as a mock row.
         (Some(pool), true) => {
             let company_id = state.company_id().await?;
             let user_id = state
@@ -85,29 +97,21 @@ pub async fn submit_du(state: State<'_, AppState>, loan_id: String) -> Result<Au
                 .await
                 .map_err(|e| e.to_string())?;
 
-            let facts = crate::aus::FileFacts {
-                loan_number: detail.summary.loan_number.as_str(),
-                terms: detail.terms.as_ref(),
-                borrowers: &detail.borrowers,
-                income: &detail.income,
-                liabilities: &detail.liabilities,
-                declarations: &detail.declarations,
-            };
-            let (recommendation, case_id, messages) = crate::aus::mock_findings(&facts);
+            let outcome = mock(&detail, engine);
             let sub = crate::aus::insert(
                 pool,
                 loan_id,
                 company_id,
-                "du-mock",
-                case_id.as_deref(),
-                Some(&recommendation),
-                serde_json::to_value(messages).map_err(|e| e.to_string())?,
+                outcome.system,
+                outcome.case_id.as_deref(),
+                Some(&outcome.recommendation),
+                serde_json::to_value(outcome.messages).map_err(|e| e.to_string())?,
                 None,
                 user_id,
             )
             .await
             .map_err(|e| e.to_string())?;
-            audit_submit(pool, &state, company_id, loan_id, user_id, &sub.id).await?;
+            audit_submit(pool, company_id, loan_id, user_id, &sub.id, engine).await?;
             Ok(sub)
         }
         // Real mode with endpoint: POST the MISMO document.
@@ -130,19 +134,23 @@ pub async fn submit_du(state: State<'_, AppState>, loan_id: String) -> Result<Au
                 .timeout(std::time::Duration::from_secs(120))
                 .send()
                 .await
-                .map_err(|e| format!("DU endpoint unreachable: {e}"))?;
+                .map_err(|e| format!("{} endpoint unreachable: {e}", engine.label().to_uppercase()))?;
             let status = resp.status();
             let body = resp.text().await.map_err(|e| e.to_string())?;
             if !status.is_success() {
-                return Err(format!("DU endpoint returned HTTP {status}: {body}"));
+                return Err(format!(
+                    "{} endpoint returned HTTP {status}: {body}",
+                    engine.label().to_uppercase()
+                ));
             }
 
-            let (recommendation, messages) = crate::aus::parse_response("DU", &body);
+            let (recommendation, messages) =
+                crate::aus::parse_response(engine.label().to_uppercase().as_str(), &body);
             let sub = crate::aus::insert(
                 pool,
                 loan_id,
                 company_id,
-                "du",
+                engine.label(),
                 None,
                 recommendation.as_deref(),
                 serde_json::to_value(messages).map_err(|e| e.to_string())?,
@@ -151,26 +159,38 @@ pub async fn submit_du(state: State<'_, AppState>, loan_id: String) -> Result<Au
             )
             .await
             .map_err(|e| e.to_string())?;
-            audit_submit(pool, &state, company_id, loan_id, user_id, &sub.id).await?;
+            audit_submit(pool, company_id, loan_id, user_id, &sub.id, engine).await?;
             Ok(sub)
         }
     }
 }
 
+fn mock(detail: &super::loan_commands::LoanDetail, engine: AusEngine) -> crate::aus::MockOutcome {
+    let facts = crate::aus::FileFacts {
+        loan_number: detail.summary.loan_number.as_str(),
+        terms: detail.terms.as_ref(),
+        borrowers: &detail.borrowers,
+        income: &detail.income,
+        liabilities: &detail.liabilities,
+        declarations: &detail.declarations,
+    };
+    crate::aus::mock_findings(engine, &facts)
+}
+
 async fn audit_submit(
     pool: &sqlx::PgPool,
-    _state: &State<'_, AppState>,
     company_id: Uuid,
     loan_id: Uuid,
     user_id: Uuid,
     submission_id: &Uuid,
+    engine: AusEngine,
 ) -> Result<(), String> {
     crate::audit::write(
         pool,
         company_id,
         Some(loan_id),
         user_id,
-        "aus.submit_du",
+        &format!("aus.submit_{}", engine.label()),
         "aus_submissions",
         *submission_id,
         None,

@@ -192,16 +192,22 @@ export function computeStageStatuses(
       ? 'progress'
       : 'empty';
 
-  // AUS: findings from an automated underwriting submission. An
-  // approval is done; a refer is a problem; anything else submitted
-  // counts as in progress.
+  // AUS: findings from automated underwriting submissions (DU and
+  // LPA share the stage — each engine speaks its own dialect: DU
+  // Approve/Refer, LPA Accept/Caution). An approval or Accept is
+  // done; a caution-tier refer or Unable to Determine is a problem;
+  // anything else submitted counts as in progress.
   const aus = detail.aus ?? [];
   statuses.aus = aus.length
-    ? aus.some((s) => s.recommendation === 'Approve/Eligible')
+    ? aus.some(
+            (s) =>
+              s.recommendation === 'Approve/Eligible' || s.recommendation === 'Accept',
+          )
       ? 'done'
       : aus.some(
             (s) =>
               s.recommendation === 'Refer with Caution' ||
+              s.recommendation === 'Caution' ||
               s.recommendation === 'Unable to Determine',
           )
         ? 'problem'

@@ -21,14 +21,17 @@ const timeOf = (iso: string) =>
     minute: '2-digit',
   });
 
-// The recommendation badge color tells the story at a glance.
+// The recommendation badge color tells the story at a glance. DU and
+// LPA speak different dialects — DU: Approve/Refer, LPA: Accept/Caution.
 const recClass = (rec: string | null) => {
   switch (rec) {
     case 'Approve/Eligible':
+    case 'Accept':
       return 'aus-rec-approve';
     case 'Refer':
       return 'aus-rec-refer';
     case 'Refer with Caution':
+    case 'Caution':
     case 'Unable to Determine':
       return 'aus-rec-caution';
     default:
@@ -54,12 +57,15 @@ export function AusScreen(props: Props) {
 
   const submissions = () => localSubs() ?? (detail()?.aus ?? []);
 
-  const submit = async () => {
+  const submit = async (engine: 'du' | 'lpa') => {
     if (submitting()) return;
     setSubmitting(true);
     setError(null);
     try {
-      const sub = await invoke<AusSubmission>('submit_du', { loanId: props.loanId });
+      const sub = await invoke<AusSubmission>(
+        engine === 'du' ? 'submit_du' : 'submit_lpa',
+        { loanId: props.loanId },
+      );
       if (props.demo) {
         setLocalSubs([sub, ...submissions()]);
       } else {
@@ -92,14 +98,19 @@ export function AusScreen(props: Props) {
             </Show>
 
             <div class="aus-actions">
-              <button class="ghost" disabled={submitting()} onClick={submit}>
+              <button class="ghost" disabled={submitting()} onClick={() => submit('du')}>
                 {submitting() ? 'Submitting…' : 'Submit to DU'}
+              </button>
+              <button class="ghost" disabled={submitting()} onClick={() => submit('lpa')}>
+                {submitting() ? 'Submitting…' : 'Submit to LPA'}
               </button>
               <Show
                 when={!props.demo}
                 fallback={<span class="aus-mode-badge">MOCK ENGINE</span>}
               >
-                <span class="aus-mode-note">Uses the configured DU sandbox endpoint.</span>
+                <span class="aus-mode-note">
+                  Uses the configured DU / LPA sandbox endpoints.
+                </span>
               </Show>
             </div>
             <Show when={error()}>
