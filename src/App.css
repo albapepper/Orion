@@ -1,3 +1,7 @@
+@import '@fontsource/barlow-condensed/latin-500.css';
+@import '@fontsource/barlow-condensed/latin-600.css';
+@import '@fontsource/barlow-condensed/latin-700.css';
+
 :root {
   /* Dark roast — easy on the eye, warm, low glare */
   --bg: #171210;
@@ -31,17 +35,18 @@
 
 :root {
   color-scheme: light;
-  --bg: #c6cac9;
-  --surface: #f0f2f0;
-  --surface-2: #dfe3e1;
-  --surface-staging: #b4bab8;
-  --surface-active: #a5adaa;
-  --border: #747d7a;
-  --border-strong: #505b57;
-  --text: #202725;
-  --text-dim: #56615e;
-  --accent: #b45b37;
-  --accent-soft: rgba(180, 91, 55, 0.12);
+  --bg: #bcc3b9;
+  --surface: #edf0e9;
+  --surface-2: #dce2d9;
+  --surface-staging: #aab4a8;
+  --surface-active: #9ca89d;
+  --border: #707b70;
+  --border-strong: #4c594e;
+  --text: #302d27;
+  --text-dim: #605d53;
+  --accent: #466251;
+  --accent-soft: rgba(70, 98, 81, 0.13);
+  --route-accent: #a45432;
   --green: #53715a;
   --green-soft: rgba(83, 113, 90, 0.12);
   --amber: #956c31;
@@ -50,7 +55,7 @@
   --red-soft: rgba(162, 77, 63, 0.11);
   --radius: 0;
   --radius-lg: 0;
-  --font-display: 'Avenir Next Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'Avenir Next Condensed', 'Arial Narrow', system-ui, sans-serif;
   --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --mono: 'SF Mono', ui-monospace, Menlo, monospace;
   --shadow-paper: 0 1px 2px rgba(23, 20, 16, 0.14), 0 18px 44px rgba(23, 20, 16, 0.1);
@@ -61,6 +66,8 @@
   --stone-vein: rgba(48, 68, 67, 0.055);
   --stone-edge: rgba(255, 255, 255, 0.42);
   --shadow-slab: inset 0 1px var(--stone-edge), 0 1px 1px rgba(19, 27, 25, 0.16), 0 8px 22px rgba(19, 27, 25, 0.07);
+  --type-highlight: rgba(255, 255, 250, 0.46);
+  --type-cut: rgba(42, 48, 40, 0.14);
   font-family: var(--font-ui);
   font-size: 16px;
 }
@@ -90,6 +97,9 @@
   --stone-vein: rgba(127, 154, 172, 0.035);
   --stone-edge: rgba(234, 231, 225, 0.075);
   --shadow-slab: inset 0 1px var(--stone-edge), 0 1px 2px rgba(0, 0, 0, 0.38), 0 14px 34px rgba(0, 0, 0, 0.2);
+  --route-accent: var(--accent);
+  --type-highlight: rgba(234, 231, 225, 0.055);
+  --type-cut: rgba(0, 0, 0, 0.42);
 }
 
 * {
@@ -106,7 +116,7 @@
 
 body {
   background:
-    radial-gradient(ellipse at 12% -8%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 38%),
+    radial-gradient(ellipse at 12% -8%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 38%),
     radial-gradient(ellipse at 92% 18%, color-mix(in srgb, var(--surface) 16%, transparent), transparent 34%),
     var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -201,6 +211,16 @@ kbd.keycap.inline {
   font-size: 15px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.brand-name,
+.home-header h1,
+.home-section-heading h2,
+.chat-title,
+.chat-empty h3,
+.loan-header-name,
+.wizard-title {
+  text-shadow: 0 1px 0 var(--type-highlight), 0 -1px 0 var(--type-cut);
 }
 
 /* Company identity (P5-02) — the install belongs to someone */
@@ -2952,7 +2972,7 @@ textarea:focus-visible {
   padding: 0;
   background: var(--surface);
   border: 1px solid color-mix(in srgb, var(--text) 18%, var(--border));
-  border-top: 2px solid var(--accent);
+  border-top: 2px solid var(--route-accent);
   box-shadow: var(--shadow-slab);
 }
 
@@ -2981,7 +3001,7 @@ textarea:focus-visible {
 }
 
 .route-direction span {
-  color: var(--accent);
+  color: var(--route-accent);
 }
 
 .pipeline-stat {
@@ -3020,7 +3040,7 @@ textarea:focus-visible {
 .pipeline-stat:nth-child(6) { --route-rise: 17px; --route-angle: 0deg; }
 
 .pipeline-stat:not(.empty)::after {
-  background: var(--accent);
+  background: var(--route-accent);
   opacity: 0.72;
 }
 
@@ -3048,7 +3068,7 @@ textarea:focus-visible {
   position: absolute;
   right: 12px;
   top: 13px;
-  color: var(--accent);
+  color: var(--route-accent);
   font-family: var(--mono);
   font-size: 0.56rem;
   font-style: normal;
