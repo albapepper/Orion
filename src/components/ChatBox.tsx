@@ -61,21 +61,45 @@ export function ChatBox(props: Props) {
     }
   };
 
+  const submitPrompt = (prompt: string) => {
+    setInput(prompt);
+    queueMicrotask(send);
+  };
+
+  const contextLabel = () => props.screen === 'dashboard'
+    ? 'Your pipeline'
+    : props.screen === 'loans'
+      ? 'All loans'
+      : props.screen.replace(/_/g, ' ');
+
   return (
     <aside class="chat-box">
       <div class="chat-header">
-        <div class="chat-model">
-          <span class="model-dot" />
-          <span class="model-name">{props.status?.ai_model ?? '…'}</span>
-          <span class="model-provider">{props.status?.ai_provider ?? ''}</span>
+        <div class="chat-title-block">
+          <span class="chat-eyebrow">Local intelligence</span>
+          <span class="chat-title">Orion AI</span>
         </div>
+        <div class="chat-model" title={`${props.status?.ai_model ?? 'Local model'} · ${props.status?.ai_provider ?? 'On device'}`}>
+          <span class="model-dot" />
+          <span class="model-state">Local</span>
+        </div>
+      </div>
+
+      <div class="chat-context">
+        <span class="context-label">Looking at</span>
+        <span class="context-value">{contextLabel()}</span>
       </div>
 
       <div class="chat-messages">
         <Show when={entries().length === 0 && !loading()}>
           <div class="chat-empty">
-            Context-aware chat — answers use what's on your screen. Press{' '}
-            <kbd class="keycap inline">/</kbd> to type from anywhere.
+            <div class="chat-orbit" aria-hidden="true"><span /></div>
+            <h3>Ask in context</h3>
+            <p>I can see where each file is on the path and help choose the next move. Your data stays on this device.</p>
+            <div class="chat-suggestions">
+              <button onClick={() => submitPrompt('What should I work on next?')}>What should I work on next?</button>
+              <button onClick={() => submitPrompt('Summarize anything that needs attention.')}>What needs attention?</button>
+            </div>
           </div>
         </Show>
         <For each={entries()}>
@@ -101,7 +125,8 @@ export function ChatBox(props: Props) {
       </div>
 
       <div class="chat-input">
-        <input
+        <div class="chat-composer">
+          <input
           ref={inputRef}
           type="text"
           value={input()}
@@ -110,12 +135,14 @@ export function ChatBox(props: Props) {
             if (e.key === 'Enter') send();
             if (e.key === 'Escape') e.currentTarget.blur();
           }}
-          placeholder={`Ask about ${props.screen}…`}
+          placeholder={`Ask about ${contextLabel().toLowerCase()}…`}
           disabled={loading()}
-        />
-        <button onClick={send} disabled={loading()}>
-          Send
-        </button>
+          />
+          <button onClick={send} disabled={loading()} aria-label="Send message">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10 12-6-4 12-2.2-4.2L4 10Z" /></svg>
+          </button>
+        </div>
+        <span class="composer-hint">Press <kbd>/</kbd> anywhere to ask</span>
       </div>
     </aside>
   );

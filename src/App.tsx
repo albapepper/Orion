@@ -1,6 +1,6 @@
 import { createResource, createSignal, createEffect, Match, onCleanup, onMount, Show, Switch } from 'solid-js';
 import { invoke } from '@tauri-apps/api/core';
-import type { AppStatus, LoanSummary } from './types';
+import type { AppStatus, LoanSummary, UserAccount } from './types';
 import { NavTray } from './components/NavTray';
 import { ChatBox } from './components/ChatBox';
 import { KeyLegend } from './components/KeyLegend';
@@ -45,8 +45,40 @@ type Route =
   | { name: 'overview'; loanId: string }
   | { name: LoanScreen; loanId: string };
 
+const isTauri = () => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
+// The browser preview is a design surface only. Tauri builds always use the
+// real commands; these representative rows keep the shell reviewable in Vite.
+const PREVIEW_LOANS: LoanSummary[] = [
+  {
+    id: 'preview-1', loan_number: '10482', status: 'underwriting',
+    borrower_name: 'Maya Thompson', assigned_to_name: 'Alex Morgan',
+    assigned_to_email: null, assigned_to_phone: null, assigned_to_title: null,
+    updated_at: new Date(Date.now() - 86_400_000 * 3).toISOString(), flagged_reviews: 2,
+  },
+  {
+    id: 'preview-2', loan_number: '10477', status: 'closing',
+    borrower_name: 'Daniel Kim', assigned_to_name: 'Jordan Ellis',
+    assigned_to_email: null, assigned_to_phone: null, assigned_to_title: null,
+    updated_at: new Date(Date.now() - 86_400_000).toISOString(), flagged_reviews: 0,
+  },
+  {
+    id: 'preview-3', loan_number: '10491', status: 'processing',
+    borrower_name: 'Priya & Sam Patel', assigned_to_name: 'Alex Morgan',
+    assigned_to_email: null, assigned_to_phone: null, assigned_to_title: null,
+    updated_at: new Date().toISOString(), flagged_reviews: 0,
+  },
+  {
+    id: 'preview-4', loan_number: '10463', status: 'approval',
+    borrower_name: 'Elena Garcia', assigned_to_name: 'Jordan Ellis',
+    assigned_to_email: null, assigned_to_phone: null, assigned_to_title: null,
+    updated_at: new Date(Date.now() - 86_400_000 * 2).toISOString(), flagged_reviews: 0,
+  },
+];
+
 function App() {
   const [route, setRoute] = createSignal<Route>({ name: 'dashboard' });
+  const [theme, setTheme] = createSignal<'light' | 'dark'>('light');
   const [history, setHistory] = createSignal<Route[]>([]);
   const [legendOpen, setLegendOpen] = createSignal(false);
   const [activeLoanId, setActiveLoanId] = createSignal<string | null>(null);
@@ -56,17 +88,42 @@ function App() {
   // P5-11: the walkthrough shows exactly once, remembered locally.
   const [tourOpen, setTourOpen] = createSignal(false);
   onMount(() => {
+    const savedTheme = localStorage.getItem('orion.theme');
+    const nextTheme = savedTheme === 'dark' || savedTheme === 'light'
+      ? savedTheme
+      : window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+    setTheme(nextTheme);
+    document.documentElement.classList.toggle('dark', nextTheme === 'dark');
     if (!localStorage.getItem('orion.tour.seen')) setTourOpen(true);
   });
+
+  const toggleTheme = () => {
+    const next = theme() === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    localStorage.setItem('orion.theme', next);
+    document.documentElement.classList.toggle('dark', next === 'dark');
+  };
   const dismissTour = () => {
     localStorage.setItem('orion.tour.seen', '1');
     setTourOpen(false);
   };
 
-  const [status, { refetch: refetchStatus }] = createResource(() => invoke<AppStatus>('get_status'));
-  const [loans, { refetch: refetchLoans }] = createResource(() => invoke<LoanSummary[]>('list_loans'));
+  const [status, { refetch: refetchStatus }] = createResource(() =>
+    isTauri()
+      ? invoke<AppStatus>('get_status')
+      : Promise.resolve({ configured: true, db_connected: false, ai_provider: 'local', ai_model: 'Preview', company_name: 'Northstar Lending' }),
+  );
+  const [loans, { refetch: refetchLoans }] = createResource(() =>
+    isTauri() ? invoke<LoanSummary[]>('list_loans') : Promise.resolve(PREVIEW_LOANS),
+  );
   // Signed-in persona drives locks, audit, and dynamic field permissions.
-  const [who] = createResource(() => invoke<import('./types').UserAccount | null>('whoami'));
+  const [who] = createResource(() =>
+    isTauri()
+      ? invoke<UserAccount | null>('whoami')
+      : Promise.resolve<UserAccount>({ id: 'preview-user', email: 'alex@example.com', name: 'Alex Morgan', role: 'loan_officer', phone: null, title: 'Loan Officer', active: true }),
+  );
   createEffect(() => setUser(who() ?? null));
 
   const navigate = (next: Route) => {
@@ -299,6 +356,8 @@ function App() {
         onShowLegend={() => setLegendOpen(true)}
         status={status()}
         user={who() ?? null}
+        theme={theme()}
+        onToggleTheme={toggleTheme}
       />
 
       <main class="workspace">

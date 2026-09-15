@@ -1,6 +1,5 @@
-import { createSignal, For, onMount, Show } from 'solid-js';
-import { invoke } from '@tauri-apps/api/core';
-import type { AiResponse, LoanSummary } from '../types';
+import { For, Show } from 'solid-js';
+import type { LoanSummary } from '../types';
 import { LOAN_STATUSES } from '../types';
 
 interface Props {
@@ -28,6 +27,18 @@ const idleLabel = (iso: string) => {
   return `idle ${d} days`;
 };
 
+const nextStep = (loan: LoanSummary) => {
+  if (loan.flagged_reviews > 0) return 'Resolve the flagged underwriting review';
+  if (loan.status === 'closing') return 'Confirm the closing package and final figures';
+  if (loan.status === 'approval') return 'Review approval terms and outstanding conditions';
+  if (loan.status === 'underwriting') return 'Check the file for a new underwriting decision';
+  if (loan.status === 'processing') return 'Complete the next open application item';
+  return 'Continue the borrower application';
+};
+
+const priorityLabel = (loan: LoanSummary) =>
+  loan.flagged_reviews > 0 || ['closing', 'approval'].includes(loan.status) ? 'Priority' : 'Next';
+
 export function Dashboard(props: Props) {
   // The work queue is deterministic — flags first, then stage urgency,
   // then stalest first — so it agrees with the AI's priority order.
@@ -47,80 +58,45 @@ export function Dashboard(props: Props) {
   const countFor = (status: string) =>
     props.loans.filter((l) => l.status === status).length;
 
-  // ── AI triage: the assistant reads the pipeline and answers ──
-
-  const [triage, setTriage] = createSignal<string | null>(null);
-  const [triageLoading, setTriageLoading] = createSignal(false);
-  const [triageError, setTriageError] = createSignal<string | null>(null);
-
-  const loadTriage = async () => {
-    if (triageLoading()) return;
-    setTriageLoading(true);
-    setTriageError(null);
-    try {
-      const response = await invoke<AiResponse>('ai_chat', {
-        loanId: null,
-        screen: 'dashboard',
-        messages: [
-          { role: 'user', content: 'What should I work on next?' },
-        ],
-      });
-      setTriage(response.content);
-    } catch (e) {
-      setTriageError(String(e));
-    } finally {
-      setTriageLoading(false);
-    }
-  };
-
-  onMount(loadTriage);
-
   return (
     <div class="screen dashboard">
-      <div class="pipeline-strip">
+      <header class="home-header">
+        <div>
+          <span class="home-eyebrow">Your workspace</span>
+          <h1>Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}.</h1>
+          <p>A clear view of every file on the path to homeownership.</p>
+        </div>
+        <div class="home-date">
+          <span>{new Date().toLocaleDateString(undefined, { weekday: 'long' })}</span>
+          <strong>{new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</strong>
+        </div>
+      </header>
+
+      <div class="route-heading">
+        <span>Path to homeownership</span>
+        <span class="route-direction">Application <span aria-hidden="true">→</span> Funded</span>
+      </div>
+      <div class="pipeline-strip" aria-label="Loan journey from application to funded">
         <For each={[...LOAN_STATUSES]}>
           {(status) => (
-            <div class="pipeline-stat" classList={{ empty: countFor(status) === 0 }}>
+            <div class="pipeline-stat" classList={{ empty: countFor(status) === 0 }} data-stage={status}>
               <span class="pipeline-count">{countFor(status)}</span>
               <span class="pipeline-label">{status}</span>
+              <Show when={status === 'funded'}>
+                <span class="summit-label">Home</span>
+              </Show>
             </div>
           )}
         </For>
       </div>
 
-      <div class="ai-summary">
-        <div class="ai-summary-header">
-          <span class="ai-summary-title">What should I work on next?</span>
-          <button
-            class="ghost small"
-            onClick={loadTriage}
-            disabled={triageLoading()}
-            title="Re-run the pipeline triage"
-          >
-            {triageLoading() ? 'Reading pipeline…' : '↻ Refresh'}
-          </button>
+      <div class="home-section-heading">
+        <div>
+          <span class="home-eyebrow">Today</span>
+          <h2>Suggested next steps</h2>
         </div>
-        <Show
-          when={!triageLoading()}
-          fallback={<div class="ai-summary-body ai-summary-loading">Reading the pipeline…</div>}
-        >
-          <Show
-            when={!triageError()}
-            fallback={<div class="ai-summary-body ai-summary-error">{triageError()}</div>}
-          >
-            <Show
-              when={triage()}
-              fallback={
-                <div class="ai-summary-body ai-summary-loading">Press refresh to ask the assistant.</div>
-              }
-            >
-              <div class="ai-summary-body">{triage()}</div>
-            </Show>
-          </Show>
-        </Show>
+        <span class="suggested-count">{workQueue().length} moves ahead</span>
       </div>
-
-      <h2 class="section-title">Up next</h2>
       <Show
         when={workQueue().length > 0}
         fallback={
@@ -131,25 +107,16 @@ export function Dashboard(props: Props) {
           <For each={workQueue()}>
             {(loan, i) => (
               <button class="queue-card" onClick={() => props.onOpenLoan(loan)}>
-                <span class="queue-rank mono">{i() + 1}</span>
+                <span class="queue-check" aria-hidden="true"><span>{i() + 1}</span></span>
                 <span class="queue-who">
-                  <span class="queue-borrower">{loan.borrower_name ?? 'No borrower yet'}</span>
-                  <span class="queue-loan mono">{loan.loan_number}</span>
+                  <span class="queue-action">{nextStep(loan)}</span>
+                  <span class="queue-borrower">{loan.borrower_name ?? 'No borrower yet'} <span>·</span> <span class="queue-loan mono">{loan.loan_number}</span></span>
                 </span>
                 <span class="queue-meta">
-                  <Show when={loan.flagged_reviews > 0}>
-                    <span
-                      class="queue-flag"
-                      title={`${loan.flagged_reviews} flagged underwriting review(s)`}
-                    >
-                      ⚠ {loan.flagged_reviews} flagged
-                    </span>
-                  </Show>
+                  <span class="queue-priority" classList={{ urgent: priorityLabel(loan) === 'Priority' }}>{priorityLabel(loan)}</span>
                   <span class={`status-pill ${loan.status}`}>{loan.status}</span>
-                  <span class="queue-idle">{idleLabel(loan.updated_at)}</span>
-                  <span class="queue-assigned">
-                    {loan.assigned_to_name ?? 'Unassigned'}
-                  </span>
+                  <span class="queue-detail"><span>{idleLabel(loan.updated_at)}</span><span>{loan.assigned_to_name ?? 'Unassigned'}</span></span>
+                  <span class="queue-arrow" aria-hidden="true">→</span>
                 </span>
               </button>
             )}
