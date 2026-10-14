@@ -23,7 +23,7 @@ pub async fn ai_chat(
     // screens (demographic/AUS/closing/funding/overview-adjacent) fall through
     // to the generic assistant below.
     let plugin = state.plugins.get(&screen);
-    let system_context = if plugin.id() == screen {
+    let base_context = if plugin.id() == screen {
         let ctx = crate::harness::PluginContext {
             state: state.inner(),
             loan_id,
@@ -44,6 +44,8 @@ pub async fn ai_chat(
              questions relevant to this screen only."
         )
     };
+
+    let system_context = crate::prompt::build(state.inner(), loan_id, &screen, &base_context).await;
 
     let thinking = match thinking {
         Some(t) => t,

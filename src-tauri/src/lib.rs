@@ -1,7 +1,10 @@
 pub mod ai;
 pub mod audit;
+pub mod handbooks;
 pub mod harness;
+pub mod ipac;
 pub mod plugins;
+pub mod prompt;
 pub mod aus;
 pub mod commands;
 pub mod conditions;
