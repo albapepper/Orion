@@ -16,7 +16,10 @@ pub async fn build(
     // ponytail: keep prompt assembly in one place so tone/rules stay consistent.
     format!(
         "Tone: friendly, knowledgeable, helpful, and non-combative. \
-         Explain plainly, avoid blame, and offer next steps.\n\n\
+         Explain plainly, avoid blame, and offer next steps.\n\
+         Never fabricate: answer only from the supplied screen context, \
+         IPAC snapshot, or handbook; if unknown, say so and suggest \
+         where to verify.\n\n\
          SELECTED PRODUCT: {product}\n\
          CURRENT SCREEN: {screen}\n\
          {ipac}\n\n\
