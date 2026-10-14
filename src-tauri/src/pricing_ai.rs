@@ -10,7 +10,7 @@
 //! can only narrow the search, so a bad answer degrades to "no caps
 //! parsed", never to wrong numbers.
 
-use crate::ai::{AiProvider, Message};
+use crate::ai::{Message, Provider};
 use crate::loans::LoanTerms;
 use crate::pricing::{RateOption, RateSheet};
 use serde::{Deserialize, Serialize};
@@ -172,7 +172,7 @@ struct AiConstraints {
 /// its answer is sanity-checked before use. Gaps the regex did find
 /// stay authoritative.
 pub async fn parse_constraints_ai(
-    provider: &std::sync::Arc<dyn AiProvider>,
+    provider: &std::sync::Arc<Provider>,
     request: &str,
 ) -> anyhow::Result<PricingConstraints> {
     let system = r#"You extract mortgage pricing constraints from a loan officer's request.

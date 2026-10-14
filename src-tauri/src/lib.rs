@@ -1,5 +1,7 @@
 pub mod ai;
 pub mod audit;
+pub mod harness;
+pub mod plugins;
 pub mod aus;
 pub mod commands;
 pub mod conditions;
@@ -13,7 +15,6 @@ pub mod mismo;
 pub mod pricing;
 pub mod pricing_ai;
 pub mod tasks;
-
 use commands::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -22,7 +23,6 @@ pub fn run() {
     let state = AppState::new(config.clone());
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
         .manage(state)
         .setup(move |app| {
             // Connect to the buyer's database in the background if configured.
@@ -65,7 +65,6 @@ pub fn run() {
             commands::loan_commands::save_dependents,
             commands::loan_commands::save_employment,
             commands::loan_commands::delete_employment,
-            commands::loan_commands::get_loan_terms,
             commands::loan_commands::delete_income,
             commands::loan_commands::save_loan_terms,
             commands::loan_commands::save_asset,
@@ -77,11 +76,10 @@ pub fn run() {
             commands::loan_commands::delete_reo,
             commands::loan_commands::save_declaration,
             commands::loan_commands::save_demographics,
-            commands::loan_commands::acquire_loan_lock,
             commands::loan_commands::release_loan_lock,
-            commands::loan_commands::get_loan_lock,
             commands::loan_commands::save_uw_review,
             commands::ai_commands::ai_chat,
+            commands::ai_commands::list_plugins,
             commands::task_commands::list_tasks,
             commands::task_commands::list_all_tasks,
             commands::task_commands::create_task,

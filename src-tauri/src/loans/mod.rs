@@ -295,3 +295,11 @@ pub struct UserAccount {
     pub title: Option<String>,
     pub active: bool,
 }
+
+pub fn borrower_name(bs: &[Borrower]) -> String {
+    bs.iter()
+        .find(|b| b.is_primary)
+        .or(bs.first())
+        .map(|b| format!("{} {}", b.first_name, b.last_name))
+        .unwrap_or_else(|| "Unknown borrower".to_string())
+}

@@ -530,24 +530,6 @@ pub async fn save_income(
 }
 
 #[tauri::command]
-pub async fn acquire_loan_lock(
-    state: State<'_, AppState>,
-    loan_id: String,
-    screen: String,
-) -> Result<bool, String> {
-    let pool = state.pool().await?;
-    let loan_id = parse_uuid(&loan_id)?;
-    let user_id = state
-        .current_user_id
-        .lock()
-        .await
-        .ok_or("No user signed in")?;
-    crate::locks::acquire_lock(&pool, loan_id, user_id, &screen)
-        .await
-        .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
 pub async fn release_loan_lock(state: State<'_, AppState>, loan_id: String) -> Result<(), String> {
     let pool = state.pool().await?;
     let loan_id = parse_uuid(&loan_id)?;
@@ -559,33 +541,6 @@ pub async fn release_loan_lock(state: State<'_, AppState>, loan_id: String) -> R
     crate::locks::release_lock(&pool, loan_id, user_id)
         .await
         .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-pub async fn get_loan_lock(
-    state: State<'_, AppState>,
-    loan_id: String,
-) -> Result<Option<LockInfo>, String> {
-    let pool = state.pool().await?;
-    let loan_id = parse_uuid(&loan_id)?;
-    crate::locks::get_lock(&pool, loan_id)
-        .await
-        .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-pub async fn get_loan_terms(
-    state: State<'_, AppState>,
-    loan_id: String,
-) -> Result<Option<LoanTerms>, String> {
-    let loan_id = parse_uuid(&loan_id)?;
-    let db = state.db.read().await.clone();
-    match db {
-        Some(pool) => crate::db::queries::get_loan_terms(&pool, loan_id)
-            .await
-            .map_err(|e| e.to_string()),
-        None => Ok(Some(demo::loan_terms(loan_id))),
-    }
 }
 
 #[derive(Deserialize)]

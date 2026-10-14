@@ -28,7 +28,6 @@ import { PricingScreen } from './screens/loan/PricingScreen';
 import { AusScreen } from './screens/loan/AusScreen';
 import { ClosingScreen } from './screens/loan/ClosingScreen';
 import { FundingScreen } from './screens/loan/FundingScreen';
-import { StubScreen } from './screens/loan/StubScreen';
 import { LOAN_SCREENS, STAGE_KEYS, nextStage, prevStage, type LoanScreen } from './screens/loan/stages';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { UsersScreen } from './screens/UsersScreen';
@@ -44,37 +43,6 @@ type Route =
   | { name: 'settings' }
   | { name: 'overview'; loanId: string }
   | { name: LoanScreen; loanId: string };
-
-const isTauri = () => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
-
-// The browser preview is a design surface only. Tauri builds always use the
-// real commands; these representative rows keep the shell reviewable in Vite.
-const PREVIEW_LOANS: LoanSummary[] = [
-  {
-    id: 'preview-1', loan_number: '10482', status: 'underwriting',
-    borrower_name: 'Maya Thompson', assigned_to_name: 'Alex Morgan',
-    assigned_to_email: null, assigned_to_phone: null, assigned_to_title: null,
-    updated_at: new Date(Date.now() - 86_400_000 * 3).toISOString(), flagged_reviews: 2,
-  },
-  {
-    id: 'preview-2', loan_number: '10477', status: 'closing',
-    borrower_name: 'Daniel Kim', assigned_to_name: 'Jordan Ellis',
-    assigned_to_email: null, assigned_to_phone: null, assigned_to_title: null,
-    updated_at: new Date(Date.now() - 86_400_000).toISOString(), flagged_reviews: 0,
-  },
-  {
-    id: 'preview-3', loan_number: '10491', status: 'processing',
-    borrower_name: 'Priya & Sam Patel', assigned_to_name: 'Alex Morgan',
-    assigned_to_email: null, assigned_to_phone: null, assigned_to_title: null,
-    updated_at: new Date().toISOString(), flagged_reviews: 0,
-  },
-  {
-    id: 'preview-4', loan_number: '10463', status: 'approval',
-    borrower_name: 'Elena Garcia', assigned_to_name: 'Jordan Ellis',
-    assigned_to_email: null, assigned_to_phone: null, assigned_to_title: null,
-    updated_at: new Date(Date.now() - 86_400_000 * 2).toISOString(), flagged_reviews: 0,
-  },
-];
 
 function App() {
   const [route, setRoute] = createSignal<Route>({ name: 'dashboard' });
@@ -111,18 +79,14 @@ function App() {
   };
 
   const [status, { refetch: refetchStatus }] = createResource(() =>
-    isTauri()
-      ? invoke<AppStatus>('get_status')
-      : Promise.resolve({ configured: true, db_connected: false, ai_provider: 'local', ai_model: 'Preview', company_name: 'Northstar Lending' }),
+    invoke<AppStatus>('get_status'),
   );
   const [loans, { refetch: refetchLoans }] = createResource(() =>
-    isTauri() ? invoke<LoanSummary[]>('list_loans') : Promise.resolve(PREVIEW_LOANS),
+    invoke<LoanSummary[]>('list_loans'),
   );
   // Signed-in persona drives locks, audit, and dynamic field permissions.
   const [who] = createResource(() =>
-    isTauri()
-      ? invoke<UserAccount | null>('whoami')
-      : Promise.resolve<UserAccount>({ id: 'preview-user', email: 'alex@example.com', name: 'Alex Morgan', role: 'loan_officer', phone: null, title: 'Loan Officer', active: true }),
+    invoke<UserAccount | null>('whoami'),
   );
   createEffect(() => setUser(who() ?? null));
 
@@ -506,14 +470,6 @@ function App() {
           <Match when={route().name === 'funding'}>
             <FundingScreen
               loanId={(route() as { loanId: string }).loanId}
-              demo={status() ? !status()!.db_connected : false}
-              onNavigate={openScreen}
-            />
-          </Match>
-          <Match when={route().name === 'credit'}>
-            <StubScreen
-              loanId={(route() as { loanId: string }).loanId}
-              screen={route().name as LoanScreen}
               demo={status() ? !status()!.db_connected : false}
               onNavigate={openScreen}
             />

@@ -93,7 +93,6 @@ export function computeStageStatuses(
   }
 
   // Credit is pulled from an external source; nothing to gather yet
-  statuses.credit = 'empty';
 
   // Income: every source needs an amount
   const income = (detail.income ?? []).filter((r) => borrowerIds.has(r.borrower_id));
@@ -230,10 +229,10 @@ export function computeStageStatuses(
       : 'progress'
     : 'empty';
 
-  // Overview summarizes the file — credit is external and documents are
+  // Overview summarizes the file — documents are
   // never truly "done", so neither blocks green
   const vals = TRACKER_ITEMS.filter(
-    (k) => k !== 'overview' && k !== 'credit' && k !== 'documents',
+    (k) => k !== 'overview' && k !== 'documents',
   ).map(
     (k) => statuses[k],
   );

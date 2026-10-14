@@ -1,5 +1,5 @@
 // The loan cascade, in working order:
-// borrower → employment → property → terms → credit → income → assets
+// borrower → employment → property → terms → income → assets
 // → liabilities → reo → declarations → demographic → documents → conditions
 // → pricing → AUS
 export type LoanScreen =
@@ -7,7 +7,6 @@ export type LoanScreen =
   | 'employment'
   | 'property'
   | 'terms'
-  | 'credit'
   | 'income'
   | 'assets'
   | 'liabilities'
@@ -26,7 +25,6 @@ export const LOAN_SCREENS: LoanScreen[] = [
   'employment',
   'property',
   'terms',
-  'credit',
   'income',
   'assets',
   'liabilities',
@@ -46,7 +44,6 @@ export const SCREEN_LABELS: Record<LoanScreen, string> = {
   employment: 'Employment',
   property: 'Property',
   terms: 'Loan Terms',
-  credit: 'Credit',
   income: 'Income Analysis',
   assets: 'Assets',
   liabilities: 'Liabilities',
@@ -67,7 +64,6 @@ export const STAGE_KEYS: Record<LoanScreen, string> = {
   employment: 'e',
   property: 'p',
   terms: 't',
-  credit: 'c',
   income: 'i',
   assets: 'a',
   liabilities: 'l',
