@@ -5,6 +5,19 @@ desktop app (Tauri v2) that connects to the buyer's own SQL server and runs
 AI locally via Ollama — or against any OpenAI-compatible cloud endpoint. No
 SaaS, no vendor-hosted data.
 
+## Copyright and licensing
+
+Copyright © 2026 Scott Heneveld. All rights reserved.
+
+Orion's original code and documentation are proprietary. Subject to applicable
+law and any previously granted rights, no license to use, copy, modify,
+distribute, or commercialize them is granted without prior written permission
+from Scott Heneveld.
+
+Third-party components remain subject to their respective licenses and
+copyright notices. This notice does not alter those rights or revoke any
+previously granted licenses.
+
 ## Core ideas
 
 - **Screen-aware AI sidebar** — the current screen's loan data is injected as
