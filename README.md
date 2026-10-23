@@ -1,5 +1,11 @@
 # Orion
 
+<p align="center">
+  <a href="docs/assets/orion-working-logo.png">
+    <img src="docs/assets/orion-working-logo.png" width="480" alt="Orion working logo: a yellow route ascending modular gray mountain forms, framed by subtle glass.">
+  </a>
+</p>
+
 **AI-native, on-premise mortgage origination platform.** Ships as a native
 desktop app (Tauri v2) that connects to the buyer's own SQL server and runs
 AI locally via Ollama — or against any OpenAI-compatible cloud endpoint. No
